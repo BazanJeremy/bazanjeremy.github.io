@@ -1,3 +1,1 @@
-1 npm install
-
-2 npm run serve
+Hi welcolm to my Portfolio 
