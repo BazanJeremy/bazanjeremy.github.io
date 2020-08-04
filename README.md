@@ -1,1 +1,3 @@
-Hi welcolm to my Portfolio 
+1 npm install
+
+2 npm run serve
