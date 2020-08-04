@@ -1,0 +1,327 @@
+html {
+    scroll-behavior: smooth;
+
+}
+
+header {
+    height: 100vh;
+    /* vh = viewport (100%écran adaptative) heiht */
+    background: radial-gradient(rgb(37, 37, 37),black);
+    
+}
+
+body{
+    font-family: 'Raleway', sans-serif;
+    color: rgb(0, 255, 161);
+}
+
+
+.banner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%)translateX(-50%);
+
+  }
+
+
+.about{
+    padding:100px 0;
+  }
+
+.section-title {
+    text-align: center;
+    font-size: 50px;
+    font-weight: 400;
+    padding-bottom: 100px;
+    text-transform: uppercase;
+    
+}
+
+h4 {
+  margin: 0px;
+}
+
+h4 .section-title {
+    text-align: center;
+    padding-top: 20px;
+    color: rgb(0, 255, 161);
+    text-decoration-color: rgb(0, 255, 161);
+  
+    
+}
+
+.nav-link {
+    text-align: center;
+    font-size: 12px;
+    color: white !important;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+
+
+
+}
+.nav-link:hover{
+    color: rgb(0, 255, 161) !important;
+}
+
+
+
+.banner h1 {
+    color: white;
+    font-size: 55px;
+    font-weight: bold;
+    transition: .6s;
+
+
+}
+
+.banner h2 {
+    color: white;    
+    text-transform: uppercase;
+    font-size: 30px;
+    letter-spacing: 8px;
+    text-align: center;
+
+}
+
+ul .banner{
+    display: flex; 
+    text-align: center; justify-content: space-around;
+    padding-left: 0;
+    margin-top: 20px;
+}
+li .banner{
+    list-style: none;
+    display: flex;
+    font-size: 25px;   
+    
+}
+ul li a {
+    color: rgb(0, 255, 161);
+
+}
+
+.about {
+    background: rgb(31, 31, 31);
+}
+
+
+.section-about {
+    color: white;
+    text-transform: uppercase;
+    font-size: 40px;
+    font-weight: bold;
+    padding:100px 0;
+    text-align: center;
+    border: white;
+    padding: 2em;
+
+}
+
+
+.portrait-description {
+    color: white;
+    text-align: justify;
+    padding: 2em;
+   
+
+}
+
+
+.portrait-description p {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    display:inline;
+}
+.portrait-description p a {
+    color: rgb(0, 255, 161);
+}
+
+.projects {
+    background: radial-gradient(rgb(37, 37, 37),black);
+    padding: 100px 0;
+}
+
+.skills {
+    background: rgb(51, 51, 51);
+    padding: 100px 0;
+}
+
+.border ul {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+}
+
+.education {
+    background: radial-gradient(rgb(37, 37, 37),black);
+}
+
+.contact {
+    background: radial-gradient(rgb(51, 51, 51)black);
+}
+
+.border-skill {
+    padding:2em;
+}
+
+
+/* Experience */
+
+.experiences .title {
+    background: #262727;
+  }
+  
+.experiences .content {
+    background: #252525;
+  }
+  
+   
+
+/* footer */
+
+footer {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    color: white;
+    text-align: center;
+}
+
+.skills-list{
+    list-style:none;
+    padding:15px 0;
+}
+
+.skills-list a {
+font-size:24px;
+   
+   }
+
+   
+.skills-list a:hover {
+ color:white;
+ text-decoration: none;
+
+
+}
+
+.navbar-brand svg{
+    width: 150px;
+    height: 60px;
+}
+
+
+.card{
+    border:none;
+    color: white;
+    background-color: #363636;
+
+}
+.card-title {
+    font-weight: 700;
+    font-size: 20px;
+    text-align:center;
+}
+.card .btn{
+    background-color: #00FFA1;
+    color: black;
+    font-weight: 700;
+    margin: 0 10px;
+}
+.card .button-list {
+    display:flex;
+    justify-content:center; 
+}
+
+.card .card-text {
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+.skills-picture {
+    text-align:center;
+    font-size: 50px;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.skills-list{
+    text-align:center;
+    list-style:none;
+    margin: 0;
+    font-weight: 500;
+}
+
+.experiences {
+    background-color: #252525;
+    padding: 100px 0;
+}
+.experiences-list {
+    list-style:none;
+}
+.experiences-list li {
+    margin-bottom:40px;
+}
+.experience-title {
+    color: white;
+    font-size: 35px;
+    margin-bottom: 0;
+}
+.experience-date {
+    margin-top:0;
+}
+.experience-description {
+    color: white;
+    margin-top:15px;
+}
+
+footer{
+    background-color: #2D2E2E;
+    padding: 50px 0;
+}
+
+footer p {
+    margin-bottom:0;
+}
+.navbar-toggler svg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 30px;
+    width: 30px;
+    margin: 30px;
+    
+}
+
+.card-column {
+    transition: .6s;
+
+}
+
+@media (max-width:768px) {
+    .card-column {
+        margin-bottom:30px;
+        transition: .6s;
+
+
+    }
+    .name {
+        text-align: center;
+        margin-bottom: 20px;
+        transition: .6s;
+    }
+}
+
+ .color {
+    background-color: black !important;
+    transition: 1s;
+}
