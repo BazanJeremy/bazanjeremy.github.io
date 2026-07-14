@@ -11,19 +11,28 @@ const t = useTranslations(lang);
 // Pure links — no client JS. Path is preserved across the locale switch.
 const frHref = switchLocalePath(Astro.url, 'fr');
 const enHref = switchLocalePath(Astro.url, 'en');
+
+const active = 'text-fg';
+const inactive = 'text-muted hover:text-fg transition-colors';
 ---
 
-<div class="lang-toggle" role="group" aria-label={t.lang_toggle.aria}>
+<div
+  class="flex items-center gap-1.5 font-mono text-xs"
+  role="group"
+  aria-label={t.lang_toggle.aria}
+>
   <a
     href={frHref}
     hreflang="fr"
+    class={lang === 'fr' ? active : inactive}
     aria-current={lang === 'fr' ? 'true' : undefined}
     aria-label={t.lang_toggle.to_fr_aria}>{t.lang_toggle.fr}</a
   >
-  <span aria-hidden="true">/</span>
+  <span class="text-line" aria-hidden="true">/</span>
   <a
     href={enHref}
     hreflang="en"
+    class={lang === 'en' ? active : inactive}
     aria-current={lang === 'en' ? 'true' : undefined}
     aria-label={t.lang_toggle.to_en_aria}>{t.lang_toggle.en}</a
   >
