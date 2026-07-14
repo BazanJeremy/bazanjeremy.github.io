@@ -1,0 +1,27 @@
+---
+import { useTranslations, type Locale } from '../i18n/utils';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const contact = t.contact;
+---
+
+<section id={contact.id}>
+  <h2>{contact.heading}</h2>
+  <ul>
+    {
+      contact.items.map((item) => (
+        <li>
+          <span>{item.label}</span>
+          <a href={item.href} rel="noopener">
+            {item.value}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

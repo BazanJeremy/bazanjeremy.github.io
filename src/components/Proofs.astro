@@ -1,0 +1,25 @@
+---
+import { useTranslations, type Locale } from '../i18n/utils';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const proofs = t.proofs;
+---
+
+<section id={proofs.id}>
+  <h2>{proofs.heading}</h2>
+  <ul>
+    {
+      proofs.items.map((item) => (
+        <li>
+          <p>{item.value}</p>
+          <p>{item.text}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

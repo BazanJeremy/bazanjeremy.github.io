@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "title": "Jérémy Bazan — QA Engineer confirmé · Testing augmenté par l'IA",
+    "description": "Ingénieur QA et référent IA de mon pôle. J'automatise les tests du web à l'embarqué et je les augmente avec l'IA — LLM, agents, MCP.",
+    "og_locale": "fr_FR"
+  },
+  "nav": {
+    "skip": "Aller au contenu",
+    "brand": "Jérémy Bazan",
+    "brand_aria": "Retour en haut de page",
+    "aria": "Navigation principale",
+    "items": [
+      { "id": "preuves", "label": "Preuves" },
+      { "id": "portfolio", "label": "Portfolio" },
+      { "id": "stack", "label": "Stack" },
+      { "id": "parcours", "label": "Parcours" },
+      { "id": "contact", "label": "Contact" }
+    ]
+  },
+  "hero": {
+    "id": "accueil",
+    "name": "Jérémy Bazan",
+    "title": "QA Engineer confirmé · Testing augmenté par l'IA",
+    "thesis": "Le déterministe d'abord, l'IA là où elle apporte — le QA reste l'arbitre.",
+    "pitch": "Ingénieur QA et référent IA de mon pôle. J'automatise les tests du web à l'embarqué et je les augmente avec l'IA — LLM, agents, MCP.",
+    "cta_primary": { "label": "Voir le portfolio →", "href": "#portfolio" },
+    "cta_secondary": { "label": "Me contacter →", "href": "#contact" }
+  },
+  "proofs": {
+    "id": "preuves",
+    "heading": "Preuves chiffrées",
+    "items": [
+      {
+        "value": "−30 %",
+        "text": "Temps de validation des releases sur le stack Web (Playwright) et Mobile (Appium / Maestro), grâce à l'industrialisation d'une stratégie d'automatisation partie de zéro."
+      },
+      {
+        "value": "6 outils · ~848 tests",
+        "text": "Portfolio QA×IA open source, exécution locale, fallback déterministe systématique. Aucune clé API externe requise."
+      },
+      {
+        "value": "−60 à −80 %",
+        "text": "Temps de conception sur les phases amont outillables par LLM : vérification des DOR, dérivation des critères d'acceptation en scénarios passants et non-passants, cadrage haut niveau de la stratégie de test."
+      }
+    ]
+  },
+  "portfolio": {
+    "id": "portfolio",
+    "heading": "Cartographie sectorielle",
+    "blocks": [
+      {
+        "title": "IA × Quality engineering",
+        "repos": [
+          {
+            "name": "EvalForge",
+            "description": "Framework d'évaluation de LLM avec juge sous calibration. Checks déterministes non compensables, méta-évaluation Cohen's kappa.",
+            "url": "https://github.com/BazanJeremy/EvalForge"
+          },
+          {
+            "name": "testscribe",
+            "description": "Enrichissement de bug reports assisté par IA. Sévérité CVSS-lite, classes IEC 62304, détection sémantique de doublons.",
+            "url": "https://github.com/BazanJeremy/testscribe"
+          }
+        ]
+      },
+      {
+        "title": "Systèmes critiques",
+        "repos": [
+          {
+            "name": "skyguard",
+            "description": "Quality gate sécurité augmenté par l'IA. Surface d'attaque avionique simulée, threat modeling STRIDE assisté par agents.",
+            "url": "https://github.com/BazanJeremy/skyguard"
+          },
+          {
+            "name": "anomaly-sentinel",
+            "description": "Framework de test pour IA de détection d'anomalies. Simulations medtech et fintech, aucune clé API requise.",
+            "url": "https://github.com/BazanJeremy/anomaly-sentinel"
+          }
+        ]
+      },
+      {
+        "title": "Fiabilité des tests & delivery",
+        "repos": [
+          {
+            "name": "flakysense",
+            "description": "Diagnostic de tests flaky à partir de l'historique CI. Analyse statistique déterministe, couche IA optionnelle. JUnit XML en entrée, rapport actionnable en sortie.",
+            "url": "https://github.com/BazanJeremy/flakysense"
+          },
+          {
+            "name": "ReleaseGuard",
+            "description": "Verrou de release explicable. Fusionne tests, couverture et flakiness en un verdict GO / CONDITIONAL GO / NO GO argumenté.",
+            "url": "https://github.com/BazanJeremy/ReleaseGuard"
+          }
+        ]
+      }
+    ]
+  },
+  "stack": {
+    "id": "stack",
+    "heading": "Stack",
+    "items": [
+      "Playwright (TypeScript · Python)",
+      "Pytest",
+      "Python",
+      "GitLab CI / Azure DevOps",
+      "MCP & agents IA",
+      "Pydantic"
+    ]
+  },
+  "journey": {
+    "id": "parcours",
+    "heading": "Parcours",
+    "items": [
+      {
+        "label": "Aujourd'hui",
+        "text": "Ingénieur QA / Lead Tech QA chez EDF Solutions Solaires (Limonest), référent IA du pôle. Périmètre : web, mobile, embarqué."
+      },
+      {
+        "label": "Près de 6 ans en qualité logicielle",
+        "text": "ISTQB Foundation v4 (2024). Anglais bilingue (expérience professionnelle au Royaume-Uni)."
+      },
+      {
+        "label": "Mobilité",
+        "text": "ouvert à un CDI en Suisse romande, Vaud en priorité. Citoyen français, libre circulation UE/AELE."
+      }
+    ]
+  },
+  "contact": {
+    "id": "contact",
+    "heading": "Contact",
+    "items": [
+      {
+        "label": "LinkedIn",
+        "value": "linkedin.com/in/jeremy-bazan",
+        "href": "https://www.linkedin.com/in/jeremy-bazan"
+      },
+      {
+        "label": "GitHub",
+        "value": "github.com/BazanJeremy",
+        "href": "https://github.com/BazanJeremy"
+      },
+      {
+        "label": "Email",
+        "value": "jeremy.bazan1@gmail.com",
+        "href": "mailto:jeremy.bazan1@gmail.com"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "© 2026 Jérémy Bazan"
+  },
+  "lang_toggle": {
+    "fr": "FR",
+    "en": "EN",
+    "aria": "Choix de la langue",
+    "to_fr_aria": "Afficher le site en français",
+    "to_en_aria": "Afficher le site en anglais"
+  }
+}

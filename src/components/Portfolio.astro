@@ -1,0 +1,32 @@
+---
+import { useTranslations, type Locale } from '../i18n/utils';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const portfolio = t.portfolio;
+---
+
+<section id={portfolio.id}>
+  <h2>{portfolio.heading}</h2>
+  {
+    portfolio.blocks.map((block) => (
+      <div>
+        <h3>{block.title}</h3>
+        <ul>
+          {block.repos.map((repo) => (
+            <li>
+              <a href={repo.url} rel="noopener">
+                <span>{repo.name}</span>
+                <span>{repo.description}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</section>

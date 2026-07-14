@@ -1,0 +1,22 @@
+---
+import { useTranslations, type Locale } from '../i18n/utils';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const hero = t.hero;
+---
+
+<section id={hero.id}>
+  <p>{hero.name}</p>
+  <p>{hero.title}</p>
+  <h1>{hero.thesis}</h1>
+  <p>{hero.pitch}</p>
+  <p>
+    <a href={hero.cta_primary.href}>{hero.cta_primary.label}</a>
+    <a href={hero.cta_secondary.href}>{hero.cta_secondary.label}</a>
+  </p>
+</section>

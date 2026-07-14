@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (palette, typography scale) are validated and filled in Task 2.
+ * Tailwind 4 is CSS-first: theme values declared here become both CSS custom
+ * properties and Tailwind utilities (e.g. --color-accent -> bg-accent).
+ */
+@theme {
+  /* Placeholder neutral scale — replaced by the validated dark palette in Task 2. */
+  --color-bg: #0d0f12;
+  --color-fg: #e6e8eb;
+  --color-muted: #9aa1a9;
+  --color-accent: #5e9ea0;
+}
+
+/* Minimal base — full base styles land with the design system in Task 2. */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Accessibility: skip link, visually hidden until focused. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  background: var(--color-fg);
+  color: var(--color-bg);
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "title": "TODO",
+    "description": "TODO",
+    "og_locale": "en_US"
+  },
+  "nav": {
+    "skip": "TODO",
+    "brand": "Jérémy Bazan",
+    "brand_aria": "TODO",
+    "aria": "TODO",
+    "items": [
+      { "id": "preuves", "label": "TODO" },
+      { "id": "portfolio", "label": "TODO" },
+      { "id": "stack", "label": "TODO" },
+      { "id": "parcours", "label": "TODO" },
+      { "id": "contact", "label": "TODO" }
+    ]
+  },
+  "hero": {
+    "id": "accueil",
+    "name": "Jérémy Bazan",
+    "title": "TODO",
+    "thesis": "TODO",
+    "pitch": "TODO",
+    "cta_primary": { "label": "TODO", "href": "#portfolio" },
+    "cta_secondary": { "label": "TODO", "href": "#contact" }
+  },
+  "proofs": {
+    "id": "preuves",
+    "heading": "TODO",
+    "items": [
+      { "value": "TODO", "text": "TODO" },
+      { "value": "TODO", "text": "TODO" },
+      { "value": "TODO", "text": "TODO" }
+    ]
+  },
+  "portfolio": {
+    "id": "portfolio",
+    "heading": "TODO",
+    "blocks": [
+      {
+        "title": "TODO",
+        "repos": [
+          {
+            "name": "EvalForge",
+            "description": "TODO",
+            "url": "https://github.com/BazanJeremy/EvalForge"
+          },
+          {
+            "name": "testscribe",
+            "description": "TODO",
+            "url": "https://github.com/BazanJeremy/testscribe"
+          }
+        ]
+      },
+      {
+        "title": "TODO",
+        "repos": [
+          {
+            "name": "skyguard",
+            "description": "TODO",
+            "url": "https://github.com/BazanJeremy/skyguard"
+          },
+          {
+            "name": "anomaly-sentinel",
+            "description": "TODO",
+            "url": "https://github.com/BazanJeremy/anomaly-sentinel"
+          }
+        ]
+      },
+      {
+        "title": "TODO",
+        "repos": [
+          {
+            "name": "flakysense",
+            "description": "TODO",
+            "url": "https://github.com/BazanJeremy/flakysense"
+          },
+          {
+            "name": "ReleaseGuard",
+            "description": "TODO",
+            "url": "https://github.com/BazanJeremy/ReleaseGuard"
+          }
+        ]
+      }
+    ]
+  },
+  "stack": {
+    "id": "stack",
+    "heading": "TODO",
+    "items": ["TODO", "TODO", "TODO", "TODO", "TODO", "TODO"]
+  },
+  "journey": {
+    "id": "parcours",
+    "heading": "TODO",
+    "items": [
+      { "label": "TODO", "text": "TODO" },
+      { "label": "TODO", "text": "TODO" },
+      { "label": "TODO", "text": "TODO" }
+    ]
+  },
+  "contact": {
+    "id": "contact",
+    "heading": "TODO",
+    "items": [
+      {
+        "label": "LinkedIn",
+        "value": "linkedin.com/in/jeremy-bazan",
+        "href": "https://www.linkedin.com/in/jeremy-bazan"
+      },
+      {
+        "label": "GitHub",
+        "value": "github.com/BazanJeremy",
+        "href": "https://github.com/BazanJeremy"
+      },
+      {
+        "label": "Email",
+        "value": "jeremy.bazan1@gmail.com",
+        "href": "mailto:jeremy.bazan1@gmail.com"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "© 2026 Jérémy Bazan"
+  },
+  "lang_toggle": {
+    "fr": "FR",
+    "en": "EN",
+    "aria": "Language switcher",
+    "to_fr_aria": "View the site in French",
+    "to_en_aria": "View the site in English"
+  }
+}

@@ -1,0 +1,30 @@
+---
+import { useTranslations, switchLocalePath, type Locale } from '../i18n/utils';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+// Pure links — no client JS. Path is preserved across the locale switch.
+const frHref = switchLocalePath(Astro.url, 'fr');
+const enHref = switchLocalePath(Astro.url, 'en');
+---
+
+<div class="lang-toggle" role="group" aria-label={t.lang_toggle.aria}>
+  <a
+    href={frHref}
+    hreflang="fr"
+    aria-current={lang === 'fr' ? 'true' : undefined}
+    aria-label={t.lang_toggle.to_fr_aria}>{t.lang_toggle.fr}</a
+  >
+  <span aria-hidden="true">/</span>
+  <a
+    href={enHref}
+    hreflang="en"
+    aria-current={lang === 'en' ? 'true' : undefined}
+    aria-label={t.lang_toggle.to_en_aria}>{t.lang_toggle.en}</a
+  >
+</div>
