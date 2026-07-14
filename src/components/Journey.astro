@@ -10,15 +10,23 @@ const t = useTranslations(lang);
 const journey = t.journey;
 ---
 
-<section id={journey.id}>
-  <h2>{journey.heading}</h2>
-  <ul>
+<section id={journey.id} class="section wrap border-t border-line">
+  <h2 class="text-heading font-semibold text-fg">{journey.heading}</h2>
+
+  <ol class="mt-10 space-y-9 border-l border-line">
     {
       journey.items.map((item) => (
-        <li>
-          <strong>{item.label}</strong> {item.text}
+        <li class="reveal relative pl-6">
+          <span
+            aria-hidden="true"
+            class="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-bg bg-accent"
+          />
+          <p class="font-semibold text-fg">{item.label}</p>
+          <p class="mt-1 max-w-prose text-sm leading-relaxed text-muted">
+            {item.text}
+          </p>
         </li>
       ))
     }
-  </ul>
+  </ol>
 </section>

@@ -10,9 +10,16 @@ const t = useTranslations(lang);
 const stack = t.stack;
 ---
 
-<section id={stack.id}>
-  <h2>{stack.heading}</h2>
-  <ul>
-    {stack.items.map((item) => <li>{item}</li>)}
+<section id={stack.id} class="section wrap border-t border-line">
+  <h2 class="text-heading font-semibold text-fg">{stack.heading}</h2>
+
+  <ul class="reveal mt-8 flex flex-wrap gap-3">
+    {
+      stack.items.map((item) => (
+        <li class="rounded-lg border border-line bg-surface px-4 py-2 font-mono text-sm text-fg">
+          {item}
+        </li>
+      ))
+    }
   </ul>
 </section>

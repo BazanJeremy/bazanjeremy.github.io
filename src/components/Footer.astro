@@ -10,7 +10,11 @@ const { lang } = Astro.props;
 const t = useTranslations(lang);
 ---
 
-<footer>
-  <LangToggle lang={lang} />
-  <p>{t.footer.copyright}</p>
+<footer class="border-t border-line">
+  <div
+    class="wrap flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <p class="font-mono text-xs text-muted">{t.footer.copyright}</p>
+    <LangToggle lang={lang} />
+  </div>
 </footer>
