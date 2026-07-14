@@ -10,13 +10,28 @@ const t = useTranslations(lang);
 const hero = t.hero;
 ---
 
-<section id={hero.id}>
-  <p>{hero.name}</p>
-  <p>{hero.title}</p>
-  <h1>{hero.thesis}</h1>
-  <p>{hero.pitch}</p>
-  <p>
-    <a href={hero.cta_primary.href}>{hero.cta_primary.label}</a>
-    <a href={hero.cta_secondary.href}>{hero.cta_secondary.label}</a>
-  </p>
+<section id={hero.id} class="section wrap">
+  <div class="max-w-3xl">
+    <p class="font-mono text-sm text-accent">{hero.name}</p>
+    <p class="mt-1 text-sm text-muted md:text-base">{hero.title}</p>
+
+    <h1 class="mt-6 text-balance text-thesis font-semibold text-fg">
+      {hero.thesis}
+    </h1>
+
+    <p class="mt-6 max-w-prose leading-relaxed text-muted">{hero.pitch}</p>
+
+    <div class="mt-9 flex flex-wrap gap-3">
+      <a
+        href={hero.cta_primary.href}
+        class="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-strong"
+        >{hero.cta_primary.label}</a
+      >
+      <a
+        href={hero.cta_secondary.href}
+        class="rounded-lg border border-line px-5 py-2.5 text-sm font-medium text-fg transition-colors hover:border-muted"
+        >{hero.cta_secondary.label}</a
+      >
+    </div>
+  </div>
 </section>

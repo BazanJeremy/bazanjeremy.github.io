@@ -10,18 +10,29 @@ const { lang } = Astro.props;
 const t = useTranslations(lang);
 ---
 
-<header>
-  <nav aria-label={t.nav.aria}>
-    <a href={`#${t.hero.id}`} aria-label={t.nav.brand_aria}>{t.nav.brand}</a>
-    <ul>
+<header class="sticky top-0 z-50 border-b border-line bg-bg">
+  <nav class="wrap flex h-14 items-center justify-between gap-6" aria-label={t.nav.aria}>
+    <a
+      href={`#${t.hero.id}`}
+      class="font-mono text-sm font-medium text-fg transition-colors hover:text-accent"
+      aria-label={t.nav.brand_aria}>{t.nav.brand}</a
+    >
+
+    <ul class="hidden items-center gap-7 text-sm md:flex">
       {
         t.nav.items.map((item) => (
           <li>
-            <a href={`#${item.id}`}>{item.label}</a>
+            <a
+              href={`#${item.id}`}
+              class="text-muted transition-colors hover:text-fg"
+            >
+              {item.label}
+            </a>
           </li>
         ))
       }
     </ul>
+
     <LangToggle lang={lang} />
   </nav>
 </header>
