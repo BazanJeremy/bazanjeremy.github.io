@@ -1,0 +1,12 @@
+Self-hosted web fonts (variable, latin subset)
+
+- Inter — SIL Open Font License 1.1
+  https://github.com/rsms/inter
+  Retrieved via https://www.npmjs.com/package/@fontsource-variable/inter
+
+- JetBrains Mono — SIL Open Font License 1.1
+  https://github.com/JetBrains/JetBrainsMono
+  Retrieved via https://www.npmjs.com/package/@fontsource-variable/jetbrains-mono
+
+Both fonts are redistributed under the OFL 1.1. Full license text:
+https://openfontlicense.org/
