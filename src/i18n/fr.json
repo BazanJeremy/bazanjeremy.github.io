@@ -12,6 +12,7 @@
     "items": [
       { "id": "preuves", "label": "Preuves" },
       { "id": "portfolio", "label": "Portfolio" },
+      { "id": "veille", "label": "Veille" },
       { "id": "stack", "label": "Stack" },
       { "id": "parcours", "label": "Parcours" },
       { "id": "contact", "label": "Contact" }
@@ -95,6 +96,19 @@
         ]
       }
     ]
+  },
+  "blog": {
+    "id": "veille",
+    "heading": "Veille QA × IA",
+    "lead": "Notes et analyses partagées sur LinkedIn — chaque encart ouvre l'article complet.",
+    "read_more": "Lire l'article →",
+    "all": "Toute la veille →",
+    "on_linkedin": "aussi sur LinkedIn ↗",
+    "back": "← Toute la veille",
+    "reading_time": "min de lecture",
+    "empty": "Les premières notes arrivent bientôt.",
+    "index_title": "Veille QA × IA — Jérémy Bazan",
+    "index_description": "Notes et analyses QA × IA de Jérémy Bazan : fiabilité des tests, LLM, agents, MCP."
   },
   "stack": {
     "id": "stack",
