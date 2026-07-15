@@ -7,7 +7,7 @@
   "nav": {
     "skip": "Aller au contenu",
     "brand": "Jérémy Bazan",
-    "brand_aria": "Retour en haut de page",
+    "brand_aria": "Jérémy Bazan, retour en haut de page",
     "aria": "Navigation principale",
     "items": [
       { "id": "preuves", "label": "Preuves" },
