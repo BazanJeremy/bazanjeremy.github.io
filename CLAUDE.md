@@ -34,10 +34,10 @@ dans `src/i18n/fr.json`.
 | T1 — bootstrap Astro + i18n + CI Pages | ✅ mergée, déployée |
 | T2 — design system (palette + fonts + tokens) | ✅ mergée, déployée |
 | T3 — Hero + Preuves stylés + header | ✅ mergée, déployée |
-| **T4 — Cartographie sectorielle** (`Portfolio.astro` : 3 blocs × 2 dépôts, cartes cliquables GitHub) | ⬜ à faire ← **prochaine** |
-| T5 — Stack + Parcours + Contact + Footer | ⬜ |
-| T6 — assets (favicon OK ; manque `public/og-image.png` 1200×630) | ⬜ |
-| T7 — traduction EN complète (`src/i18n/en.json` tout en `TODO`) + a11y (axe) + Lighthouse 100 | ⬜ |
+| T4 — Cartographie sectorielle (`Portfolio.astro` : 3 blocs × 2 dépôts, cartes cliquables GitHub) | ✅ mergée, déployée |
+| T5 — Stack + Parcours + Contact + Footer | ✅ mergée, déployée |
+| **T6 — assets** (favicon OK ; manque `public/og-image.png` 1200×630) | ⬜ à faire ← **prochaine** |
+| T7 — traduction EN + a11y | 🔄 EN complet + audit a11y (landmarks, hiérarchie titres, contrastes AA, `lang`/hreflang) faits (cette PR). Reste : run Lighthouse réel sur prod (bloqué tant que og-image T6 absente) |
 | T8 — déploiement / DNS custom (non prioritaire) | ⬜ |
 
 ## Workflow Git (Jérémy merge lui-même)
