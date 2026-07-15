@@ -25,7 +25,9 @@ dans `src/i18n/fr.json`.
 - **CSS layering** : styles de base dans `@layer base`, helpers (`.wrap` `.section` `.reveal`)
   dans `@layer components` — sinon les utilitaires Tailwind sont écrasés sur les `<a>`.
 - **Pas de dépendance hors stack ci-dessus sans accord.** Pas d'emoji dans le contenu.
-  Animations : rien au-delà d'un fade-in au scroll (déjà en place, `.reveal`, CSS-only).
+  Animations (mise à jour T9 « plus affirmé », validé Jérémy sur maquette) : fade-in scroll
+  (`.reveal`) + entrée Hero échelonnée + micro-effets au survol (cartes `.card-lift`, boutons).
+  CSS-only, toujours gated `prefers-reduced-motion`. Rester sobre : pas d'animation gratuite.
 
 ## Avancement
 
@@ -39,6 +41,8 @@ dans `src/i18n/fr.json`.
 | T6 — assets (favicon + `public/og-image.png` 1200×630) | ✅ mergée, déployée |
 | T7 — traduction EN + a11y | ✅ mergée, déployée. EN complet + audit a11y (landmarks, hiérarchie titres, contrastes AA, `lang`/hreflang) + Lighthouse prod |
 | T8 — déploiement / DNS custom | ✅ déploiement live & vérifié (`/`, `/en/`, `sitemap-index.xml` → 200). **DNS custom : reporté** (pas de domaine — décision Jérémy 2026-07-15). Repo prêt : ajouter `public/CNAME` + màj `astro.config.mjs` `site` le jour venu |
+| T9 — mise en vie « plus affirmé » (Hero halo + arcs, header flouté, bandes de section, cartes lift, eyebrows ; helpers `.eyebrow`/`.kicker`/`.card-lift`/`.btn*` ; clé i18n `hero.eyebrow`) | ✅ mergée, déployée (direction validée sur maquette) |
+| T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ livré. Articles `[EXEMPLE]` = gabarits ; **contenu réel de veille à fournir par Jérémy** dans `src/content/blog/<lang>/<slug>.md`. Limite connue : `hreflang` des pages `/blog/*` pointe vers la home (canonical OK) |
 
 ## Workflow Git (Jérémy merge lui-même)
 
