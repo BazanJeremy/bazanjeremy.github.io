@@ -51,6 +51,6 @@ settings, set **Settings → Pages → Source = GitHub Actions**.
 
 - **`src/i18n/en.json`** is a structural mirror with every translatable value set to
   `TODO`; the English copy is written in a later task.
-- **`public/og-image.png`** (1200×630) is not committed yet — `BaseLayout.astro`
-  references `/og-image.png` for Open Graph / Twitter cards. Add it in the assets task.
+- **`public/og-image.png`** (1200×630) ships the Open Graph / Twitter card that
+  `BaseLayout.astro` references at `/og-image.png`.
 - Palette and typography are placeholders in `global.css`, finalized in the design task.
