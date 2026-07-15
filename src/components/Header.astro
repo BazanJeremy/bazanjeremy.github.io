@@ -8,12 +8,15 @@ interface Props {
 
 const { lang } = Astro.props;
 const t = useTranslations(lang);
+
+// Home root for this locale, so nav anchors resolve from subpages (e.g. /blog).
+const home = lang === 'en' ? '/en/' : '/';
 ---
 
 <header class="header-blur sticky top-0 z-50 border-b border-line backdrop-blur-[8px]">
   <nav class="wrap flex h-14 items-center justify-between gap-6" aria-label={t.nav.aria}>
     <a
-      href={`#${t.hero.id}`}
+      href={home}
       class="font-mono text-sm font-medium text-fg transition-colors hover:text-accent"
       aria-label={t.nav.brand_aria}>{t.nav.brand}</a
     >
@@ -23,7 +26,7 @@ const t = useTranslations(lang);
         t.nav.items.map((item) => (
           <li>
             <a
-              href={`#${item.id}`}
+              href={`${home}#${item.id}`}
               class="text-muted transition-colors hover:text-fg"
             >
               {item.label}

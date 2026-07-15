@@ -12,6 +12,7 @@
     "items": [
       { "id": "preuves", "label": "Results" },
       { "id": "portfolio", "label": "Portfolio" },
+      { "id": "veille", "label": "Insights" },
       { "id": "stack", "label": "Stack" },
       { "id": "parcours", "label": "Background" },
       { "id": "contact", "label": "Contact" }
@@ -95,6 +96,19 @@
         ]
       }
     ]
+  },
+  "blog": {
+    "id": "veille",
+    "heading": "QA × AI insights",
+    "lead": "Notes and analyses shared on LinkedIn — each card opens the full article.",
+    "read_more": "Read the article →",
+    "all": "All insights →",
+    "on_linkedin": "also on LinkedIn ↗",
+    "back": "← All insights",
+    "reading_time": "min read",
+    "empty": "First notes coming soon.",
+    "index_title": "QA × AI insights — Jérémy Bazan",
+    "index_description": "QA × AI notes and analyses by Jérémy Bazan: test reliability, LLMs, agents, MCP."
   },
   "stack": {
     "id": "stack",

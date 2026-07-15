@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+import { useTranslations } from '../../../i18n/utils';
+
+export async function getStaticPaths() {
+  const posts = await getCollection(
+    'blog',
+    (e) => e.data.lang === 'en' && !e.data.draft
+  );
+  return posts.map((post) => ({ params: { slug: post.data.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const lang = 'en' as const;
+const t = useTranslations(lang);
+const blog = t.blog;
+const { Content } = await render(post);
+
+const df = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+const words = post.body?.trim().split(/\s+/).length ?? 0;
+const readMin = Math.max(1, Math.round(words / 200));
+---
+
+<BaseLayout
+  lang={lang}
+  title={`${post.data.title} — Jérémy Bazan`}
+  description={post.data.excerpt}
+>
+  <article class="section">
+    <div class="wrap">
+      <a
+        href="/en/blog"
+        class="font-mono text-sm text-accent transition-colors hover:text-accent-strong"
+        >{blog.back}</a
+      >
+
+      <h1 class="mt-5 text-balance text-thesis font-bold text-fg">
+        {post.data.title}
+      </h1>
+
+      <div
+        class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs text-muted"
+      >
+        <span class="chip">{post.data.tag}</span>
+        <time datetime={post.data.date.toISOString()}>
+          {df.format(post.data.date)}
+        </time>
+        <span aria-hidden="true">·</span>
+        <span>{readMin} {blog.reading_time}</span>
+        {
+          post.data.linkedin && (
+            <>
+              <span aria-hidden="true">·</span>
+              <a
+                href={post.data.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-accent transition-colors hover:text-accent-strong"
+              >
+                {blog.on_linkedin}
+              </a>
+            </>
+          )
+        }
+      </div>
+
+      <div class="prose mt-10">
+        <Content />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
