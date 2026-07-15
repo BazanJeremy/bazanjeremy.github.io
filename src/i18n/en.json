@@ -1,85 +1,94 @@
 {
   "meta": {
-    "title": "TODO",
-    "description": "TODO",
+    "title": "Jérémy Bazan — Senior QA Engineer · AI-augmented testing",
+    "description": "QA engineer and AI lead for my unit. I automate testing from web to embedded and augment it with AI — LLMs, agents, MCP.",
     "og_locale": "en_US"
   },
   "nav": {
-    "skip": "TODO",
+    "skip": "Skip to content",
     "brand": "Jérémy Bazan",
-    "brand_aria": "TODO",
-    "aria": "TODO",
+    "brand_aria": "Back to top",
+    "aria": "Main navigation",
     "items": [
-      { "id": "preuves", "label": "TODO" },
-      { "id": "portfolio", "label": "TODO" },
-      { "id": "stack", "label": "TODO" },
-      { "id": "parcours", "label": "TODO" },
-      { "id": "contact", "label": "TODO" }
+      { "id": "preuves", "label": "Results" },
+      { "id": "portfolio", "label": "Portfolio" },
+      { "id": "stack", "label": "Stack" },
+      { "id": "parcours", "label": "Background" },
+      { "id": "contact", "label": "Contact" }
     ]
   },
   "hero": {
     "id": "accueil",
     "name": "Jérémy Bazan",
-    "title": "TODO",
-    "thesis": "TODO",
-    "pitch": "TODO",
-    "cta_primary": { "label": "TODO", "href": "#portfolio" },
-    "cta_secondary": { "label": "TODO", "href": "#contact" }
+    "title": "Senior QA Engineer · AI-augmented testing",
+    "thesis": "Deterministic first, AI where it earns its place — QA stays the arbiter.",
+    "pitch": "QA engineer and AI lead for my unit. I automate testing from web to embedded and augment it with AI — LLMs, agents, MCP.",
+    "cta_primary": { "label": "View the portfolio →", "href": "#portfolio" },
+    "cta_secondary": { "label": "Get in touch →", "href": "#contact" }
   },
   "proofs": {
     "id": "preuves",
-    "heading": "TODO",
+    "heading": "By the numbers",
     "items": [
-      { "value": "TODO", "text": "TODO" },
-      { "value": "TODO", "text": "TODO" },
-      { "value": "TODO", "text": "TODO" }
+      {
+        "value": "−30%",
+        "text": "Release-validation time across the Web (Playwright) and Mobile (Appium / Maestro) stacks, by industrializing an automation strategy built from the ground up."
+      },
+      {
+        "value": "6 tools · ~848 tests",
+        "text": "Open-source QA×AI portfolio: runs locally, with a systematic deterministic fallback. No external API key required."
+      },
+      {
+        "value": "−60 to −80%",
+        "text": "Design time on the upstream phases an LLM can support: Definition-of-Ready checks, deriving acceptance criteria into passing and failing scenarios, high-level scoping of the test strategy."
+      }
     ]
   },
   "portfolio": {
     "id": "portfolio",
-    "heading": "TODO",
+    "heading": "Mapped by domain",
     "blocks": [
       {
-        "title": "TODO",
+        "title": "AI × Quality engineering",
         "repos": [
           {
             "name": "EvalForge",
-            "description": "TODO",
+            "description": "LLM evaluation framework with a calibrated judge. Non-compensable deterministic checks, Cohen's kappa meta-evaluation.",
             "url": "https://github.com/BazanJeremy/EvalForge"
           },
           {
             "name": "testscribe",
-            "description": "TODO",
+            "description": "AI-assisted bug-report enrichment. CVSS-lite severity, IEC 62304 classes, semantic duplicate detection.",
             "url": "https://github.com/BazanJeremy/testscribe"
           }
         ]
       },
       {
-        "title": "TODO",
+        "title": "Critical systems",
         "repos": [
           {
             "name": "skyguard",
-            "description": "TODO",
+            "description": "AI-augmented security quality gate. Simulated avionics attack surface, agent-assisted STRIDE threat modeling.",
             "url": "https://github.com/BazanJeremy/skyguard"
           },
           {
             "name": "anomaly-sentinel",
-            "description": "TODO",
+            "description": "Test framework for anomaly-detection AI. Medtech and fintech simulations, no API key required.",
             "url": "https://github.com/BazanJeremy/anomaly-sentinel"
           }
         ]
       },
       {
-        "title": "TODO",
+        "title": "Test reliability & delivery",
         "repos": [
           {
             "name": "flakysense",
-            "description": "TODO",
+            "description": "Flaky-test diagnosis from CI history. Deterministic statistical analysis, optional AI layer. JUnit XML in, actionable report out.",
             "url": "https://github.com/BazanJeremy/flakysense"
           },
           {
             "name": "ReleaseGuard",
-            "description": "TODO",
+            "description": "Explainable release gate. Merges tests, coverage and flakiness into a reasoned GO / CONDITIONAL GO / NO GO verdict.",
             "url": "https://github.com/BazanJeremy/ReleaseGuard"
           }
         ]
@@ -88,21 +97,37 @@
   },
   "stack": {
     "id": "stack",
-    "heading": "TODO",
-    "items": ["TODO", "TODO", "TODO", "TODO", "TODO", "TODO"]
+    "heading": "Stack",
+    "items": [
+      "Playwright (TypeScript · Python)",
+      "Pytest",
+      "Python",
+      "GitLab CI / Azure DevOps",
+      "MCP & AI agents",
+      "Pydantic"
+    ]
   },
   "journey": {
     "id": "parcours",
-    "heading": "TODO",
+    "heading": "Background",
     "items": [
-      { "label": "TODO", "text": "TODO" },
-      { "label": "TODO", "text": "TODO" },
-      { "label": "TODO", "text": "TODO" }
+      {
+        "label": "Today",
+        "text": "QA Engineer / QA Tech Lead at EDF Solutions Solaires (Limonest, France), AI lead for the unit. Scope: web, mobile, embedded."
+      },
+      {
+        "label": "Nearly 6 years in software quality",
+        "text": "ISTQB Foundation v4 (2024). Bilingual French / English (professional experience in the United Kingdom)."
+      },
+      {
+        "label": "Mobility",
+        "text": "open to a permanent role in French-speaking Switzerland, Vaud in particular. French citizen, EU/EFTA freedom of movement."
+      }
     ]
   },
   "contact": {
     "id": "contact",
-    "heading": "TODO",
+    "heading": "Contact",
     "items": [
       {
         "label": "LinkedIn",
