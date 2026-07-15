@@ -18,13 +18,13 @@ Bilingual (FR default, EN), built with Astro + Tailwind, deployed to GitHub Page
 ```text
 src/
 ├── components/     # Header, Footer, LangToggle + 6 section components
-├── i18n/           # fr.json (source copy), en.json (mirror, TODO), utils.ts
+├── i18n/           # fr.json (source copy), en.json (English mirror), utils.ts
 ├── layouts/        # BaseLayout.astro (SEO, OG/Twitter, hreflang)
 ├── pages/
 │   ├── index.astro     # FR (/)
 │   └── en/index.astro  # EN (/en/)
 └── styles/global.css   # Tailwind import + @theme tokens
-public/             # favicon.svg, robots.txt  (og-image.png: see Assets below)
+public/             # favicon.svg, robots.txt, og-image.png, fonts/  (see Assets)
 .github/workflows/  # deploy.yml — GitHub Pages via withastro/action
 ```
 
@@ -47,10 +47,17 @@ Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds with
 `withastro/action` and publishes via `actions/deploy-pages`. In the repository
 settings, set **Settings → Pages → Source = GitHub Actions**.
 
-## Status / TODO
+## Assets
 
-- **`src/i18n/en.json`** is a structural mirror with every translatable value set to
-  `TODO`; the English copy is written in a later task.
-- **`public/og-image.png`** (1200×630) ships the Open Graph / Twitter card that
-  `BaseLayout.astro` references at `/og-image.png`.
-- Palette and typography are placeholders in `global.css`, finalized in the design task.
+All assets are self-hosted under `public/` — zero external requests at runtime.
+
+- **`public/og-image.png`** (1200×630) — Open Graph / Twitter card, referenced by
+  `BaseLayout.astro` at `/og-image.png`. It is the social-share preview only; it is
+  **not** rendered on the page.
+- **`public/favicon.svg`** — site icon.
+- **`public/fonts/`** — Inter + JetBrains Mono variable fonts (latin subset, ~88 KB),
+  preloaded in `BaseLayout.astro`.
+- **`public/robots.txt`** — points crawlers to the sitemap.
+
+Design tokens (palette « Ardoise » + type scale) live in `@theme` inside
+`src/styles/global.css`.

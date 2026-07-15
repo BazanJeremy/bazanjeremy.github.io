@@ -37,8 +37,8 @@ dans `src/i18n/fr.json`.
 | T4 — Cartographie sectorielle (`Portfolio.astro` : 3 blocs × 2 dépôts, cartes cliquables GitHub) | ✅ mergée, déployée |
 | T5 — Stack + Parcours + Contact + Footer | ✅ mergée, déployée |
 | T6 — assets (favicon + `public/og-image.png` 1200×630) | ✅ mergée, déployée |
-| T7 — traduction EN + a11y | 🔄 EN complet + audit a11y (landmarks, hiérarchie titres, contrastes AA, `lang`/hreflang) faits. Reste : run Lighthouse réel sur prod (débloqué — og-image livrée) ← **prochaine** |
-| T8 — déploiement / DNS custom (non prioritaire) | ⬜ |
+| T7 — traduction EN + a11y | ✅ mergée, déployée. EN complet + audit a11y (landmarks, hiérarchie titres, contrastes AA, `lang`/hreflang) + Lighthouse prod |
+| T8 — déploiement / DNS custom | ✅ déploiement live & vérifié (`/`, `/en/`, `sitemap-index.xml` → 200). **DNS custom : reporté** (pas de domaine — décision Jérémy 2026-07-15). Repo prêt : ajouter `public/CNAME` + màj `astro.config.mjs` `site` le jour venu |
 
 ## Workflow Git (Jérémy merge lui-même)
 
