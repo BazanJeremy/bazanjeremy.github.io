@@ -10,17 +10,22 @@ const t = useTranslations(lang);
 const proofs = t.proofs;
 ---
 
-<section id={proofs.id} class="section wrap border-t border-line">
-  <h2 class="text-heading font-semibold text-fg">{proofs.heading}</h2>
+<section id={proofs.id} class="section section-alt border-t border-line">
+  <div class="wrap">
+    <span class="kicker" aria-hidden="true"></span>
+    <h2 class="text-heading font-semibold text-fg">{proofs.heading}</h2>
 
-  <ul class="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-3">
-    {
-      proofs.items.map((item) => (
-        <li class="reveal border-t border-line pt-5">
-          <p class="text-stat font-bold tabular-nums text-accent">{item.value}</p>
-          <p class="mt-4 text-sm leading-relaxed text-muted">{item.text}</p>
-        </li>
-      ))
-    }
-  </ul>
+    <ul class="mt-10 grid gap-4 sm:grid-cols-3">
+      {
+        proofs.items.map((item) => (
+          <li class="reveal card-lift rounded-xl border border-line bg-bg p-6 hover:border-accent">
+            <p class="text-stat font-bold tabular-nums text-accent">
+              {item.value}
+            </p>
+            <p class="mt-4 text-sm leading-relaxed text-muted">{item.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </section>

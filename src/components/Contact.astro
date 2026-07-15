@@ -10,39 +10,42 @@ const t = useTranslations(lang);
 const contact = t.contact;
 ---
 
-<section id={contact.id} class="section wrap border-t border-line">
-  <h2 class="text-heading font-semibold text-fg">{contact.heading}</h2>
+<section id={contact.id} class="section border-t border-line">
+  <div class="wrap">
+    <span class="kicker" aria-hidden="true"></span>
+    <h2 class="text-heading font-semibold text-fg">{contact.heading}</h2>
 
-  <ul class="mt-10 grid gap-4 sm:grid-cols-3">
-    {
-      contact.items.map((item) => {
-        const isExternal = item.href.startsWith('http');
-        return (
-          <li>
-            <a
-              href={item.href}
-              target={isExternal ? '_blank' : undefined}
-              rel={isExternal ? 'noopener noreferrer' : undefined}
-              class="group flex h-full flex-col rounded-xl border border-line bg-surface p-5 transition-colors hover:border-accent"
-            >
-              <span class="flex items-center justify-between gap-3">
-                <span class="font-mono text-sm text-muted">{item.label}</span>
-                {isExternal && (
-                  <span
-                    aria-hidden="true"
-                    class="text-muted transition-colors group-hover:text-accent"
-                  >
-                    ↗
-                  </span>
-                )}
-              </span>
-              <span class="mt-3 break-all text-sm text-fg transition-colors group-hover:text-accent">
-                {item.value}
-              </span>
-            </a>
-          </li>
-        );
-      })
-    }
-  </ul>
+    <ul class="mt-10 grid gap-4 sm:grid-cols-3">
+      {
+        contact.items.map((item) => {
+          const isExternal = item.href.startsWith('http');
+          return (
+            <li>
+              <a
+                href={item.href}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                class="group card-lift flex h-full flex-col rounded-xl border border-line bg-surface p-5 hover:border-accent"
+              >
+                <span class="flex items-center justify-between gap-3">
+                  <span class="font-mono text-sm text-muted">{item.label}</span>
+                  {isExternal && (
+                    <span
+                      aria-hidden="true"
+                      class="text-muted transition-colors group-hover:text-accent"
+                    >
+                      ↗
+                    </span>
+                  )}
+                </span>
+                <span class="mt-3 break-all text-sm text-fg transition-colors group-hover:text-accent">
+                  {item.value}
+                </span>
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
 </section>

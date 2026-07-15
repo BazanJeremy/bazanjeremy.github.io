@@ -10,28 +10,123 @@ const t = useTranslations(lang);
 const hero = t.hero;
 ---
 
-<section id={hero.id} class="section wrap">
-  <div class="max-w-3xl">
-    <p class="font-mono text-sm text-accent">{hero.name}</p>
-    <p class="mt-1 text-sm text-muted md:text-base">{hero.title}</p>
+<section id={hero.id} class="hero section">
+  <div class="hero__bg" aria-hidden="true">
+    <svg
+      class="hero__arcs"
+      viewBox="0 0 760 760"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <circle cx="640" cy="380" r="240" stroke-width="1" opacity="0.9" />
+      <circle cx="640" cy="380" r="330" stroke-width="1" opacity="0.6" />
+      <circle cx="640" cy="380" r="430" stroke-width="1" opacity="0.38" />
+      <circle cx="640" cy="380" r="540" stroke-width="1" opacity="0.22" />
+      <circle cx="640" cy="380" r="660" stroke-width="1" opacity="0.12" />
+    </svg>
+  </div>
 
-    <h1 class="mt-6 text-balance text-thesis font-semibold text-fg">
-      {hero.thesis}
+  <div class="wrap">
+    <p class="eyebrow hero__in">{hero.eyebrow}</p>
+
+    <h1 class="hero__in hero__d1 mt-4 text-balance text-stat font-bold text-fg">
+      {hero.name}
     </h1>
 
-    <p class="mt-6 max-w-prose leading-relaxed text-muted">{hero.pitch}</p>
+    <p
+      class="hero__in hero__d1 mt-2 text-balance text-xl font-semibold text-accent sm:text-2xl"
+    >
+      {hero.title}
+    </p>
 
-    <div class="mt-9 flex flex-wrap gap-3">
-      <a
-        href={hero.cta_primary.href}
-        class="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-strong"
-        >{hero.cta_primary.label}</a
-      >
-      <a
-        href={hero.cta_secondary.href}
-        class="rounded-lg border border-line px-5 py-2.5 text-sm font-medium text-fg transition-colors hover:border-muted"
-        >{hero.cta_secondary.label}</a
-      >
+    <p class="hero__in hero__d2 mt-6 max-w-[34ch] text-balance text-lg text-fg sm:text-xl">
+      {hero.thesis}
+    </p>
+
+    <p class="hero__in hero__d2 mt-4 max-w-prose leading-relaxed text-muted">
+      {hero.pitch}
+    </p>
+
+    <div class="hero__in hero__d3 mt-9 flex flex-wrap gap-3">
+      <a class="btn btn-primary" href={hero.cta_primary.href}>
+        {hero.cta_primary.label}
+      </a>
+      <a class="btn btn-ghost" href={hero.cta_secondary.href}>
+        {hero.cta_secondary.label}
+      </a>
     </div>
   </div>
 </section>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero > .wrap {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        120% 90% at 82% 12%,
+        color-mix(in srgb, var(--color-accent) 15%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        80% 70% at 0% 100%,
+        color-mix(in srgb, var(--color-accent-strong) 8%, transparent),
+        transparent 60%
+      );
+  }
+
+  .hero__arcs {
+    position: absolute;
+    top: 50%;
+    right: -12%;
+    width: min(720px, 88vw);
+    height: min(720px, 88vw);
+    transform: translateY(-50%);
+    opacity: 0.5;
+  }
+
+  .hero__arcs circle {
+    fill: none;
+    stroke: var(--color-accent);
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Entrée échelonnée — désactivée sous prefers-reduced-motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__in {
+      animation: hero-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+    .hero__d1 {
+      animation-delay: 0.06s;
+    }
+    .hero__d2 {
+      animation-delay: 0.12s;
+    }
+    .hero__d3 {
+      animation-delay: 0.18s;
+    }
+  }
+
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

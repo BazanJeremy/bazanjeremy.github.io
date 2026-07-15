@@ -19,6 +19,7 @@
   },
   "hero": {
     "id": "accueil",
+    "eyebrow": "QA × AI Portfolio",
     "name": "Jérémy Bazan",
     "title": "Senior QA Engineer · AI-augmented testing",
     "thesis": "Deterministic first, AI where it earns its place — QA stays the arbiter.",

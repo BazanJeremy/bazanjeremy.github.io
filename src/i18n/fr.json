@@ -19,6 +19,7 @@
   },
   "hero": {
     "id": "accueil",
+    "eyebrow": "Portfolio QA × IA",
     "name": "Jérémy Bazan",
     "title": "QA Engineer confirmé · Testing augmenté par l'IA",
     "thesis": "Le déterministe d'abord, l'IA là où elle apporte — le QA reste l'arbitre.",
