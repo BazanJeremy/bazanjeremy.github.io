@@ -10,44 +10,47 @@ const t = useTranslations(lang);
 const portfolio = t.portfolio;
 ---
 
-<section id={portfolio.id} class="section wrap border-t border-line">
-  <h2 class="text-heading font-semibold text-fg">{portfolio.heading}</h2>
+<section id={portfolio.id} class="section border-t border-line">
+  <div class="wrap">
+    <span class="kicker" aria-hidden="true"></span>
+    <h2 class="text-heading font-semibold text-fg">{portfolio.heading}</h2>
 
-  <div class="mt-10 space-y-12">
-    {
-      portfolio.blocks.map((block) => (
-        <div class="reveal">
-          <h3 class="font-mono text-sm text-accent">{block.title}</h3>
+    <div class="mt-10 space-y-12">
+      {
+        portfolio.blocks.map((block) => (
+          <div class="reveal">
+            <h3 class="font-mono text-sm text-accent">{block.title}</h3>
 
-          <ul class="mt-4 grid gap-4 sm:grid-cols-2">
-            {block.repos.map((repo) => (
-              <li>
-                <a
-                  href={repo.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group flex h-full flex-col rounded-xl border border-line bg-surface p-5 transition-colors hover:border-accent"
-                >
-                  <span class="flex items-center justify-between gap-3">
-                    <span class="font-mono text-base font-medium text-fg transition-colors group-hover:text-accent">
-                      {repo.name}
+            <ul class="mt-4 grid gap-4 sm:grid-cols-2">
+              {block.repos.map((repo) => (
+                <li>
+                  <a
+                    href={repo.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="group card-lift flex h-full flex-col rounded-xl border border-line bg-surface p-5 hover:border-accent"
+                  >
+                    <span class="flex items-center justify-between gap-3">
+                      <span class="font-mono text-base font-medium text-fg transition-colors group-hover:text-accent">
+                        {repo.name}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        class="text-muted transition-colors group-hover:text-accent"
+                      >
+                        ↗
+                      </span>
                     </span>
-                    <span
-                      aria-hidden="true"
-                      class="text-muted transition-colors group-hover:text-accent"
-                    >
-                      ↗
+                    <span class="mt-3 text-sm leading-relaxed text-muted">
+                      {repo.description}
                     </span>
-                  </span>
-                  <span class="mt-3 text-sm leading-relaxed text-muted">
-                    {repo.description}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))
-    }
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
   </div>
 </section>
