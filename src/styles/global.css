@@ -264,6 +264,97 @@
     transform: translateY(-2px);
   }
 
+  /* Puce de catégorie (veille / blog). */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+  }
+
+  /* Corps d'article Markdown (pages /blog/<slug>). */
+  .prose {
+    max-width: var(--container-prose);
+  }
+  .prose > * + * {
+    margin-top: 1rem;
+  }
+  .prose h2 {
+    margin-top: 2rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-fg);
+  }
+  .prose h3 {
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-fg);
+  }
+  .prose a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose a:hover {
+    color: var(--color-accent-strong);
+  }
+  .prose strong {
+    color: var(--color-fg);
+    font-weight: 600;
+  }
+  .prose ul,
+  .prose ol {
+    padding-left: 1.25rem;
+  }
+  .prose ul {
+    list-style: disc;
+  }
+  .prose ol {
+    list-style: decimal;
+  }
+  .prose li + li {
+    margin-top: 0.35rem;
+  }
+  .prose blockquote {
+    border-left: 2px solid var(--color-accent);
+    padding-left: 1rem;
+    color: var(--color-muted);
+  }
+  .prose code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: 5px;
+    padding: 0.1rem 0.35rem;
+  }
+  .prose pre {
+    overflow-x: auto;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+  }
+  .prose pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+  /* Aligne le fond des blocs Shiki sur la surface (défaut github-dark #24292e). */
+  .prose pre.astro-code {
+    background: var(--color-surface) !important;
+  }
+
   /* Respect de prefers-reduced-motion pour les nouveaux mouvements. */
   @media (prefers-reduced-motion: reduce) {
     .card-lift:hover,

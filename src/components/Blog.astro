@@ -1,0 +1,80 @@
+---
+import { getCollection } from 'astro:content';
+import { useTranslations, type Locale } from '../i18n/utils';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const blog = t.blog;
+
+const base = lang === 'en' ? '/en' : '';
+const df = new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'fr-FR', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+
+const posts = (
+  await getCollection('blog', (e) => e.data.lang === lang && !e.data.draft)
+)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+---
+
+<section id={blog.id} class="section border-t border-line">
+  <div class="wrap">
+    <span class="kicker" aria-hidden="true"></span>
+    <h2 class="text-heading font-semibold text-fg">{blog.heading}</h2>
+    <p class="mt-2 max-w-prose text-muted">{blog.lead}</p>
+
+    {
+      posts.length === 0 ? (
+        <p class="mt-10 text-muted">{blog.empty}</p>
+      ) : (
+        <ul class="mt-10 grid gap-4 sm:grid-cols-3">
+          {posts.map((post) => (
+            <li>
+              <a
+                href={`${base}/blog/${post.data.slug}`}
+                class="group card-lift flex h-full flex-col rounded-xl border border-line bg-surface p-5 hover:border-accent"
+              >
+                <span class="flex items-center gap-2">
+                  <span class="chip">{post.data.tag}</span>
+                </span>
+                <time
+                  datetime={post.data.date.toISOString()}
+                  class="mt-3 font-mono text-xs text-muted"
+                >
+                  {df.format(post.data.date)}
+                </time>
+                <span class="mt-2 font-medium leading-snug text-fg transition-colors group-hover:text-accent">
+                  {post.data.title}
+                </span>
+                <span class="mt-2 text-sm leading-relaxed text-muted">
+                  {post.data.excerpt}
+                </span>
+                <span class="mt-4 text-sm font-semibold text-accent">
+                  {blog.read_more}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      posts.length > 0 && (
+        <a
+          href={`${base}/blog`}
+          class="mt-8 inline-flex items-center gap-2 border-b border-accent pb-0.5 font-medium text-fg transition-colors hover:text-accent"
+        >
+          {blog.all}
+        </a>
+      )
+    }
+  </div>
+</section>
