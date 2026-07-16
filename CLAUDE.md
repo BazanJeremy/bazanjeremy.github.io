@@ -43,7 +43,7 @@ dans `src/i18n/fr.json`.
 | T8 — déploiement / DNS custom | ✅ déploiement live & vérifié (`/`, `/en/`, `sitemap-index.xml` → 200). **DNS custom : reporté** (pas de domaine — décision Jérémy 2026-07-15). Repo prêt : ajouter `public/CNAME` + màj `astro.config.mjs` `site` le jour venu |
 | T9 — mise en vie « plus affirmé » (Hero halo + arcs, header flouté, bandes de section, cartes lift, eyebrows ; helpers `.eyebrow`/`.kicker`/`.card-lift`/`.btn*` ; clé i18n `hero.eyebrow`) | ✅ mergée, déployée (direction validée sur maquette) |
 | T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ mergée (#12, #13), déployée. Limite connue : `hreflang` des pages `/blog/*` pointe vers la home (canonical OK) |
-| T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ livré, PR en attente de merge |
+| T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ mergée (#14), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
