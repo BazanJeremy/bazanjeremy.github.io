@@ -1,16 +1,13 @@
 ---
-title: "L'IA en QA "
+title: "L'IA en QA : commencer par les tâches simples"
 date: 2026-07-16
-tag: "veille"
-excerpt: "Article de veille"
+tag: "IA & QA"
+excerpt: "Relecture d'US contre la DOR, documentation : le ROI le plus rapide de l'IA n'est pas là où on le cherche."
 lang: fr
-slug: veille - bas niveau
+slug: ia-en-qa-taches-simples
 linkedin: https://www.linkedin.com/in/jeremy-bazan
 draft: false
 ---
-
-
-# Commencer par les tâches simples
 
 *Relecture d'US contre la DOR, documentation : le ROI le plus rapide de l'IA n'est pas là où on le cherche.*
 
