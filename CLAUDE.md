@@ -54,8 +54,13 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
 2. `git switch -c feat/<tache>`.
 3. Implémenter + **vérifier en conditions réelles** (voir plus bas).
 4. Commit (Conventional Commits, anglais, trailer `Co-Authored-By`), `git push -u origin ...`,
-   `gh pr create` (body finissant par "Generated with Claude Code").
+   `gh pr create`.
 5. **S'arrêter** : donner le lien PR + `gh pr merge <n> --squash --delete-branch`. **Jérémy merge.**
+
+**Pas de mention d'outil dans les PR** (décision Jérémy 2026-07-16) : aucun footer / annexe
+« 🤖 Generated with Claude Code » ni équivalent dans les titres et bodies de PR. C'est déjà
+évident, et Jérémy compte écrire dessus lui-même. Le body décrit le changement, point.
+Vaut aussi pour les commentaires de PR et les issues.
 
 ## Vérification (obligatoire avant de livrer une PR)
 
