@@ -43,7 +43,7 @@ dans `src/i18n/fr.json`.
 | T8 — déploiement / DNS custom | ✅ déploiement live & vérifié (`/`, `/en/`, `sitemap-index.xml` → 200). **DNS custom : reporté** (pas de domaine — décision Jérémy 2026-07-15). Repo prêt : ajouter `public/CNAME` + màj `astro.config.mjs` `site` le jour venu |
 | T9 — mise en vie « plus affirmé » (Hero halo + arcs, header flouté, bandes de section, cartes lift, eyebrows ; helpers `.eyebrow`/`.kicker`/`.card-lift`/`.btn*` ; clé i18n `hero.eyebrow`) | ✅ mergée, déployée (direction validée sur maquette) |
 | T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ mergée (#12, #13), déployée. Limite connue : `hreflang` des pages `/blog/*` pointe vers la home (canonical OK) |
-| T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ livré, PR en attente de merge |
+| T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ mergée (#14), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -54,8 +54,13 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
 2. `git switch -c feat/<tache>`.
 3. Implémenter + **vérifier en conditions réelles** (voir plus bas).
 4. Commit (Conventional Commits, anglais, trailer `Co-Authored-By`), `git push -u origin ...`,
-   `gh pr create` (body finissant par "Generated with Claude Code").
+   `gh pr create`.
 5. **S'arrêter** : donner le lien PR + `gh pr merge <n> --squash --delete-branch`. **Jérémy merge.**
+
+**Pas de mention d'outil dans les PR** (décision Jérémy 2026-07-16) : aucun footer / annexe
+« 🤖 Generated with Claude Code » ni équivalent dans les titres et bodies de PR. C'est déjà
+évident, et Jérémy compte écrire dessus lui-même. Le body décrit le changement, point.
+Vaut aussi pour les commentaires de PR et les issues.
 
 ## Vérification (obligatoire avant de livrer une PR)
 
