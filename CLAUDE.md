@@ -42,7 +42,8 @@ dans `src/i18n/fr.json`.
 | T7 — traduction EN + a11y | ✅ mergée, déployée. EN complet + audit a11y (landmarks, hiérarchie titres, contrastes AA, `lang`/hreflang) + Lighthouse prod |
 | T8 — déploiement / DNS custom | ✅ déploiement live & vérifié (`/`, `/en/`, `sitemap-index.xml` → 200). **DNS custom : reporté** (pas de domaine — décision Jérémy 2026-07-15). Repo prêt : ajouter `public/CNAME` + màj `astro.config.mjs` `site` le jour venu |
 | T9 — mise en vie « plus affirmé » (Hero halo + arcs, header flouté, bandes de section, cartes lift, eyebrows ; helpers `.eyebrow`/`.kicker`/`.card-lift`/`.btn*` ; clé i18n `hero.eyebrow`) | ✅ mergée, déployée (direction validée sur maquette) |
-| T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ livré. Articles `[EXEMPLE]` = gabarits ; **contenu réel de veille à fournir par Jérémy** dans `src/content/blog/<lang>/<slug>.md`. Limite connue : `hreflang` des pages `/blog/*` pointe vers la home (canonical OK) |
+| T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ mergée (#12, #13), déployée. Limite connue : `hreflang` des pages `/blog/*` pointe vers la home (canonical OK) |
+| T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ livré, PR en attente de merge |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -69,6 +70,11 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
 - CI = `.github/workflows/deploy.yml`, `withastro/action` **avec `node-version: 22`**
   (Astro 7 exige ≥ 22.12 ; l'action est en Node 20 par défaut).
 - L'environnement `github-pages` n'autorise que la **branche par défaut** → doit rester `main`.
+- **Articles de veille** : Jérémy en pousse lui-même. Le schéma (`src/content.config.ts`)
+  ne valide pas tout → à vérifier à chaque nouvel article (contrat documenté dans le README) :
+  `slug` = l'URL, kebab-case sans espace ni accent (sinon `/blog/mon%20article/` part dans le
+  sitemap), fichier nommé comme le slug, et **le corps ne commence pas par `#`** (le layout rend
+  déjà `title` en `<h1>` — sinon double h1). Penser au pendant EN.
 - Repo : https://github.com/BazanJeremy/bazanjeremy.github.io · Live :
   https://bazanjeremy.github.io/
 
