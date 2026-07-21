@@ -44,7 +44,7 @@ dans `src/i18n/fr.json`.
 | T9 — mise en vie « plus affirmé » (Hero halo + arcs, header flouté, bandes de section, cartes lift, eyebrows ; helpers `.eyebrow`/`.kicker`/`.card-lift`/`.btn*` ; clé i18n `hero.eyebrow`) | ✅ mergée, déployée (direction validée sur maquette) |
 | T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ mergée (#12, #13), déployée |
 | T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ mergée (#14), déployée |
-| T12 — 2e article (« Mot de passe "robuste"… », NIST SP 800-63B-4, FR par Jérémy + traduction EN) + fix switch de langue des articles (champ `translationSlug` → toggle + `hreflang` corrects, l'ancienne « limite T10 » est levée) + styles `.prose table` (scroll interne mobile) | ✅ livré, PR en attente de merge |
+| T12 — 2e article (« Mot de passe "robuste"… », NIST SP 800-63B-4, FR par Jérémy + traduction EN) + fix switch de langue des articles (champ `translationSlug` → toggle + `hreflang` corrects, l'ancienne « limite T10 » est levée) + styles `.prose table` (scroll interne mobile) | ✅ mergée (#16), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
