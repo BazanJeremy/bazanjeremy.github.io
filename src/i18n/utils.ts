@@ -25,9 +25,14 @@ export function getLocaleFromUrl(url: URL): Locale {
   return segment === 'en' ? 'en' : 'fr';
 }
 
+/** Paths of one page in both languages (used by hreflang + language toggle). */
+export type AltPaths = Record<Locale, string>;
+
 /**
  * Returns the equivalent path in `target` locale, preserving the current path.
- * Single-page today (`/` <-> `/en/`), but written to survive future subpaths.
+ * Mechanical `/x` <-> `/en/x` mapping — only valid when both languages share
+ * the same path. Blog articles have per-language slugs: their pages must pass
+ * explicit `altPaths` to BaseLayout instead.
  */
 export function switchLocalePath(url: URL, target: Locale): string {
   let path = url.pathname;

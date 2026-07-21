@@ -42,8 +42,9 @@ dans `src/i18n/fr.json`.
 | T7 — traduction EN + a11y | ✅ mergée, déployée. EN complet + audit a11y (landmarks, hiérarchie titres, contrastes AA, `lang`/hreflang) + Lighthouse prod |
 | T8 — déploiement / DNS custom | ✅ déploiement live & vérifié (`/`, `/en/`, `sitemap-index.xml` → 200). **DNS custom : reporté** (pas de domaine — décision Jérémy 2026-07-15). Repo prêt : ajouter `public/CNAME` + màj `astro.config.mjs` `site` le jour venu |
 | T9 — mise en vie « plus affirmé » (Hero halo + arcs, header flouté, bandes de section, cartes lift, eyebrows ; helpers `.eyebrow`/`.kicker`/`.card-lift`/`.btn*` ; clé i18n `hero.eyebrow`) | ✅ mergée, déployée (direction validée sur maquette) |
-| T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ mergée (#12, #13), déployée. Limite connue : `hreflang` des pages `/blog/*` pointe vers la home (canonical OK) |
+| T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ mergée (#12, #13), déployée |
 | T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ mergée (#14), déployée |
+| T12 — 2e article (« Mot de passe "robuste"… », NIST SP 800-63B-4, FR par Jérémy + traduction EN) + fix switch de langue des articles (champ `translationSlug` → toggle + `hreflang` corrects, l'ancienne « limite T10 » est levée) + styles `.prose table` (scroll interne mobile) | ✅ livré, PR en attente de merge |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -79,7 +80,9 @@ Vaut aussi pour les commentaires de PR et les issues.
   ne valide pas tout → à vérifier à chaque nouvel article (contrat documenté dans le README) :
   `slug` = l'URL, kebab-case sans espace ni accent (sinon `/blog/mon%20article/` part dans le
   sitemap), fichier nommé comme le slug, et **le corps ne commence pas par `#`** (le layout rend
-  déjà `title` en `<h1>` — sinon double h1). Penser au pendant EN.
+  déjà `title` en `<h1>` — sinon double h1). Penser au pendant EN, et **chaîner les deux via
+  `translationSlug`** (chacun pointe le slug de l'autre — sinon le toggle de langue retombe sur
+  l'index du blog de l'autre langue).
 - Repo : https://github.com/BazanJeremy/bazanjeremy.github.io · Live :
   https://bazanjeremy.github.io/
 

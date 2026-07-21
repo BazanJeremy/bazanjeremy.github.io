@@ -5,6 +5,7 @@ tag: "IA & QA"
 excerpt: "Relecture d'US contre la DOR, documentation : le ROI le plus rapide de l'IA n'est pas là où on le cherche."
 lang: fr
 slug: ia-en-qa-taches-simples
+translationSlug: ai-in-qa-simple-tasks
 linkedin: https://www.linkedin.com/in/jeremy-bazan
 draft: false
 ---

@@ -24,12 +24,22 @@ const df = new Intl.DateTimeFormat('fr-FR', {
 });
 const words = post.body?.trim().split(/\s+/).length ?? 0;
 const readMin = Math.max(1, Math.round(words / 200));
+
+// Language toggle + hreflang: point to the EN translation when it exists,
+// otherwise fall back to the EN blog index (never a 404).
+const altPaths = {
+  fr: `/blog/${post.data.slug}`,
+  en: post.data.translationSlug
+    ? `/en/blog/${post.data.translationSlug}`
+    : '/en/blog',
+};
 ---
 
 <BaseLayout
   lang={lang}
   title={`${post.data.title} — Jérémy Bazan`}
   description={post.data.excerpt}
+  altPaths={altPaths}
 >
   <article class="section">
     <div class="wrap">

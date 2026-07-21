@@ -343,6 +343,31 @@
     border: 1px solid var(--color-line);
     border-radius: 10px;
   }
+  /* Tables: readable on dark surface, horizontally scrollable on narrow
+     viewports (display:block + overflow keeps the page itself from
+     overflowing at 375px). */
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .prose th,
+  .prose td {
+    border: 1px solid var(--color-line);
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+    min-width: 9rem;
+  }
+  .prose th {
+    background: var(--color-surface);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-fg);
+  }
   .prose pre code {
     background: none;
     border: none;

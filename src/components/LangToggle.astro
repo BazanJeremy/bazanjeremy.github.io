@@ -1,16 +1,18 @@
 ---
-import { useTranslations, switchLocalePath, type Locale } from '../i18n/utils';
+import { useTranslations, type Locale, type AltPaths } from '../i18n/utils';
 
 interface Props {
   lang: Locale;
+  altPaths: AltPaths;
 }
 
-const { lang } = Astro.props;
+const { lang, altPaths } = Astro.props;
 const t = useTranslations(lang);
 
-// Pure links — no client JS. Path is preserved across the locale switch.
-const frHref = switchLocalePath(Astro.url, 'fr');
-const enHref = switchLocalePath(Astro.url, 'en');
+// Pure links — no client JS. BaseLayout provides both paths (mechanical
+// mapping by default, per-language slugs for blog articles).
+const frHref = altPaths.fr;
+const enHref = altPaths.en;
 
 const active = 'text-fg';
 const inactive = 'text-muted hover:text-fg transition-colors';

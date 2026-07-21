@@ -1,12 +1,13 @@
 ---
 import LangToggle from './LangToggle.astro';
-import { useTranslations, type Locale } from '../i18n/utils';
+import { useTranslations, type Locale, type AltPaths } from '../i18n/utils';
 
 interface Props {
   lang: Locale;
+  altPaths: AltPaths;
 }
 
-const { lang } = Astro.props;
+const { lang, altPaths } = Astro.props;
 const t = useTranslations(lang);
 
 // Home root for this locale, so nav anchors resolve from subpages (e.g. /blog).
@@ -36,6 +37,6 @@ const home = lang === 'en' ? '/en/' : '/';
       }
     </ul>
 
-    <LangToggle lang={lang} />
+    <LangToggle lang={lang} altPaths={altPaths} />
   </nav>
 </header>

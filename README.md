@@ -52,10 +52,16 @@ tag: "AI & QA"                                   # short label, shown as a chip
 excerpt: "One or two sentences."                 # <meta description> + list-card summary
 lang: en                                         # must match the folder: fr | en
 slug: ai-in-qa-simple-tasks                      # THE URL — see rules below
+translationSlug: ia-en-qa-taches-simples         # slug of the same article in the OTHER language
 linkedin: https://www.linkedin.com/in/jeremy-bazan   # optional
 draft: false                                     # true = excluded from the build
 ---
 ```
+
+`translationSlug` links the two language versions: it drives the language toggle and
+the `hreflang` tags on article pages. Set it in **both** files (each pointing at the
+other). If an article has no translation yet, omit it — the toggle then falls back to
+the other language's blog index instead of a 404.
 
 Two rules the schema cannot catch on its own:
 
