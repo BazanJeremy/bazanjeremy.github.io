@@ -5,6 +5,7 @@ tag: "AI & QA"
 excerpt: "Reviewing a user story against the DOR, writing documentation: the fastest ROI on AI is not where people look for it."
 lang: en
 slug: ai-in-qa-simple-tasks
+translationSlug: ia-en-qa-taches-simples
 linkedin: https://www.linkedin.com/in/jeremy-bazan
 draft: false
 ---
