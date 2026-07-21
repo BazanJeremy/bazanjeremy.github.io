@@ -26,12 +26,13 @@ const words = post.body?.trim().split(/\s+/).length ?? 0;
 const readMin = Math.max(1, Math.round(words / 200));
 
 // Language toggle + hreflang: point to the FR original when it exists,
-// otherwise fall back to the FR blog index (never a 404).
+// otherwise fall back to the FR blog index (never a 404). Trailing slashes
+// match canonical/sitemap and avoid a GitHub Pages 301.
 const altPaths = {
   fr: post.data.translationSlug
-    ? `/blog/${post.data.translationSlug}`
-    : '/blog',
-  en: `/en/blog/${post.data.slug}`,
+    ? `/blog/${post.data.translationSlug}/`
+    : '/blog/',
+  en: `/en/blog/${post.data.slug}/`,
 };
 ---
 
