@@ -6,7 +6,7 @@ persistante). Communiquer en **français**.
 
 ## Le projet en une phrase
 
-Landing single-page **bilingue FR/EN**, vitrine externe du portfolio QA×IA de Jérémy Bazan
+Landing single-page **bilingue FR/EN**, vitrine externe des outils QA×IA de Jérémy Bazan
 (recherche CDI Suisse romande), déployée sur GitHub Pages. Ton : **moderne dans la forme,
 senior/sobre dans le fond**. Aucun contenu inventé — la copy vient du brief de Jérémy et vit
 dans `src/i18n/fr.json`.
@@ -24,6 +24,11 @@ dans `src/i18n/fr.json`.
   ~88 KB, 0 requête externe). Utilitaires d'échelle : `text-stat` / `text-thesis` / `text-heading`.
 - **CSS layering** : styles de base dans `@layer base`, helpers (`.wrap` `.section` `.reveal`)
   dans `@layer components` — sinon les utilitaires Tailwind sont écrasés sur les `<a>`.
+- **Vocabulaire public (ligne rouge, 30.07.2026)** : les mots « portfolio », « P1 » à « P7 »,
+  « entretien », « recruteur », « démonstration » sont **bannis de tout texte rendu** — copy,
+  navigation, libellés de boutons, et **ancres d'URL** (`#outils` / `#tools`, pas `#portfolio`).
+  On dit « outils », « série d'outils », ou le nom du projet. Le fichier `Portfolio.astro` garde
+  son nom : c'est du code, pas du texte publié.
 - **Pas de dépendance hors stack ci-dessus sans accord.** Pas d'emoji dans le contenu.
   Animations (mise à jour T9 « plus affirmé », validé Jérémy sur maquette) : fade-in scroll
   (`.reveal`) + entrée Hero échelonnée + micro-effets au survol (cartes `.card-lift`, boutons).
@@ -45,6 +50,7 @@ dans `src/i18n/fr.json`.
 | T10 — blog/veille bilingue (Astro content collections, section `#veille` + `/blog` + `/blog/<slug>` FR/EN, `.prose`, nav « Veille »/« Insights ») | ✅ mergée (#12, #13), déployée |
 | T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ mergée (#14), déployée |
 | T12 — 2e article (« Mot de passe "robuste"… », NIST SP 800-63B-4, FR par Jérémy + traduction EN) + fix switch de langue des articles (champ `translationSlug` → toggle + `hreflang` corrects, l'ancienne « limite T10 » est levée) + styles `.prose table` (scroll interne mobile) | ✅ mergée (#16), déployée |
+| T13 — 7ᵉ outil + ligne rouge de vocabulaire (`claude-qa-toolkit` en 4ᵉ bloc de la cartographie, tuile de preuve « 6 outils · ~848 tests » → « 7 outils open source » avec le total réattribué aux six frameworks, mot « portfolio » purgé de la nav / de l'eyebrow / du bouton / de l'ancre `#portfolio` → `#outils` / `#tools`) | 🔄 PR ouverte |
 
 ## Workflow Git (Jérémy merge lui-même)
 

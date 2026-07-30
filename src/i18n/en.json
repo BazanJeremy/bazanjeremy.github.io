@@ -11,7 +11,7 @@
     "aria": "Main navigation",
     "items": [
       { "id": "preuves", "label": "Results" },
-      { "id": "portfolio", "label": "Portfolio" },
+      { "id": "outils", "label": "Tools" },
       { "id": "veille", "label": "Insights" },
       { "id": "stack", "label": "Stack" },
       { "id": "parcours", "label": "Background" },
@@ -20,12 +20,12 @@
   },
   "hero": {
     "id": "accueil",
-    "eyebrow": "QA × AI Portfolio",
+    "eyebrow": "QA × AI Tools",
     "name": "Jérémy Bazan",
     "title": "Senior QA Engineer · AI-augmented testing",
     "thesis": "Deterministic first, AI where it earns its place — QA stays the arbiter.",
     "pitch": "QA engineer and AI lead for my unit. I automate testing from web to embedded and augment it with AI — LLMs, agents, MCP.",
-    "cta_primary": { "label": "View the portfolio →", "href": "#portfolio" },
+    "cta_primary": { "label": "View the tools →", "href": "#outils" },
     "cta_secondary": { "label": "Get in touch →", "href": "#contact" }
   },
   "proofs": {
@@ -37,8 +37,8 @@
         "text": "Release-validation time across the Web (Playwright) and Mobile (Appium / Maestro) stacks, by industrializing an automation strategy built from the ground up."
       },
       {
-        "value": "6 tools · ~848 tests",
-        "text": "Open-source QA×AI portfolio: runs locally, with a systematic deterministic fallback. No external API key required."
+        "value": "7 open-source tools",
+        "text": "Six test frameworks — around 848 cumulative tests — plus one plugin for coding agents. Runs locally, with a systematic deterministic fallback, and no external API key required."
       },
       {
         "value": "−60 to −80%",
@@ -47,7 +47,7 @@
     ]
   },
   "portfolio": {
-    "id": "portfolio",
+    "id": "outils",
     "heading": "Mapped by domain",
     "blocks": [
       {
@@ -92,6 +92,16 @@
             "name": "ReleaseGuard",
             "description": "Explainable release gate. Merges tests, coverage and flakiness into a reasoned GO / CONDITIONAL GO / NO GO verdict.",
             "url": "https://github.com/BazanJeremy/ReleaseGuard"
+          }
+        ]
+      },
+      {
+        "title": "QA agent tooling",
+        "repos": [
+          {
+            "name": "claude-qa-toolkit",
+            "description": "Three QA disciplines wired into a coding agent: session close-out, deterministic flaky-test triage, test plan derived from a user story. No external service, no API key.",
+            "url": "https://github.com/BazanJeremy/claude-qa-toolkit"
           }
         ]
       }

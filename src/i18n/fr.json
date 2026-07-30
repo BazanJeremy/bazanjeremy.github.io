@@ -11,7 +11,7 @@
     "aria": "Navigation principale",
     "items": [
       { "id": "preuves", "label": "Preuves" },
-      { "id": "portfolio", "label": "Portfolio" },
+      { "id": "outils", "label": "Outils" },
       { "id": "veille", "label": "Veille" },
       { "id": "stack", "label": "Stack" },
       { "id": "parcours", "label": "Parcours" },
@@ -20,12 +20,12 @@
   },
   "hero": {
     "id": "accueil",
-    "eyebrow": "Portfolio QA × IA",
+    "eyebrow": "Outils QA × IA",
     "name": "Jérémy Bazan",
     "title": "QA Engineer confirmé · Testing augmenté par l'IA",
     "thesis": "Le déterministe d'abord, l'IA là où elle apporte — le QA reste l'arbitre.",
     "pitch": "Ingénieur QA et référent IA de mon pôle. J'automatise les tests du web à l'embarqué et je les augmente avec l'IA — LLM, agents, MCP.",
-    "cta_primary": { "label": "Voir le portfolio →", "href": "#portfolio" },
+    "cta_primary": { "label": "Voir les outils →", "href": "#outils" },
     "cta_secondary": { "label": "Me contacter →", "href": "#contact" }
   },
   "proofs": {
@@ -37,8 +37,8 @@
         "text": "Temps de validation des releases sur le stack Web (Playwright) et Mobile (Appium / Maestro), grâce à l'industrialisation d'une stratégie d'automatisation partie de zéro."
       },
       {
-        "value": "6 outils · ~848 tests",
-        "text": "Portfolio QA×IA open source, exécution locale, fallback déterministe systématique. Aucune clé API externe requise."
+        "value": "7 outils open source",
+        "text": "Six frameworks de test — environ 848 tests cumulés — et un plugin pour agents de code. Exécution locale, fallback déterministe systématique, aucune clé API externe requise."
       },
       {
         "value": "−60 à −80 %",
@@ -47,7 +47,7 @@
     ]
   },
   "portfolio": {
-    "id": "portfolio",
+    "id": "outils",
     "heading": "Cartographie sectorielle",
     "blocks": [
       {
@@ -92,6 +92,16 @@
             "name": "ReleaseGuard",
             "description": "Verrou de release explicable. Fusionne tests, couverture et flakiness en un verdict GO / CONDITIONAL GO / NO GO argumenté.",
             "url": "https://github.com/BazanJeremy/ReleaseGuard"
+          }
+        ]
+      },
+      {
+        "title": "Outillage de l'agent QA",
+        "repos": [
+          {
+            "name": "claude-qa-toolkit",
+            "description": "Trois disciplines QA installées dans un agent de code : clôture de session, triage déterministe des tests flaky, plan de test dérivé d'une user story. Aucun service externe, aucune clé API.",
+            "url": "https://github.com/BazanJeremy/claude-qa-toolkit"
           }
         ]
       }
