@@ -51,6 +51,7 @@ dans `src/i18n/fr.json`.
 | T11 — 1er article réel de veille (« L'IA en QA : commencer par les tâches simples », FR par Jérémy + traduction EN). Gabarits `[EXEMPLE]` supprimés | ✅ mergée (#14), déployée |
 | T12 — 2e article (« Mot de passe "robuste"… », NIST SP 800-63B-4, FR par Jérémy + traduction EN) + fix switch de langue des articles (champ `translationSlug` → toggle + `hreflang` corrects, l'ancienne « limite T10 » est levée) + styles `.prose table` (scroll interne mobile) | ✅ mergée (#16), déployée |
 | T13 — 7ᵉ outil + ligne rouge de vocabulaire (`claude-qa-toolkit` en 4ᵉ bloc de la cartographie, tuile de preuve « 6 outils · ~848 tests » → « 7 outils open source » avec le total réattribué aux six frameworks, mot « portfolio » purgé de la nav / de l'eyebrow / du bouton / de l'ancre `#portfolio` → `#outils` / `#tools`) | ✅ mergée (#18), déployée |
+| T14 — 3e article (« Tests flaky : qui décide qu'un test est instable ? », choix de conception de `flakysense`, FR par Jérémy + traduction EN). Une objection de l'article réécrite après vérification du repo lié : le seuil 0.5 est une constante de l'orchestrateur (ADR-005), distincte du seuil de détection 0.3, calibrée sur fixtures synthétiques, et la CLI **expose bien** `--escalation-threshold` | ✅ mergée (#20), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -88,7 +89,14 @@ Vaut aussi pour les commentaires de PR et les issues.
   sitemap), fichier nommé comme le slug, et **le corps ne commence pas par `#`** (le layout rend
   déjà `title` en `<h1>` — sinon double h1). Penser au pendant EN, et **chaîner les deux via
   `translationSlug`** (chacun pointe le slug de l'autre — sinon le toggle de langue retombe sur
-  l'index du blog de l'autre langue).
+  l'index du blog de l'autre langue). Le frontmatter fourni par Jérémy est souvent en
+  `description` / `category` : remapper sur `excerpt` / `tag`, et ajouter `lang` +
+  `translationSlug`.
+- **Article qui parle d'un outil du repo public** : vérifier chaque affirmation technique
+  contre le dépôt cité (`gh api repos/BazanJeremy/<outil>/...`) avant de livrer la PR. Sur
+  T14, l'article affirmait qu'un seuil n'était **pas** exposé en ligne de commande alors que
+  la CLI de `flakysense` le fait — contradiction visible par tout lecteur qui ouvre le lien.
+  Reformuler et le signaler à Jérémy, ne jamais publier l'écart en silence.
 - Repo : https://github.com/BazanJeremy/bazanjeremy.github.io · Live :
   https://bazanjeremy.github.io/
 
