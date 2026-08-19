@@ -52,6 +52,7 @@ dans `src/i18n/fr.json`.
 | T12 — 2e article (« Mot de passe "robuste"… », NIST SP 800-63B-4, FR par Jérémy + traduction EN) + fix switch de langue des articles (champ `translationSlug` → toggle + `hreflang` corrects, l'ancienne « limite T10 » est levée) + styles `.prose table` (scroll interne mobile) | ✅ mergée (#16), déployée |
 | T13 — 7ᵉ outil + ligne rouge de vocabulaire (`claude-qa-toolkit` en 4ᵉ bloc de la cartographie, tuile de preuve « 6 outils · ~848 tests » → « 7 outils open source » avec le total réattribué aux six frameworks, mot « portfolio » purgé de la nav / de l'eyebrow / du bouton / de l'ancre `#portfolio` → `#outils` / `#tools`) | ✅ mergée (#18), déployée |
 | T14 — 3e article (« Tests flaky : qui décide qu'un test est instable ? », choix de conception de `flakysense`, FR par Jérémy + traduction EN). Une objection de l'article réécrite après vérification du repo lié : le seuil 0.5 est une constante de l'orchestrateur (ADR-005), distincte du seuil de détection 0.3, calibrée sur fixtures synthétiques, et la CLI **expose bien** `--escalation-threshold` | ✅ mergée (#20), déployée |
+| T15 — 4e article (« Le déterministe d'abord, l'IA là où elle apporte », la règle « le LLM ne décide de rien » appliquée à 5 outils, FR par Jérémy + traduction EN). Deux affirmations reformulées après vérification des dépôts cités : (1) `flakysense` n'a pas de « refus de conclure » sous 4 runs — `MIN_RUNS = 4` est un **amortisseur** du score dans `detector.py` (`raw * min(1, len(runs)/MIN_RUNS)`), le vrai refus est le classifieur de cause qui répond `unknown` sous `CONFIDENCE_FLOOR = 0.4` ; (2) `testscribe` n'a pas « retenu TF-IDF plutôt qu'un modèle sémantique » — ADR-002 acte un *dual-mode embedder*, TF-IDF étant le **défaut et le chemin CI**, sentence-transformers restant accessible via `USE_NEURAL_EMBEDDINGS`. Un point mou signalé et **non** réécrit (choix rhétorique, pas erreur factuelle) : sur `anomaly-sentinel`, le dépôt tient ses gates avec son fallback déterministe | ✅ mergée (#22), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -93,10 +94,16 @@ Vaut aussi pour les commentaires de PR et les issues.
   `description` / `category` : remapper sur `excerpt` / `tag`, et ajouter `lang` +
   `translationSlug`.
 - **Article qui parle d'un outil du repo public** : vérifier chaque affirmation technique
-  contre le dépôt cité (`gh api repos/BazanJeremy/<outil>/...`) avant de livrer la PR. Sur
-  T14, l'article affirmait qu'un seuil n'était **pas** exposé en ligne de commande alors que
-  la CLI de `flakysense` le fait — contradiction visible par tout lecteur qui ouvre le lien.
-  Reformuler et le signaler à Jérémy, ne jamais publier l'écart en silence.
+  contre le dépôt cité (`gh api repos/BazanJeremy/<outil>/...`) avant de livrer la PR.
+  **La source de vérité est le code et les ADR, pas le README** — un README peut lui aussi
+  surestimer (celui de `testscribe` annonce « détection sémantique de doublons » là où
+  ADR-002 acte TF-IDF par défaut). L'écart va toujours dans le même sens : l'article promet
+  plus que ce que le code garantit. Cas rencontrés — T14 : un seuil annoncé comme non exposé
+  en CLI alors que `flakysense` l'expose ; T15 : un « refus de conclure » annoncé là où le
+  code amortit seulement le score, et un « plutôt que » là où l'ADR acte un mode double.
+  Reformuler et le signaler à Jérémy, ne jamais publier l'écart en silence. Distinguer
+  l'affirmation technique fausse (à corriger) du choix rhétorique non soutenu par le dépôt
+  (à signaler, pas à réécrire).
 - Repo : https://github.com/BazanJeremy/bazanjeremy.github.io · Live :
   https://bazanjeremy.github.io/
 
