@@ -129,6 +129,13 @@ Vaut aussi pour les commentaires de PR et les issues.
   articles) n'a aucune entrée hostile ici, alors qu'un XSS d'Astro, lui, atteint le visiteur.
   Le dire, plutôt que de recopier le score CVSS. Et `npm audit fix` peut emporter des
   **minors** malgré son « lockfile only » (vu en #26 : Astro 7.0.9 → 7.3.1) → vérifier le rendu.
+- **`allowScripts` dans `package.json`** : la machine de Jérémy est en **npm 11**, qui bloque
+  les `postinstall` par défaut ; la CI est en **npm 10.9.8** (lu dans le log du workflow), qui
+  ignore le champ. Le warning `allow-scripts` sur `esbuild` était donc local. Il est acté en
+  `"esbuild": false` : sur Windows avec `@esbuild/win32-x64` installé, ce `postinstall` est un
+  **no-op** (`maybeOptimizePackage()` s'exclut de `win32`, le binaire de plateforme résout déjà)
+  — vérifié par `npm ci` complet puis `esbuild --version`. ⚠️ `npm install-scripts approve|deny`
+  **écrit dans `package.json` malgré `--dry-run`** (npm 11.18.0) : ne pas s'y fier.
 - Repo : https://github.com/BazanJeremy/bazanjeremy.github.io · Live :
   https://bazanjeremy.github.io/
 
