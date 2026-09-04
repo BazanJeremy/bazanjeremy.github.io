@@ -53,6 +53,7 @@ dans `src/i18n/fr.json`.
 | T13 — 7ᵉ outil + ligne rouge de vocabulaire (`claude-qa-toolkit` en 4ᵉ bloc de la cartographie, tuile de preuve « 6 outils · ~848 tests » → « 7 outils open source » avec le total réattribué aux six frameworks, mot « portfolio » purgé de la nav / de l'eyebrow / du bouton / de l'ancre `#portfolio` → `#outils` / `#tools`) | ✅ mergée (#18), déployée |
 | T14 — 3e article (« Tests flaky : qui décide qu'un test est instable ? », choix de conception de `flakysense`, FR par Jérémy + traduction EN). Une objection de l'article réécrite après vérification du repo lié : le seuil 0.5 est une constante de l'orchestrateur (ADR-005), distincte du seuil de détection 0.3, calibrée sur fixtures synthétiques, et la CLI **expose bien** `--escalation-threshold` | ✅ mergée (#20), déployée |
 | T15 — 4e article (« Le déterministe d'abord, l'IA là où elle apporte », la règle « le LLM ne décide de rien » appliquée à 5 outils, FR par Jérémy + traduction EN). Deux affirmations reformulées après vérification des dépôts cités : (1) `flakysense` n'a pas de « refus de conclure » sous 4 runs — `MIN_RUNS = 4` est un **amortisseur** du score dans `detector.py` (`raw * min(1, len(runs)/MIN_RUNS)`), le vrai refus est le classifieur de cause qui répond `unknown` sous `CONFIDENCE_FLOOR = 0.4` ; (2) `testscribe` n'a pas « retenu TF-IDF plutôt qu'un modèle sémantique » — ADR-002 acte un *dual-mode embedder*, TF-IDF étant le **défaut et le chemin CI**, sentence-transformers restant accessible via `USE_NEURAL_EMBEDDINGS`. Un point mou signalé et **non** réécrit (choix rhétorique, pas erreur factuelle) : sur `anomaly-sentinel`, le dépôt tient ses gates avec son fallback déterministe | ✅ mergée (#22), déployée |
+| T16 — 5e article (« Le QA qui arrive au refinement arrive déjà trop tard », positionnement du QA au cadrage plutôt qu'au refinement, FR par Jérémy + traduction EN). **Aucun dépôt d'outil cité** → pas de vérification technique applicable ; à la place, contrôle de cohérence avec la copy publiée : les trois tâches amont et le « 60 à 80 % » de l'article concordent mot pour mot avec la tuile de preuve n°2 (`i18n/fr.json`, « −60 à −80 % »). La traduction EN réutilise le vocabulaire déjà publié dans `i18n/en.json` (« Definition-of-Ready checks », « deriving acceptance criteria into passing and failing scenarios », « high-level scoping of the test strategy ») | ✅ mergée (#24), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -78,6 +79,10 @@ Vaut aussi pour les commentaires de PR et les issues.
   cet environnement** → vérifier via `javascript_tool` + `getComputedStyle` (couleurs, tailles),
   et via la prod (`curl` du CSS `/_astro/*.css`).
 - Responsive **mobile 375px** (iPhone SE) : pas de débordement horizontal. Contrastes WCAG AA.
+  ⚠️ `resize_window` peut répondre « Viewport set to 375x812 » **sans que l'émulation soit
+  appliquée** : toujours relire `document.documentElement.clientWidth` dans la même mesure,
+  et recharger la page si la largeur n'est pas 375 avant de conclure (vu en T16 : première
+  mesure faite à 785px, donc sans valeur).
 
 ## Gotchas
 
@@ -104,6 +109,13 @@ Vaut aussi pour les commentaires de PR et les issues.
   Reformuler et le signaler à Jérémy, ne jamais publier l'écart en silence. Distinguer
   l'affirmation technique fausse (à corriger) du choix rhétorique non soutenu par le dépôt
   (à signaler, pas à réécrire).
+- **Article qui ne cite aucun dépôt** : la vérification ci-dessus ne s'applique pas — le dire
+  plutôt que de laisser croire qu'elle a eu lieu. Faire à la place le contrôle de cohérence
+  avec la **copy publiée** (`src/i18n/*.json`) : un article qui reprend un chiffre ou une
+  liste déjà affichés sur la landing doit dire la même chose qu'eux, et la traduction EN doit
+  réutiliser le vocabulaire déjà publié dans `en.json` (sinon un lecteur EN voit deux
+  formulations divergentes du même engagement). Cas T16 : les trois tâches amont et le
+  « 60 à 80 % » concordaient avec la tuile de preuve n°2 — vérifié, rien à reformuler.
 - Repo : https://github.com/BazanJeremy/bazanjeremy.github.io · Live :
   https://bazanjeremy.github.io/
 
