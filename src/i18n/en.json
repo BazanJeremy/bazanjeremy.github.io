@@ -33,16 +33,16 @@
     "heading": "By the numbers",
     "items": [
       {
-        "value": "−30%",
-        "text": "Release-validation time across the Web (Playwright) and Mobile (Appium / Maestro) stacks, by industrializing an automation strategy built from the ground up."
+        "value": "100% of user stories",
+        "text": "Risk-assessed from the framing stage, every sprint, with a review agent — before the first line of code."
       },
       {
         "value": "7 open-source tools",
         "text": "Six test frameworks — around 848 cumulative tests — plus one plugin for coding agents. Runs locally, with a systematic deterministic fallback, and no external API key required."
       },
       {
-        "value": "−60 to −80%",
-        "text": "Design time on the upstream phases an LLM can support: Definition-of-Ready checks, deriving acceptance criteria into passing and failing scenarios, high-level scoping of the test strategy."
+        "value": "8 AI agents",
+        "text": "Built for project managers, product owners, QA and developers: test case generation, Definition-of-Ready checks, script optimization, QA documentation."
       }
     ]
   },
