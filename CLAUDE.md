@@ -53,9 +53,10 @@ dans `src/i18n/fr.json`.
 | T13 — 7ᵉ outil + ligne rouge de vocabulaire (`claude-qa-toolkit` en 4ᵉ bloc de la cartographie, tuile de preuve « 6 outils · ~848 tests » → « 7 outils open source » avec le total réattribué aux six frameworks, mot « portfolio » purgé de la nav / de l'eyebrow / du bouton / de l'ancre `#portfolio` → `#outils` / `#tools`) | ✅ mergée (#18), déployée |
 | T14 — 3e article (« Tests flaky : qui décide qu'un test est instable ? », choix de conception de `flakysense`, FR par Jérémy + traduction EN). Une objection de l'article réécrite après vérification du repo lié : le seuil 0.5 est une constante de l'orchestrateur (ADR-005), distincte du seuil de détection 0.3, calibrée sur fixtures synthétiques, et la CLI **expose bien** `--escalation-threshold` | ✅ mergée (#20), déployée |
 | T15 — 4e article (« Le déterministe d'abord, l'IA là où elle apporte », la règle « le LLM ne décide de rien » appliquée à 5 outils, FR par Jérémy + traduction EN). Deux affirmations reformulées après vérification des dépôts cités : (1) `flakysense` n'a pas de « refus de conclure » sous 4 runs — `MIN_RUNS = 4` est un **amortisseur** du score dans `detector.py` (`raw * min(1, len(runs)/MIN_RUNS)`), le vrai refus est le classifieur de cause qui répond `unknown` sous `CONFIDENCE_FLOOR = 0.4` ; (2) `testscribe` n'a pas « retenu TF-IDF plutôt qu'un modèle sémantique » — ADR-002 acte un *dual-mode embedder*, TF-IDF étant le **défaut et le chemin CI**, sentence-transformers restant accessible via `USE_NEURAL_EMBEDDINGS`. Un point mou signalé et **non** réécrit (choix rhétorique, pas erreur factuelle) : sur `anomaly-sentinel`, le dépôt tient ses gates avec son fallback déterministe | ✅ mergée (#22), déployée |
-| T16 — 5e article (« Le QA qui arrive au refinement arrive déjà trop tard », positionnement du QA au cadrage plutôt qu'au refinement, FR par Jérémy + traduction EN). **Aucun dépôt d'outil cité** → pas de vérification technique applicable ; à la place, contrôle de cohérence avec la copy publiée : les trois tâches amont et le « 60 à 80 % » de l'article concordent mot pour mot avec la tuile de preuve n°2 (`i18n/fr.json`, « −60 à −80 % »). La traduction EN réutilise le vocabulaire déjà publié dans `i18n/en.json` (« Definition-of-Ready checks », « deriving acceptance criteria into passing and failing scenarios », « high-level scoping of the test strategy ») | ✅ mergée (#24), déployée |
+| T16 — 5e article (« Le QA qui arrive au refinement arrive déjà trop tard », positionnement du QA au cadrage plutôt qu'au refinement, FR par Jérémy + traduction EN). **Aucun dépôt d'outil cité** → pas de vérification technique applicable ; à la place, contrôle de cohérence avec la copy publiée : les trois tâches amont et le « 60 à 80 % » de l'article concordaient mot pour mot avec la tuile de preuve n°2 de l'époque (`i18n/fr.json`, « −60 à −80 % »). La traduction EN réutilisait le vocabulaire alors publié dans `i18n/en.json` (« Definition-of-Ready checks », « deriving acceptance criteria into passing and failing scenarios », « high-level scoping of the test strategy »). **Depuis #32**, cette tuile n'existe plus, et l'article présente le chiffre comme une estimation, plus comme une mesure (voir la ligne « Correctif chiffres ») | ✅ mergée (#24), déployée |
 | T17 — 6e article (« Le bouton ne marche pas » : ce que coûte la reconstruction d'un signalement d'une ligne, les quatre agents de `testscribe`, et les trois fois où l'outil s'est trompé sur lui-même ; FR par Jérémy + traduction EN). Deux affirmations reformulées après vérification du dépôt cité : (1) « chaque agent tourne dans deux modes : le modèle de langage + un repli déterministe » est vrai pour **trois agents sur quatre** — le classifieur de doublons n'appelle aucun modèle de langage, `PatternClassifier.__init__` fige `Embedder(force_tfidf=True)` et retombe sur des mots-clés sous son seuil de similarité ; (2) « le repli déterministe laisse le champ vide plutôt que de deviner » est vrai pour `psd2_article` (`None`) et `traceability_tag` (`UNTRACED`), mais les quatre dimensions de sévérité et le label de pattern retombent sur des **défauts conservateurs écrits en dur** (`"partial"  # Safe default`, `"sometimes"  # Assume reproducible by default`, `"single"`, `"new"`, `"UI_REGRESSION"`) — donc précisément des valeurs vraisemblables. Vérifié et laissé tel quel : 4 agents, CVSS-lite à 4 dimensions (ADR-003), 144 tests (144 `def test_`, aucun `parametrize`), le lookbehind `(?<!not )\balways\b`, et l'anecdote du seuil — le scoreur **exécuté ici** sur la fixture `medtech_report` sort `full/always/single/new` → **8,1 → critical**, qui serait « high » avec un seuil à 8,5. Non vérifiable et signalé sans réécriture : les valeurs *antérieures* des trois corrections ne sont pas dans l'historique public (seuil déjà à 8.0 et lookbehind déjà présent au premier commit poussé `0a118c69`) | ✅ mergée (#30), déployée |
 | Maintenance — dépendances, en deux temps. **(a) #26** : 4 alertes Dependabot fermées (`js-yaml` GHSA-5p4m-2wfm-xmqj high, `nanoid` high, `postcss` medium, `astro` XSS medium) par `npm audit fix` — `package-lock.json` seul, mais le bump a emporté **Astro 7.0.9 → 7.3.1** (deux minors, dans `^7.0.9`) ; rendu vérifié inchangé par diff octet contre la prod, `npm audit` = 0. **(b) #28** : le warning npm 11 `allow-scripts` acté dans `package.json` en `"allowScripts": { "esbuild": false }` — donc **`package.json` n'est plus vierge de tout champ hors stack**, c'est voulu (détail et justification dans les gotchas) | ✅ mergées (#26, #28), déployées |
+| Correctif chiffres (17.09) — lot fourni par Jérémy sous forme de **patch** (`git apply`, appliqué tel quel, sans conflit). **(1) Tuiles de preuve (FR + EN)** : Jérémy qualifie lui-même « −30 % » et « −60 à −80 % » d'**estimations personnelles**. Elles sont remplacées par « 100 % des user stories » (évaluées sur leurs risques dès le cadrage, avec un agent de relecture) et « 8 agents IA » ; la tuile « 7 outils open source » ne change pas. Source des deux nouveaux faits : Jérémy. Ce sont des pratiques internes, **aucun dépôt public ne permet de les vérifier**. Cohérence contrôlée : la tuile « 100 % » reprend l'article T16 (« dès le cadrage », « avant la première ligne de code » ; en EN, « framing stage », le terme de l'article). **(2) Articles T11 et T16 (FR + EN)** : le −60 à −80 % est désormais libellé comme une estimation (« Estimation personnelle, pas une mesure », « je ne l'ai pas mesuré »). Le titre « Ce que ça change, mesuré » devient « Ce que ça change », donc **l'ancre change** : `#ce-que-ça-change-mesuré` → `#ce-que-ça-change`, `#what-it-changes-measured` → `#what-it-changes` (aucun lien interne n'y pointait). **(3) Article T16** : la phrase « le module d'à côté a cassé deux fois ce trimestre » est retirée (fait sans source). Vérifié : diff du `dist/` contre la prod, mise en page des tuiles de 375 à 1265 px sans débordement, et, après le merge, le texte servi sur les 6 pages concernées | ✅ mergée (#32), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -68,6 +69,13 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
 4. Commit (Conventional Commits, anglais, trailer `Co-Authored-By`), `git push -u origin ...`,
    `gh pr create`.
 5. **S'arrêter** : donner le lien PR + `gh pr merge <n> --squash --delete-branch`. **Jérémy merge.**
+
+Le squash d'une PR **à un seul commit** garde le message **du commit**, pas le titre de la PR
+(observé sur #30 et #32 : titre de PR en français, commit en anglais sur `main`). Le message
+qui compte pour l'historique est donc celui du commit de branche. Quand Jérémy fournit un
+correctif sous forme de patch avec un « message de commit proposé » en français, ce message
+n'atterrit sur `main` que si on l'utilise pour le commit lui-même, ce qui contredit la règle
+« anglais » ci-dessus : lui poser la question plutôt que trancher.
 
 **Pas de mention d'outil dans les PR** (décision Jérémy 2026-07-16) : aucun footer / annexe
 « 🤖 Generated with Claude Code » ni équivalent dans les titres et bodies de PR. C'est déjà
@@ -85,11 +93,17 @@ Vaut aussi pour les commentaires de PR et les issues.
   appliquée** : toujours relire `document.documentElement.clientWidth` dans la même mesure,
   et recharger la page si la largeur n'est pas 375 avant de conclure (vu en T16 : première
   mesure faite à 785px, donc sans valeur).
-- **Bump de dépendance** : ne pas juger à l'œil, comparer le `dist/` au site en prod (qui est
-  l'état de `main`) — `curl` de chaque type de page + `diff`, `cmp` sur le CSS `/_astro/*.css`
-  (son nom est un hash de contenu : nom identique ⇒ CSS identique), `diff` du `sitemap-0.xml`.
-  Vérif la moins coûteuse et la plus concluante ; en #26 le seul écart sur 4 pages était
-  `<meta name="generator">`.
+- **Bump de dépendance ou correctif de contenu** : ne pas juger à l'œil, comparer le `dist/`
+  au site en prod (qui est l'état de `main`) — `curl` de chaque type de page + `diff`, `cmp` sur
+  le CSS `/_astro/*.css` (son nom est un hash de contenu : nom identique ⇒ CSS identique), `diff`
+  du `sitemap-0.xml`. Vérif la moins coûteuse et la plus concluante ; en #26 le seul écart sur
+  4 pages était `<meta name="generator">`, en #32 les écarts étaient exactement ceux du patch.
+  ⚠️ **Faux positif Windows** : cette machine extrait les fichiers en CRLF (`core.autocrlf=true`,
+  `git ls-files --eol` → `w/crlf`). Un build local laisse alors un octet `\r` à chaque retour à
+  la ligne *interne à un paragraphe*, ce qui fait différer l'article T17 (FR + EN) alors qu'il
+  n'a pas changé. La CI construit en LF. Cause **vérifiée** le 17.09 : build de `main` tel
+  quel → 2 pages différentes ; mêmes fichiers repassés en LF → 0 écart sur les 16 pages. Avant
+  de conclure à une régression, regarder l'octet (`cmp -l`) : un `015` isolé n'en est pas une.
 
 ## Gotchas
 
@@ -124,13 +138,30 @@ Vaut aussi pour les commentaires de PR et les issues.
   (`i18n/fr.json` / `i18n/en.json`) annonce toujours « détection sémantique de doublons » /
   « semantic duplicate detection ». Quand une vérification contredit du contenu déjà en ligne, le dire —
   ne pas se contenter de corriger l'article en cours.
+- **Image Open Graph et ligne rouge de vocabulaire : écart ouvert** (repéré le 17.09, **non corrigé —
+  décision de Jérémy attendue**). `public/og-image.png` affiche en eyebrow « PORTFOLIO QA × IA ».
+  La prod sert exactement ce fichier (identique octet pour octet, `cmp`), via `og:image` et
+  `twitter:image` sur toutes les pages, FR comme EN. L'image date de T6 (#7, 15.07), donc d'avant
+  la ligne rouge du 30.07, et T13 a purgé la copy mais pas l'image.
+  D'après le body de #7, elle a été rendue avec `sharp` (déjà présent dans les dépendances) en polices
+  sans/mono **système**, pas Inter/JetBrains. Le **script de génération n'est pas versionné** (#7 ne
+  touche que `CLAUDE.md`, `README.md` et le PNG) : il faudra réécrire ce rendu. Questions ouvertes : quel
+  libellé de remplacement, et faut-il une image EN distincte (le texte est en français, et #7 laissait
+  déjà cette variante « possible plus tard »). Il faut aussi confirmer que la ligne rouge couvre le
+  texte incrusté dans les images ; « tout texte rendu » le suggère, mais c'est une lecture, pas une
+  décision. Un texte dans une image échappe à tout `grep` : penser aux images quand on purge un mot.
 - **Article qui ne cite aucun dépôt** : la vérification ci-dessus ne s'applique pas — le dire
   plutôt que de laisser croire qu'elle a eu lieu. Faire à la place le contrôle de cohérence
   avec la **copy publiée** (`src/i18n/*.json`) : un article qui reprend un chiffre ou une
   liste déjà affichés sur la landing doit dire la même chose qu'eux, et la traduction EN doit
   réutiliser le vocabulaire déjà publié dans `en.json` (sinon un lecteur EN voit deux
   formulations divergentes du même engagement). Cas T16 : les trois tâches amont et le
-  « 60 à 80 % » concordaient avec la tuile de preuve n°2 — vérifié, rien à reformuler.
+  « 60 à 80 % » concordaient avec la tuile de preuve n°2, et rien n'avait été reformulé.
+  **Mais une concordance ne dit rien de la source** : l'article (« je mesure ») et la tuile
+  reprenaient tous deux un chiffre que Jérémy a ensuite qualifié d'« estimation
+  personnelle » (#32), si bien qu'il a fallu requalifier les deux. Quand un chiffre est
+  présenté comme mesuré (« mesuré », « je mesure », « résultat mesuré »), demander à Jérémy
+  s'il s'agit d'une mesure ou d'une estimation, au lieu de s'arrêter à la concordance.
 - **Alertes Dependabot / `npm audit`** : elles portent sur des dépendances **transitives**
   (rien à toucher dans `package.json`). Avant de relayer la sévérité affichée, regarder si le
   paquet tourne **au build ou chez le visiteur** : le site est statique, donc un CVE de
