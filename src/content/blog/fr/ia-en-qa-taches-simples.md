@@ -26,9 +26,9 @@ Ce que le LLM ne voit pas : les règles métier implicites, celles qui ne sont �
 
 Même logique pour les guidelines et la documentation QA : le LLM produit une première version structurée en quelques minutes ; le QA valide le fond, corrige, décide. Le temps gagné n'est pas du confort — il se réinvestit là où l'humain apporte le plus : analyse de risques, exploration, dialogue avec le produit.
 
-## Ce que ça change, mesuré
+## Ce que ça change
 
-Référent IA de mon pôle QA, j'ai installé ces usages au quotidien. Résultat mesuré : −60 à −80 % de temps sur les phases amont outillables par LLM — vérification des DOR, dérivation des critères d'acceptation en scénarios passants/non-passants, cadrage haut niveau de la stratégie de test.
+Référent IA de mon pôle QA, j'ai installé ces usages au quotidien. Estimation personnelle, pas une mesure : −60 à −80 % de temps sur les phases amont outillables par LLM — vérification des DOR, dérivation des critères d'acceptation en scénarios passants/non-passants, cadrage haut niveau de la stratégie de test.
 
 Le paradoxe n'en est pas un : c'est parce que ces tâches sont simples et bien cadrées que l'IA y excelle avec un risque maîtrisé. Et c'est le meilleur terrain pour installer une gouvernance saine avant de viser plus ambitieux. Le déterministe d'abord, l'IA là où elle apporte — le QA reste l'arbitre.
 

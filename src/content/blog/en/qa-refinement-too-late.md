@@ -38,9 +38,9 @@ Yes. It is the only objection that holds, and it is well founded.
 
 Doing it on one story is pleasant. Doing it on 100% of a sprint's stories, every sprint, is a recurring cost in direct competition with running the tests. That is exactly why the practice dies in most teams that try it: it gets adopted, it is sound, and it is dropped by the third busy sprint.
 
-What made it sustainable is tooling. Three upstream tasks are largely automatable: Definition-of-Ready checks, deriving acceptance criteria into passing and failing scenarios, and high-level scoping of the test strategy. On those phases, I measure between 60 and 80% less time.
+What made it sustainable is tooling. Three upstream tasks are largely automatable: Definition-of-Ready checks, deriving acceptance criteria into passing and failing scenarios, and high-level scoping of the test strategy. On those phases, I estimate I spend 60 to 80% less time; I have not measured it.
 
-With one limit I hold firmly: the model produces the material, it does not decide what is risky. It derives scenarios from an acceptance criterion; it does not know that the neighbouring module broke twice this quarter. The sorting stays with me. What is delegated is the drafting — never the judgment.
+With one limit I hold firmly: the model produces the material, it does not decide what is risky. It derives scenarios from an acceptance criterion; it does not know the neighbouring module's incident history. The sorting stays with me. What is delegated is the drafting — never the judgment.
 
 Without that gain, I would not hold the 100%. I would have gone back to refinement within a month, like everyone else.
 

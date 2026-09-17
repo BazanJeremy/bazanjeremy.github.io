@@ -38,9 +38,9 @@ Oui. C'est la seule objection qui tienne, et elle est fondée.
 
 Le faire sur une story, c'est agréable. Le faire sur 100 % des stories d'un sprint, chaque sprint, c'est un coût récurrent en concurrence directe avec l'exécution des tests. C'est exactement pour ça que la pratique meurt dans la plupart des équipes qui l'essaient : elle est adoptée, elle est juste, et elle est abandonnée au troisième sprint chargé.
 
-Ce qui l'a rendue tenable, c'est l'outillage. Trois tâches amont sont largement automatisables : la vérification des DOR, la dérivation des critères d'acceptation en scénarios passants et non-passants, et le cadrage haut niveau de la stratégie de test. Sur ces phases, je mesure entre 60 et 80 % de temps en moins.
+Ce qui l'a rendue tenable, c'est l'outillage. Trois tâches amont sont largement automatisables : la vérification des DOR, la dérivation des critères d'acceptation en scénarios passants et non-passants, et le cadrage haut niveau de la stratégie de test. Sur ces phases, j'estime y passer entre 60 et 80 % de temps en moins ; je ne l'ai pas mesuré.
 
-Avec une limite que je tiens fermement : le modèle produit la matière, il ne décide pas ce qui est risqué. Il dérive des scénarios à partir d'un critère d'acceptation ; il ne sait pas que le module d'à côté a cassé deux fois ce trimestre. Le tri reste à moi. Ce qui est délégué, c'est la rédaction — jamais le jugement.
+Avec une limite que je tiens fermement : le modèle produit la matière, il ne décide pas ce qui est risqué. Il dérive des scénarios à partir d'un critère d'acceptation ; il ne connaît pas l'historique d'incidents du module d'à côté. Le tri reste à moi. Ce qui est délégué, c'est la rédaction — jamais le jugement.
 
 Sans ce gain, je ne tiendrais pas les 100 %. Je serais revenu au refinement au bout d'un mois, comme tout le monde.
 

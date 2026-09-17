@@ -33,16 +33,16 @@
     "heading": "Preuves chiffrées",
     "items": [
       {
-        "value": "−30 %",
-        "text": "Temps de validation des releases sur le stack Web (Playwright) et Mobile (Appium / Maestro), grâce à l'industrialisation d'une stratégie d'automatisation partie de zéro."
+        "value": "100 % des user stories",
+        "text": "Évaluées sur leurs risques dès le cadrage, à chaque sprint, avec un agent de relecture — avant la première ligne de code."
       },
       {
         "value": "7 outils open source",
         "text": "Six frameworks de test — environ 848 tests cumulés — et un plugin pour agents de code. Exécution locale, fallback déterministe systématique, aucune clé API externe requise."
       },
       {
-        "value": "−60 à −80 %",
-        "text": "Temps de conception sur les phases amont outillables par LLM : vérification des DOR, dérivation des critères d'acceptation en scénarios passants et non-passants, cadrage haut niveau de la stratégie de test."
+        "value": "8 agents IA",
+        "text": "Conçus pour les chefs de projet, les PO, les QA et les développeurs : génération de cas de test, vérification des DOR, optimisation de scripts, documentation QA."
       }
     ]
   },

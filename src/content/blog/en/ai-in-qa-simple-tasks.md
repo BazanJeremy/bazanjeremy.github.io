@@ -26,8 +26,8 @@ What the LLM does not see: the implicit business rules, the ones written down no
 
 Same logic for QA guidelines and documentation: the LLM produces a structured first draft in minutes; the QA validates the substance, corrects, decides. The time saved is not a comfort — it is reinvested where humans add the most: risk analysis, exploration, dialogue with the product.
 
-## What it changes, measured
+## What it changes
 
-As the AI lead for my QA unit, I have built these practices into daily work. Measured result: −60 to −80% of the design time on the upstream phases an LLM can support — Definition-of-Ready checks, deriving acceptance criteria into passing and failing scenarios, high-level scoping of the test strategy.
+As the AI lead for my QA unit, I have built these practices into daily work. My own estimate, not a measurement: −60 to −80% of the design time on the upstream phases an LLM can support — Definition-of-Ready checks, deriving acceptance criteria into passing and failing scenarios, high-level scoping of the test strategy.
 
 The paradox is not one: it is precisely because these tasks are simple and well-scoped that AI excels at them with controlled risk. And they are the best ground on which to build sound governance before aiming higher. Deterministic first, AI where it earns its place — QA stays the arbiter.
