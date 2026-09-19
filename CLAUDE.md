@@ -57,6 +57,8 @@ dans `src/i18n/fr.json`.
 | T17 — 6e article (« Le bouton ne marche pas » : ce que coûte la reconstruction d'un signalement d'une ligne, les quatre agents de `testscribe`, et les trois fois où l'outil s'est trompé sur lui-même ; FR par Jérémy + traduction EN). Deux affirmations reformulées après vérification du dépôt cité : (1) « chaque agent tourne dans deux modes : le modèle de langage + un repli déterministe » est vrai pour **trois agents sur quatre** — le classifieur de doublons n'appelle aucun modèle de langage, `PatternClassifier.__init__` fige `Embedder(force_tfidf=True)` et retombe sur des mots-clés sous son seuil de similarité ; (2) « le repli déterministe laisse le champ vide plutôt que de deviner » est vrai pour `psd2_article` (`None`) et `traceability_tag` (`UNTRACED`), mais les quatre dimensions de sévérité et le label de pattern retombent sur des **défauts conservateurs écrits en dur** (`"partial"  # Safe default`, `"sometimes"  # Assume reproducible by default`, `"single"`, `"new"`, `"UI_REGRESSION"`) — donc précisément des valeurs vraisemblables. Vérifié et laissé tel quel : 4 agents, CVSS-lite à 4 dimensions (ADR-003), 144 tests (144 `def test_`, aucun `parametrize`), le lookbehind `(?<!not )\balways\b`, et l'anecdote du seuil — le scoreur **exécuté ici** sur la fixture `medtech_report` sort `full/always/single/new` → **8,1 → critical**, qui serait « high » avec un seuil à 8,5. Non vérifiable et signalé sans réécriture : les valeurs *antérieures* des trois corrections ne sont pas dans l'historique public (seuil déjà à 8.0 et lookbehind déjà présent au premier commit poussé `0a118c69`) | ✅ mergée (#30), déployée |
 | Maintenance — dépendances, en deux temps. **(a) #26** : 4 alertes Dependabot fermées (`js-yaml` GHSA-5p4m-2wfm-xmqj high, `nanoid` high, `postcss` medium, `astro` XSS medium) par `npm audit fix` — `package-lock.json` seul, mais le bump a emporté **Astro 7.0.9 → 7.3.1** (deux minors, dans `^7.0.9`) ; rendu vérifié inchangé par diff octet contre la prod, `npm audit` = 0. **(b) #28** : le warning npm 11 `allow-scripts` acté dans `package.json` en `"allowScripts": { "esbuild": false }` — donc **`package.json` n'est plus vierge de tout champ hors stack**, c'est voulu (détail et justification dans les gotchas) | ✅ mergées (#26, #28), déployées |
 | Correctif chiffres (17.09) — lot fourni par Jérémy sous forme de **patch** (`git apply`, appliqué tel quel, sans conflit). **(1) Tuiles de preuve (FR + EN)** : Jérémy qualifie lui-même « −30 % » et « −60 à −80 % » d'**estimations personnelles**. Elles sont remplacées par « 100 % des user stories » (évaluées sur leurs risques dès le cadrage, avec un agent de relecture) et « 8 agents IA » ; la tuile « 7 outils open source » ne change pas. Source des deux nouveaux faits : Jérémy. Ce sont des pratiques internes, **aucun dépôt public ne permet de les vérifier**. Cohérence contrôlée : la tuile « 100 % » reprend l'article T16 (« dès le cadrage », « avant la première ligne de code » ; en EN, « framing stage », le terme de l'article). **(2) Articles T11 et T16 (FR + EN)** : le −60 à −80 % est désormais libellé comme une estimation (« Estimation personnelle, pas une mesure », « je ne l'ai pas mesuré »). Le titre « Ce que ça change, mesuré » devient « Ce que ça change », donc **l'ancre change** : `#ce-que-ça-change-mesuré` → `#ce-que-ça-change`, `#what-it-changes-measured` → `#what-it-changes` (aucun lien interne n'y pointait). **(3) Article T16** : la phrase « le module d'à côté a cassé deux fois ce trimestre » est retirée (fait sans source). Vérifié : diff du `dist/` contre la prod, mise en page des tuiles de 375 à 1265 px sans débordement, et, après le merge, le texte servi sur les 6 pages concernées | ✅ mergée (#32), déployée |
+| Correctif `testscribe` (19.09) — fermeture de l'écart ouvert depuis T17, **option choisie par Jérémy : le texte suit le code** (l'autre option était de retirer le `force_tfidf=True` du dépôt, écartée : elle changeait l'outil et aurait demandé d'exécuter le mode neuronal pour pouvoir l'affirmer). Côté site : la carte `testscribe` passe de « détection sémantique de doublons » à « détection de doublons » (la description GitHub du dépôt, mot pour mot), et l'article T15 ne dit plus que TF-IDF est un « chemin par défaut » ni que le modèle neuronal est « accessible derrière un drapeau de configuration ». Côté outil, même écart dans le README FR/EN, l'ADR-002 (« Production upgrade path is one config flag ») et un commentaire de `docker-compose.yml` → PR séparée, l'ADR gardant sa décision et recevant un **amendement daté** plutôt qu'une réécriture | ✅ mergée (#34), déployée · PR `BazanJeremy/testscribe#2` **ouverte**, Jérémy merge |
+| Cartes de partage Open Graph (19.09) — « PORTFOLIO QA × IA » retiré de l'image (le mot avait survécu à T13 parce qu'aucun `grep` ne lit une image) et remplacé par « OUTILS QA × IA », l'eyebrow du héros. **Une carte par langue** : les pages `/en/` affichaient jusque-là une image en français ; `BaseLayout` choisit selon `lang`. Le script de génération est enfin versionné (`scripts/og-image.mjs`). Géométrie du texte calibrée sur l'image d'origine (largeurs et positions à 2 px près, titre et thèse au pixel exact) ; halo et arcs reconstruits d'après les pixels, faute du script de T6. Seul écart visible assumé : le nom descend 4 px moins bas, la police système d'origine n'étant pas reproductible | ✅ mergée (#35), déployée |
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -70,12 +72,11 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
    `gh pr create`.
 5. **S'arrêter** : donner le lien PR + `gh pr merge <n> --squash --delete-branch`. **Jérémy merge.**
 
-Le squash d'une PR **à un seul commit** garde le message **du commit**, pas le titre de la PR
-(observé sur #30 et #32 : titre de PR en français, commit en anglais sur `main`). Le message
-qui compte pour l'historique est donc celui du commit de branche. Quand Jérémy fournit un
-correctif sous forme de patch avec un « message de commit proposé » en français, ce message
-n'atterrit sur `main` que si on l'utilise pour le commit lui-même, ce qui contredit la règle
-« anglais » ci-dessus : lui poser la question plutôt que trancher.
+**Langue des commits : le français est accepté** (Jérémy, 19.09 — l'ancienne règle « anglais »
+n'est plus impérative). Quand Jérémy fournit un message de commit, l'utiliser **pour le commit**,
+pas seulement comme titre de PR : le squash d'une PR **à un seul commit** garde le message du
+commit, pas le titre de la PR (observé sur #30 et #32, corrigé à partir de #34). Dans un **autre
+dépôt**, suivre la langue de son historique : `testscribe` est en anglais.
 
 **Pas de mention d'outil dans les PR** (décision Jérémy 2026-07-16) : aucun footer / annexe
 « 🤖 Generated with Claude Code » ni équivalent dans les titres et bodies de PR. C'est déjà
@@ -130,26 +131,26 @@ Vaut aussi pour les commentaires de PR et les issues.
   Reformuler et le signaler à Jérémy, ne jamais publier l'écart en silence. Distinguer
   l'affirmation technique fausse (à corriger) du choix rhétorique non soutenu par le dépôt
   (à signaler, pas à réécrire).
-- **La vérification d'un nouvel article peut invalider un article déjà publié.** Repéré en T17 et
-  **non corrigé — décision de Jérémy attendue** : l'article T15 (FR + EN, en ligne) écrit que, pour la
-  détection de doublons de `testscribe`, « le modèle neuronal reste accessible derrière un flag de
-  configuration » ; or `PatternClassifier.__init__` fige `Embedder(force_tfidf=True)`, donc
-  `USE_NEURAL_EMBEDDINGS` n'atteint jamais ce classifieur. Dans le même sens, la copy de la landing
-  (`i18n/fr.json` / `i18n/en.json`) annonce toujours « détection sémantique de doublons » /
-  « semantic duplicate detection ». Quand une vérification contredit du contenu déjà en ligne, le dire —
-  ne pas se contenter de corriger l'article en cours.
-- **Image Open Graph et ligne rouge de vocabulaire : écart ouvert** (repéré le 17.09, **non corrigé —
-  décision de Jérémy attendue**). `public/og-image.png` affiche en eyebrow « PORTFOLIO QA × IA ».
-  La prod sert exactement ce fichier (identique octet pour octet, `cmp`), via `og:image` et
-  `twitter:image` sur toutes les pages, FR comme EN. L'image date de T6 (#7, 15.07), donc d'avant
-  la ligne rouge du 30.07, et T13 a purgé la copy mais pas l'image.
-  D'après le body de #7, elle a été rendue avec `sharp` (déjà présent dans les dépendances) en polices
-  sans/mono **système**, pas Inter/JetBrains. Le **script de génération n'est pas versionné** (#7 ne
-  touche que `CLAUDE.md`, `README.md` et le PNG) : il faudra réécrire ce rendu. Questions ouvertes : quel
-  libellé de remplacement, et faut-il une image EN distincte (le texte est en français, et #7 laissait
-  déjà cette variante « possible plus tard »). Il faut aussi confirmer que la ligne rouge couvre le
-  texte incrusté dans les images ; « tout texte rendu » le suggère, mais c'est une lecture, pas une
-  décision. Un texte dans une image échappe à tout `grep` : penser aux images quand on purge un mot.
+- **La vérification d'un nouvel article peut invalider un article déjà publié.** Repéré en T17,
+  **corrigé le 19.09** : l'article T15 (FR + EN) écrivait que, pour la détection de doublons de
+  `testscribe`, « le modèle neuronal reste accessible derrière un flag de configuration », et la
+  copy de la landing annonçait une « détection sémantique de doublons » ; or
+  `PatternClassifier.__init__` fige `Embedder(force_tfidf=True)`, donc `USE_NEURAL_EMBEDDINGS`
+  n'atteint jamais ce classifieur. Les deux sont réécrits (#34). L'écart vivait **aussi dans le
+  dépôt de l'outil** (README FR/EN, ADR-002, commentaire `docker-compose`) → PR séparée
+  `BazanJeremy/testscribe#2`. Leçon : quand une vérification contredit du contenu déjà en ligne, le
+  dire, et regarder où la même affirmation est répétée — site, article, README, ADR.
+- **Cartes Open Graph : deux images, un script** (#35, 19.09). `public/og-image.png` (FR) et
+  `public/og-image-en.png` (EN) ; `BaseLayout.astro` choisit selon `lang`. **Le texte est incrusté
+  dans l'image** : toute copy qui y figure doit être changée là aussi, et aucun `grep` ne la
+  trouvera — c'est ce qui a fait survivre « PORTFOLIO QA × IA » à la purge de T13, jusqu'au 17.09.
+  Les régénérer avec `node scripts/og-image.mjs` (le script porte la copy et la mise en page) ;
+  ne jamais retoucher les PNG à la main. Rendu par `sharp`, présent via Astro mais **non déclaré**
+  dans `package.json` — outil de génération lancé à la main, jamais appelé par le build. Polices
+  **système** (Segoe UI / Consolas) : le SVG passe par librsvg, Inter et JetBrains Mono ne sont pas
+  utilisables. Sortie attendue : 1200×630, sRGB, **sans canal alpha** (`.flatten()`), ~70 KB.
+  La géométrie du texte est calibrée sur l'image de T6 ; le décor (halo, arcs) est une
+  reconstruction, le script d'origine n'ayant jamais été versionné.
 - **Article qui ne cite aucun dépôt** : la vérification ci-dessus ne s'applique pas — le dire
   plutôt que de laisser croire qu'elle a eu lieu. Faire à la place le contrôle de cohérence
   avec la **copy publiée** (`src/i18n/*.json`) : un article qui reprend un chiffre ou une
