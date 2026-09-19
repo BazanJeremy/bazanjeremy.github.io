@@ -60,7 +60,7 @@ Je ne veux pas la présenter comme gratuite.
 
 Elle coûte du code. Chaque heuristique déterministe est du travail que le LLM aurait fait tout seul, et il faut la maintenir.
 
-Elle coûte en finesse. Pour la détection de doublons dans **testscribe**, le chemin par défaut — et celui de la chaîne d'intégration — est TF-IDF, pas le modèle sémantique. TF-IDF capte mal la proximité de sens, c'est un fait : « crash » et « freeze » y restent deux mots étrangers, et je perds des doublons formulés différemment. Mais il tourne sans réseau, sans modèle à télécharger et à versionner, de façon reproductible. Le modèle neuronal reste accessible derrière un drapeau de configuration ; ce qui est verrouillé, c'est que le comportement par défaut, lui, soit reproductible. J'ai choisi la reproductibilité contre la finesse, et c'est documenté comme tel.
+Elle coûte en finesse. Pour la détection de doublons dans **testscribe**, le classifieur tourne toujours sur TF-IDF, pas sur un modèle sémantique — en local comme dans la chaîne d'intégration. TF-IDF capte mal la proximité de sens, c'est un fait : « crash » et « freeze » y restent deux mots étrangers, et je perds des doublons formulés différemment. Mais il tourne sans réseau, sans modèle à télécharger et à versionner, de façon reproductible. Le code sait charger un modèle neuronal, mais le classifieur de doublons l'écarte explicitement : ce qui est verrouillé, c'est la reproductibilité, pas seulement un comportement par défaut. J'ai choisi la reproductibilité contre la finesse, et c'est documenté comme tel.
 
 Elle coûte enfin des cas où le LLM ferait objectivement mieux. Sous un plancher de confiance, mes outils répondent `unknown`. Un modèle aurait proposé quelque chose. Parfois il aurait eu raison.
 
