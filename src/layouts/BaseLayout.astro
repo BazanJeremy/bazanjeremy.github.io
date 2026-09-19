@@ -24,7 +24,8 @@ const {
   lang,
   title,
   description,
-  ogImage = '/og-image.png',
+  // Une carte de partage par langue (le texte y est incrusté).
+  ogImage = lang === 'en' ? '/og-image-en.png' : '/og-image.png',
   altPaths = {
     fr: switchLocalePath(Astro.url, 'fr'),
     en: switchLocalePath(Astro.url, 'en'),
