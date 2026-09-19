@@ -68,7 +68,8 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
 1. `git switch main && git pull` (récupérer la PR précédente mergée), nettoyer les branches locales.
 2. `git switch -c feat/<tache>`.
 3. Implémenter + **vérifier en conditions réelles** (voir plus bas).
-4. Commit (Conventional Commits, anglais, trailer `Co-Authored-By`), `git push -u origin ...`,
+4. Commit (Conventional Commits, trailer `Co-Authored-By` ; langue : voir ci-dessous),
+   `git push -u origin ...`,
    `gh pr create`.
 5. **S'arrêter** : donner le lien PR + `gh pr merge <n> --squash --delete-branch`. **Jérémy merge.**
 
@@ -122,9 +123,10 @@ Vaut aussi pour les commentaires de PR et les issues.
   `translationSlug`.
 - **Article qui parle d'un outil du repo public** : vérifier chaque affirmation technique
   contre le dépôt cité (`gh api repos/BazanJeremy/<outil>/...`) avant de livrer la PR.
-  **La source de vérité est le code et les ADR, pas le README** — un README peut lui aussi
-  surestimer (celui de `testscribe` annonce « détection sémantique de doublons » là où
-  ADR-002 acte TF-IDF par défaut). L'écart va toujours dans le même sens : l'article promet
+  **La source de vérité est le code, pas le README — ni même l'ADR** : celui de `testscribe`
+  annonçait « détection sémantique de doublons », et son ADR-002 promettait un basculement vers
+  le neuronal « à un drapeau près », là où le classifieur fige TF-IDF depuis toujours (corrigé
+  par `testscribe#2`). L'écart va toujours dans le même sens : l'article promet
   plus que ce que le code garantit. Cas rencontrés — T14 : un seuil annoncé comme non exposé
   en CLI alors que `flakysense` l'expose ; T15 : un « refus de conclure » annoncé là où le
   code amortit seulement le score, et un « plutôt que » là où l'ADR acte un mode double.
