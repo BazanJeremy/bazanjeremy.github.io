@@ -60,7 +60,7 @@
           },
           {
             "name": "testscribe",
-            "description": "AI-assisted bug-report enrichment. CVSS-lite severity, IEC 62304 classes, semantic duplicate detection.",
+            "description": "AI-assisted bug-report enrichment. CVSS-lite severity, IEC 62304 classes, duplicate detection.",
             "url": "https://github.com/BazanJeremy/testscribe"
           }
         ]

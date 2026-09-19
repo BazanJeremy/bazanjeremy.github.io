@@ -60,7 +60,7 @@
           },
           {
             "name": "testscribe",
-            "description": "Enrichissement de bug reports assisté par IA. Sévérité CVSS-lite, classes IEC 62304, détection sémantique de doublons.",
+            "description": "Enrichissement de bug reports assisté par IA. Sévérité CVSS-lite, classes IEC 62304, détection de doublons.",
             "url": "https://github.com/BazanJeremy/testscribe"
           }
         ]

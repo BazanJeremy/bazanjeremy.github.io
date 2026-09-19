@@ -60,7 +60,7 @@ I do not want to present it as free.
 
 It costs code. Every deterministic heuristic is work the LLM would have done on its own, and it has to be maintained.
 
-It costs in subtlety. For duplicate detection in **testscribe**, the default path — and the one the integration pipeline takes — is TF-IDF, not the semantic model. TF-IDF captures closeness of meaning poorly, that is a fact: "crash" and "freeze" remain two foreign words to it, and I lose duplicates worded differently. But it runs without a network, without a model to download and version, reproducibly. The neural model stays reachable behind a configuration flag; what is locked is that the default behaviour, at least, is reproducible. I chose reproducibility over subtlety, and it is documented as such.
+It costs in subtlety. For duplicate detection in **testscribe**, the classifier always runs on TF-IDF, not on a semantic model — locally as well as in the integration pipeline. TF-IDF captures closeness of meaning poorly, that is a fact: "crash" and "freeze" remain two foreign words to it, and I lose duplicates worded differently. But it runs without a network, without a model to download and version, reproducibly. The code knows how to load a neural model, but the duplicate classifier explicitly rules it out: what is locked is reproducibility, not merely a default behaviour. I chose reproducibility over subtlety, and it is documented as such.
 
 Finally, it costs cases where the LLM would objectively do better. Below a confidence floor, my tools answer `unknown`. A model would have proposed something. Sometimes it would have been right.
 
