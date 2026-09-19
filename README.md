@@ -30,7 +30,8 @@ src/
 │   ├── en/blog/index.astro   # EN article list (/en/blog)
 │   └── en/blog/[...slug].astro
 └── styles/global.css   # Tailwind import + @theme tokens
-public/             # favicon.svg, robots.txt, og-image.png, fonts/  (see Assets)
+public/             # favicon.svg, robots.txt, og-image*.png, fonts/  (see Assets)
+scripts/            # og-image.mjs — regenerates the social cards (run by hand)
 .github/workflows/  # deploy.yml — GitHub Pages via withastro/action
 ```
 
@@ -90,9 +91,13 @@ settings, set **Settings → Pages → Source = GitHub Actions**.
 
 All assets are self-hosted under `public/` — zero external requests at runtime.
 
-- **`public/og-image.png`** (1200×630) — Open Graph / Twitter card, referenced by
-  `BaseLayout.astro` at `/og-image.png`. It is the social-share preview only; it is
-  **not** rendered on the page.
+- **`public/og-image.png`** and **`public/og-image-en.png`** (1200×630) — Open Graph /
+  Twitter cards, one per language, since the text is baked into the image.
+  `BaseLayout.astro` picks the EN card for `lang === 'en'`. They are the social-share
+  preview only; they are **not** rendered on the page.
+  Regenerate both with `node scripts/og-image.mjs` after editing that script — it holds
+  the copy and the layout. It renders through `sharp` (present via Astro, not a declared
+  dependency) using system fonts, and is run by hand: the build never calls it.
 - **`public/favicon.svg`** — site icon.
 - **`public/fonts/`** — Inter + JetBrains Mono variable fonts (latin subset, ~88 KB),
   preloaded in `BaseLayout.astro`.
