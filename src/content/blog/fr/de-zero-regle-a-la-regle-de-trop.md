@@ -10,7 +10,7 @@ linkedin: https://www.linkedin.com/in/jeremy-bazan
 draft: false
 ---
 
-Le 15 septembre, la société d'évaluation Vals AI a publié le compte rendu d'une
+Le 15 septembre, la société d'évaluation Vals AI a partagé le récit d'une
 expérience : GPT-6 Astra, le dernier modèle d'OpenAI, a joué 141 heures à
 Minecraft en direct, uniquement par contrôle de l'écran, du clavier et de la
 souris. Le modèle est allé plus loin qu'aucun système qu'elle avait testé
