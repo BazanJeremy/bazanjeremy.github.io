@@ -10,7 +10,7 @@ linkedin: https://www.linkedin.com/in/jeremy-bazan
 draft: false
 ---
 
-On 15 September, the evaluation company Vals AI published an account of an
+On 15 September, the evaluation company Vals AI shared an account of an
 experiment: GPT-6 Astra, OpenAI's latest model, played 141 hours of Minecraft
 live, driving nothing but the screen, the keyboard and the mouse. The model got
 further than any system the company had tested before: a semi-automatic blaze
