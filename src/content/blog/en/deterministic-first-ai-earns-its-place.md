@@ -70,7 +70,7 @@ I take that cost because the opposite — a tool that is often right, without an
 
 There remain areas with no writable rule.
 
-Behavioural anomaly detection is one. A sequence of operations where every single step is legitimate, but where the chain of them does not add up: that is what an auditor looks for, and it is very hard to cover with static rules. That is the ground **anomaly-sentinel** works on, and there, the LLM brings something the deterministic path cannot do.
+Behavioural anomaly detection is one. A sequence of operations where every single step is legitimate, but where the chain of them does not add up: that is what an auditor looks for, and it is very hard to cover with static rules. What I read says the LLM brings something there that the deterministic path cannot do. I have not measured it: **anomaly-sentinel** does not claim to show it, it puts an LLM classifier under test, against requirements written beforehand.
 
 Natural language is another. Turning "the button doesn't work" into structured reproduction steps — no rule set will do that well.
 

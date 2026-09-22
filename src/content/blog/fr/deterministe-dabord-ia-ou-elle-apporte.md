@@ -70,7 +70,7 @@ Je prends ce coût parce que l'inverse — un outil qui a raison souvent, sans q
 
 Il reste des zones sans règle écrivable.
 
-La détection d'anomalies comportementales en est une. Une séquence d'opérations dont chaque étape est légitime, mais dont l'enchaînement ne tient pas debout : c'est ce qu'un auditeur cherche, et c'est très difficile à couvrir par des règles statiques. C'est le terrain d'**anomaly-sentinel**, et là, le LLM apporte quelque chose que le déterministe ne sait pas faire.
+La détection d'anomalies comportementales en est une. Une séquence d'opérations dont chaque étape est légitime, mais dont l'enchaînement ne tient pas debout : c'est ce qu'un auditeur cherche, et c'est très difficile à couvrir par des règles statiques. Ma veille dit que le LLM y apporte quelque chose que le déterministe ne sait pas faire. Je ne l'ai pas mesuré : **anomaly-sentinel** ne prétend pas le montrer, il met un classifieur LLM sous test, avec des exigences écrites avant.
 
 Le langage naturel en est une autre. Transformer « le bouton ne marche pas » en étapes de reproduction structurées, aucun jeu de règles ne le fera bien.
 
