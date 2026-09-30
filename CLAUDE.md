@@ -44,7 +44,7 @@ d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en m
 ajoutée au test paramétré change le nombre de tests (182, publié dans l'article T19).
 
 **Point ouvert au 29.09 (source : ligne T20 du journal), décision de Jérémy** : `main` de
-`ReleaseGuard` n'est **pas protégée** (mesuré le 29.09 : `gh api .../branches/main` →
+`ReleaseGuard` n'est **pas protégée** (re-mesuré le 30.09 : `gh api .../branches/main` →
 `protected: false`, aucun ruleset). Le job CI échoue bien sur NO GO (`test "$status" -le 1`),
 mais rien n'empêche un merge par-dessus — or l'article T20 et le README écrivent que l'outil
 « est le verrou de sortie du projet ». Même écart que celui fermé en T19 sur `anomaly-sentinel`,
