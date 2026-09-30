@@ -26,7 +26,9 @@ dans `src/i18n/fr.json`.
   dans `@layer components` — sinon les utilitaires Tailwind sont écrasés sur les `<a>`.
 - **Vocabulaire public (ligne rouge, 30.07.2026)** : les mots « portfolio », « P1 » à « P7 »,
   « entretien », « recruteur », « démonstration » sont **bannis de tout texte rendu** — copy,
-  navigation, libellés de boutons, et **ancres d'URL** (`#outils` / `#tools`, pas `#portfolio`).
+  navigation, libellés de boutons, et **ancres d'URL** (`#outils`, pas `#portfolio` — les ancres
+  ne sont pas traduites, l'anglais pointe `#outils` lui aussi ; `#tools` n'existe nulle part,
+  mesuré le 30.09 sur `dist/` et `src/i18n/*.json`).
   On dit « outils », « série d'outils », ou le nom du projet. Le fichier `Portfolio.astro` garde
   son nom : c'est du code, pas du texte publié.
 - **Pas de dépendance hors stack ci-dessus sans accord.** Pas d'emoji dans le contenu.
@@ -96,12 +98,23 @@ Vaut aussi pour les commentaires de PR et les issues.
   le CSS `/_astro/*.css` (son nom est un hash de contenu : nom identique ⇒ CSS identique), `diff`
   du `sitemap-0.xml`. Vérif la moins coûteuse et la plus concluante ; en #26 le seul écart sur
   4 pages était `<meta name="generator">`, en #32 les écarts étaient exactement ceux du patch.
+  ⚠️ **L'inverse n'est pas vrai : un hash de CSS différent ne veut pas dire une régression de
+  style.** Tailwind 4 scanne aussi les `.md` du contenu, et un mot de prose qui ressemble à un
+  utilitaire produit une règle. Cause **mesurée** le 30.09 (#50) : le mot anglais « block » de
+  « what would block the most people » a ajouté `.block{display:block}` (+21 octets,
+  `TT2EtjqR` → `DPDLS9i_`) ; le mot remplacé, le hash redevient celui de la prod à l'identique.
+  Donc quand le hash bouge sans changement de style, `diff` les deux CSS **par règle**
+  (`sed 's/}/}\n/g'`) avant de conclure — et ne pas réécrire la copy pour 21 octets inutilisés.
   ⚠️ **Faux positif Windows** : cette machine extrait les fichiers en CRLF (`core.autocrlf=true`,
   `git ls-files --eol` → `w/crlf`). Un build local laisse alors un octet `\r` à chaque retour à
   la ligne *interne à un paragraphe*, ce qui fait différer l'article T17 (FR + EN) alors qu'il
   n'a pas changé. La CI construit en LF. Cause **vérifiée** le 17.09 : build de `main` tel
   quel → 2 pages différentes ; mêmes fichiers repassés en LF → 0 écart sur les 16 pages. Avant
-  de conclure à une régression, regarder l'octet (`cmp -l`) : un `015` isolé n'en est pas une.
+  de conclure à une régression, **recomparer les deux fichiers après `tr -d '\r'`** : s'ils
+  deviennent identiques, l'écart n'était que du CRLF. ⚠️ Ne pas chercher un `015` isolé dans
+  `cmp -l` : les deux fichiers n'ayant pas la même longueur, `cmp` annonce `EOF` et décale toutes
+  les positions suivantes, donc **tous** les octets ressortent comme différents (vu le 30.09 :
+  10 pages classées « écart réel » à tort, 0 une fois les `\r` retirés).
 
 ## Gotchas
 
