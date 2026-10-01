@@ -38,7 +38,7 @@ dans `src/i18n/fr.json`.
 
 ## Avancement
 
-Historique des tâches (T1–T20, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
+Historique des tâches (T1–T21, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
@@ -51,6 +51,15 @@ ajoutée au test paramétré change le nombre de tests (182, publié dans l'arti
 mais rien n'empêche un merge par-dessus — or l'article T20 et le README écrivent que l'outil
 « est le verrou de sortie du projet ». Même écart que celui fermé en T19 sur `anomaly-sentinel`,
 où Jérémy avait choisi d'activer la protection. Ne rien changer sans son arbitrage.
+
+**Point ouvert au 01.10 (source : ligne T21 du journal), décision de Jérémy** : l'article T21
+s'appuie sur « une analyse récente des sites des dix universités françaises », sans auteur. Cette
+analyse est l'œuvre d'**Accessiway**, un prestataire d'accessibilité (observé : l'article
+Handicap.fr du 03.09.2026 cité en source la lui attribue nommément). Les faits repris sont exacts
+— 2 universités sur 10 satisfaisaient l'ensemble des critères, contrastes insuffisants et
+navigation clavier déficiente. C'est un choix de rédaction, pas une erreur factuelle, donc **non
+réécrit** ; signalé parce que l'article reproche précisément à un indicateur de taire sa méthode.
+Ne rien changer sans son arbitrage.
 
 ## Workflow Git (Jérémy merge lui-même)
 
