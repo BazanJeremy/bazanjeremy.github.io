@@ -61,6 +61,19 @@ navigation clavier déficiente. C'est un choix de rédaction, pas une erreur fac
 réécrit** ; signalé parce que l'article reproche précisément à un indicateur de taire sa méthode.
 Ne rien changer sans son arbitrage.
 
+**Point ouvert au 07.10 (source : ligne T22 du journal), décision de Jérémy** : deux écarts de
+**sourcement** relevés à la vérification de l'article T22, aucun n'étant une erreur factuelle,
+donc **non réécrits**. (1) Le principe 4 du syllabus s'appelle « **Regroupement des défauts** »
+dans la traduction CFTL (observé : CFTL v4.0 p. 20), là où l'article écrit « les défauts se
+regroupent » — retraduction du titre anglais « Defects cluster together », exacte et hors
+guillemets, mais l'article emploie partout ailleurs le vocabulaire officiel du CFTL. (2) La ligne
+de sources cite §1.1.1, §1.3, §1.4.3, §1.4.4 et §4.2.3 mais **pas §5.2**, alors que la mécanique
+centrale de l'article (probabilité × impact → tester plus tôt et plus en profondeur) en vient
+(observé : §5.2.1 « Plus le niveau de risque est élevé, plus son traitement est important » et
+§5.2.3 « influencer la rigueur et le périmètre des tests »), ni §4.2.1/§4.2.2 pour les partitions
+d'équivalence et les valeurs limites qu'il développe. Toutes les affirmations sont justes ; seul le
+renvoi manque. Ne rien changer sans son arbitrage.
+
 ## Workflow Git (Jérémy merge lui-même)
 
 Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge**. Claude fait tout
