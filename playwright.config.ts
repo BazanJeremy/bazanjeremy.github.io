@@ -72,9 +72,26 @@ export default defineConfig({
     {
       name: 'gate-desktop',
       testDir: './tests/gate',
+      // `mobile-375` porte une précondition de largeur : la faire tourner à
+      // 1280 la ferait échouer pour la bonne raison, au mauvais endroit.
+      testIgnore: '**/mobile-375.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },
+        reducedMotion: 'reduce',
+      },
+    },
+    {
+      name: 'gate-mobile',
+      testDir: './tests/gate',
+      testMatch: '**/mobile-375.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        // VIEWPORT EXPLICITE, pas un descripteur d'appareil. `isMobile: true`
+        // change la gestion du viewport-meta et du touch, ce qui peut aussi
+        // bien masquer que fabriquer un débordement. L'exigence du projet est
+        // une largeur (iPhone SE, 375px) : on teste une largeur.
+        viewport: { width: 375, height: 667 },
         reducedMotion: 'reduce',
       },
     },

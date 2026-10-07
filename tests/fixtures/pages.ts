@@ -59,7 +59,17 @@ function parseFrontmatter(raw: string): Record<string, string> {
     const key = line.slice(0, sep).trim();
     let value = line.slice(sep + 1).trim();
     if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
-      value = value.slice(1, -1);
+      // Scalaire YAML entre guillemets doubles : il faut déséchapper, pas
+      // seulement retirer les guillemets extérieurs. Deux titres du dépôt
+      // commencent par une citation (`"\"Strong\" passwords: …"`), et sans
+      // déséchappement la valeur lue garde les antislashs — ce qui faisait
+      // échouer la comparaison avec le h1 rendu pour une raison qui n'avait
+      // rien à voir avec le site.
+      value = value
+        .slice(1, -1)
+        .replace(/\\(["\\/])/g, '$1')
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t');
     }
     out[key] = value;
   }

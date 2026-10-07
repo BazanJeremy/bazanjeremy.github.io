@@ -12,7 +12,7 @@
     "astro": "astro",
     "test:e2e": "playwright test",
     "test:gate": "playwright test --project=invariants-gate --project=gate-desktop",
-    "test:report": "allure generate ./allure-results && node scripts/allure-strip-tracker.mjs"
+    "test:report": "node scripts/allure-report.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
