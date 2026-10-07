@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
 /* -------------------------------------------------------------------------- */
+/* Tailwind 4 auto-detects its sources, so it also scans the committed test    */
+/* files and the root config files (just as it already scans                   */
+/* `astro.config.mjs`). A prose word that looks like a utility then injects a  */
+/* rule and moves the content-hashed `_astro/*.css` filename — the same trap   */
+/* already documented for the word "block". Measured 07.10: the word "inline"  */
+/* in a comment of `playwright.config.ts`, and again in one under `scripts/`,  */
+/* each added a `display:inline` rule (+23 bytes). Measured: this stylesheet   */
+/* itself is NOT scanned, but `scripts/` is.                                   */
+/* These files are not style sources, so they are excluded.                    */
+/* -------------------------------------------------------------------------- */
+@source not "../../tests";
+@source not "../../playwright.config.ts";
+@source not "../../allurerc.mjs";
+@source not "../../scripts";
+
+/* -------------------------------------------------------------------------- */
 /* Self-hosted fonts (variable, latin subset — covers −, œ, «», —, curly ').  */
 /* 0 external request, no Google Fonts CDN (privacy / GDPR-friendly).         */
 /* -------------------------------------------------------------------------- */
