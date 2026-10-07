@@ -23,9 +23,12 @@ import { defineConfig } from 'allure';
  *
  * 2. Le plugin `awesome` injecte un traceur Google Analytics en dur
  *    (`analyticsEnable: true`, sans opt-out, contrairement au plugin
- *    `allure2` qui respecte ALLURE_NO_ANALYTICS). `npm run test:report`
- *    enchaîne donc sur `scripts/allure-strip-tracker.mjs`, qui le retire et
- *    vérifie qu'il ne reste aucune requête externe.
+ *    `allure2` qui respecte ALLURE_NO_ANALYTICS). `npm run test:report` passe
+ *    donc par `scripts/allure-report.mjs`, qui génère puis le retire, et
+ *    vérifie qu'il ne reste aucune requête externe. C'est un script, et non un
+ *    enchaînement par `&&`, parce qu'un gate en échec fait sortir
+ *    `allure generate` en non-zéro : le `&&` court-circuiterait et le traceur
+ *    resterait dans le rapport qu'on va justement ouvrir.
  */
 const qualityGateEnabled = process.env.ALLURE_QUALITY_GATE === '1';
 

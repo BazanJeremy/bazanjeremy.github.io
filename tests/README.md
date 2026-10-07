@@ -129,11 +129,10 @@ rien produit.
 
 Un mot de prose qui ressemble à un utilitaire injecte donc une règle dans le CSS
 de production et fait bouger le hash de `_astro/*.css`. Deux fois de suite
-pendant cette PR : le mot « inline » dans un commentaire de
-`playwright.config.ts`, puis dans un commentaire de
-`scripts/allure-strip-tracker.mjs` — chaque fois `.inline{display:inline}`,
-+23 octets, hash `DPDLS9i_` vers `RNyVmQBJ`. Quatre directives dans
-`src/styles/global.css` l'empêchent :
+pendant la PR 1 : le mot « inline » dans un commentaire de
+`playwright.config.ts`, puis dans un commentaire d'un script de `scripts/` —
+chaque fois `.inline{display:inline}`, +23 octets, hash `DPDLS9i_` vers
+`RNyVmQBJ`. Quatre directives dans `src/styles/global.css` l'empêchent :
 
 ```css
 @source not "../../tests";
@@ -200,10 +199,18 @@ analyticsEnable: process.env.ALLURE_NO_ANALYTICS?.toLowerCase() !== "true"
 Il n'existe donc **aucune** option ni variable d'environnement pour désactiver
 le traceur sur le plugin `awesome` (vérifié : `ALLURE_NO_ANALYTICS=1` ne change
 rien). Or ce dépôt revendique « 0 requête externe » et auto-héberge ses polices
-pour ne pas appeler de CDN tiers. `npm run test:report` enchaîne donc sur
-`scripts/allure-strip-tracker.mjs`, qui retire le traceur et **échoue** s'il ne
-trouve rien à retirer — pour qu'un correctif en amont ou un changement de
-markup se voie au lieu de passer en silence.
+pour ne pas appeler de CDN tiers. `npm run test:report` passe donc par
+`scripts/allure-report.mjs`, qui génère le rapport puis retire le traceur, et
+**échoue** s'il ne trouve rien à retirer — pour qu'un correctif en amont ou un
+changement de markup se voie au lieu de passer en silence.
+
+C'est un script, et non deux commandes enchaînées par `&&`, pour une raison
+mesurée pendant la PR 2 : quand le quality gate échoue, `allure generate` sort
+avec un code non nul, le `&&` court-circuite, et le traceur reste dans le
+rapport — précisément celui qu'on va ouvrir, puisqu'il y a des échecs. Un `;`
+ne corrige rien de façon portable (npm passe par `sh` sur POSIX, `cmd.exe` sur
+Windows). Le script garantit l'ordre et ressort le code de la génération, pour
+que le quality gate garde son autorité.
 
 ### CRLF
 
