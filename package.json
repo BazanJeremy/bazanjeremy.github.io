@@ -9,7 +9,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test:e2e": "playwright test",
+    "test:gate": "playwright test --project=invariants-gate --project=gate-desktop",
+    "test:report": "allure generate ./allure-results && node scripts/allure-strip-tracker.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
@@ -19,5 +22,11 @@
   },
   "allowScripts": {
     "esbuild": false
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^24.19.1",
+    "allure": "^3.20.1",
+    "allure-playwright": "^3.13.0"
   }
 }
