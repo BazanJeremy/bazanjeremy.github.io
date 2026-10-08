@@ -24,6 +24,21 @@ npm run test:gate     # le sous-ensemble bloquant seulement
 npm run test:report   # genere le rapport Allure (un fichier HTML autonome)
 ```
 
+Pour un projet precis, `--project=` est le selecteur unique :
+
+```bash
+npx playwright test --project=gate-mobile
+npx playwright test --project=gate-firefox --project=gate-webkit
+```
+
+Les projets `prod-http` et `external-links` visent la **production** et n'ont
+besoin d'aucun serveur local :
+
+```powershell
+$env:PW_NO_SERVER='1'; npx playwright test --project=prod-http
+Remove-Item Env:PW_NO_SERVER
+```
+
 Le rapport sort dans `allure-report/index.html` — **un seul fichier**, ouvrable
 hors ligne, sans aucune requête externe. Il pèse environ **4 Mo** même pour un
 run vert : c'est le bundle de l'application Allure, inliné en base64. Ce n'est
@@ -54,27 +69,43 @@ déterministe et ne dépendre que de nous.
 
 ## Ce que la suite verrouille
 
-### Livré
+### GATE — bloque le déploiement
 
-| Spec | Niveau | Risque | Ce qu'il verrouille |
-|---|---|---|---|
-| `gate/vocabulary.spec.ts` | GATE | P moyenne × I **très haut** | La ligne rouge du vocabulaire public, sur **trois surfaces indépendantes** : le texte rendu et les attributs visibles des 26 pages, les URLs réellement produites (noms de dossiers de `dist/`), et les **valeurs** des deux dictionnaires i18n. Règle qui a déjà échappé deux fois. |
-| `invariants/zero-js.spec.ts` | GATE | P basse × I **maximal** | Aucun `.js` dans `dist/`, aucune balise `<script>`, aucun handler inline. Plus un garde-fou : toutes les pages déclarées par le contenu sont bien construites. |
+| Spec | Risque | Ce qu'elle verrouille |
+|---|---|---|
+| `gate/i18n-toggle` | P **haute** × I haut | Aller-retour du toggle sur les 26 pages (la page d'arrivée doit ramener exactement d'où l'on vient) et chaînage bidirectionnel de `translationSlug` sur les 22 articles. La règle que le schéma Zod ne *peut pas* valider, et dont le mode de panne est documenté. |
+| `gate/links-anchors` | P moy-haute × I haut | Ancres mortes y compris inter-pages ; **parité des id de section FR/EN**, qui encode la décision « les ancres ne sont pas traduites » ; ancre `#tools` interdite. |
+| `gate/vocabulary` | P moyenne × I **très haut** | La ligne rouge du vocabulaire, sur **trois surfaces indépendantes** : texte rendu et attributs visibles des 26 pages, URLs réellement produites, et **valeurs** des dictionnaires i18n. Règle qui a déjà échappé deux fois. |
+| `gate/mobile-375` | P moyenne × I haut | Aucun défilement horizontal **et** aucun texte peint hors du viewport, avec la précondition de largeur qui ferme le piège de mesure documenté. |
+| `gate/sitemap` | P basse-moy × I moyen | Correspondance exacte avec les pages construites, slash final, **aucune URL encodée** (le piège `%20`), aucun doublon, chaque URL en 200. |
+| `gate/seo-meta` | P moyenne × I moy-haut | Canonical = `og:url`, image Open Graph **par locale**, `og:locale`, titres uniques, les trois `hreflang`. |
+| `gate/blog-contract` | P moy-haute × I moyen | Un seul `h1` égal au titre, aucun saut de niveau, date affichée = frontmatter, slug kebab-case et fichier homonyme. |
+| `gate/skip-link` | P basse × I moyen | Hors écran sans focus, visible au focus, mène à `#contenu` — vérifié sur les trois moteurs. Et « un seul Tab suffit » là où Tab atteint les liens. |
+| `invariants/zero-js` | P basse × I **maximal** | Aucun `.js`, aucune balise de script, aucun handler en attribut. Plus un garde-fou : toutes les pages déclarées sont construites. |
+| `invariants/zero-external` | P basse-moy × I moy-haut | L'invariant « 0 requête externe », côté fichiers **et** côté navigateur. |
+| `invariants/assets` | P basse × I moyen | Polices présentes, preloads avec `crossorigin`, contrat des PNG Open Graph lu dans l'en-tête IHDR. |
+| `invariants/og-copy` | P basse × I **haut** | La copy du générateur des cartes Open Graph — seule surface du système lisible par une machine. |
 
-Détail important de `vocabulary.spec.ts` : il scanne les **valeurs** des
-dictionnaires i18n, jamais les **clés**. Une clé est de la structure, une valeur
-est de la copy publiée — et l'un des noms de clé existants est précisément un
-mot de la liste rouge, au même titre qu'un nom de composant du dépôt, qui est du
-code et non du texte publié. Scanner les clés rendrait la suite rouge dès le
-premier jour sans aucun défaut.
+Détail important de `vocabulary` : il scanne les **valeurs** des dictionnaires
+i18n, jamais les **clés**. Une clé est de la structure, une valeur est de la
+copy publiée — et l'un des noms de clé existants est précisément un mot de la
+liste rouge, au même titre qu'un nom de composant du dépôt, qui est du code et
+non du texte publié. Scanner les clés rendrait la suite rouge dès le premier
+jour sans aucun défaut.
 
-### À venir (PR 2 à 6)
+### NUIT — cron, jamais bloquant
 
-`i18n-toggle` (chaînage `translationSlug`) · `links-anchors` (ancres mortes et
-ancres interdites) · `mobile-375` (débordement horizontal, avec la précondition
-de largeur) · `sitemap` · `seo-meta` · `blog-contract` · `skip-link` ·
-`zero-external` · `assets` · `og-copy` · puis `a11y-axe`, `prod-http`,
-`external-links`, `reduced-motion`.
+| Spec / projet | Risque | Ce qu'elle verrouille |
+|---|---|---|
+| `nightly/prod-http` | impact faible-moyen | **Production uniquement.** Chaque page et chaque URL du sitemap en 200 ; un lien non canonique redirige en **une seule** étape vers exactement sa canonique ; un chemin inconnu répond 404 ; la feuille de style référencée est bien servie. Avec un garde-fou qui échoue si aucune redirection n'est observée — sinon la spec passerait sans rien vérifier de propre à la production. |
+| `nightly/external-links` | P basse-moy × I moyen | Les 7 dépôts de la cartographie, LinkedIn, GitHub et le champ `linkedin:` des articles. Un statut qu'on ne peut pas interpréter est compté « inconnu », pas « vérifié ». |
+| `nightly/reduced-motion` | P basse × I moyen | La seule spec autorisée à s'intéresser au mouvement. Surtout : **le contenu n'est jamais masqué**, dans les deux préférences — c'est le mode de panne grave de ce motif. |
+| `gate-firefox` / `gate-webkit` | assurance de régression | Rejeu du gate sur les deux autres moteurs. Justifié, pas réflexe : le site a 0 JS et une seule feuille de style, et la seule fonctionnalité sensible au moteur est derrière un `@supports`. |
+
+### À venir
+
+`a11y-axe` (PR 5, demande de dépendance séparée) · persistance de l'historique
+Allure et accumulation du JUnit · branchement ReleaseGuard et FlakySense.
 
 ## Ce qu'on ne teste pas — et pourquoi
 
@@ -116,7 +147,67 @@ de largeur) · `sitemap` · `seo-meta` · `blog-contract` · `skip-link` ·
 11. **Charge, concurrence, scan de sécurité.** Site statique sur CDN, sans code
     serveur ni entrée utilisateur.
 
+## Défauts du site trouvés par la suite, non corrigés
+
+Chacun est documenté dans sa spec, asséré dans le sens souhaité, et attend un
+arbitrage. Aucun n'est corrigé au passage : les trois touchent le CSS ou le
+contenu servis, donc ils méritent leur propre changement et leur propre
+vérification.
+
+**1. La révélation au scroll est morte en production, et l'a toujours été.**
+Mesuré le 08.10. La source est correcte, en trois déclarations :
+
+```css
+animation: reveal-fade linear both;
+animation-timeline: view();
+animation-range: entry 0% cover 20%;
+```
+
+mais le minifieur CSS les fusionne en un seul raccourci :
+
+```css
+animation: linear both reveal-fade view()
+```
+
+Or `animation-timeline` n'est pas une valeur acceptée par le raccourci
+`animation`. Vérifié dans le navigateur : poser ce raccourci donne
+`cssText: ""` — la déclaration est rejetée **en entier** — d'où
+`animation-name: none`. La forme source, elle, donne bien
+`animation-name: reveal-fade`. Et le CSS servi par la production est identique
+à l'octet au build local, donc c'est bien l'état livré.
+
+Conséquence pour le visiteur : aucune. Le contenu reste à opacité 1, donc rien
+n'est caché — c'est un embellissement absent, pas une régression de contenu.
+C'est précisément pour ça que personne ne l'a vu.
+
+**2. Un tableau d'article est inatteignable à 375px.** La troisième colonne du
+tableau de l'article sur les mots de passe (FR + EN) est peinte jusqu'à ~440px
+dans un viewport de 375px, sans que la page défile : la colonne n'est ni
+visible ni accessible. Deux pages sur 26. Exception nommée dans
+`mobile-375.spec.ts`, qui échoue **dans les deux sens**.
+
+**3. `og:type` vaut `website` sur les pages d'article.** Devrait être
+`article`. Asséré via `test.fail()` dans `seo-meta.spec.ts`.
+
 ## Pièges mesurés — à ne pas redécouvrir
+
+### Un moteur peut diverger sans que le site soit en cause
+
+Le rejeu sur WebKit a fait échouer `skip-link`, et la cause n'était pas le
+site. **Mesuré le 08.10** : dans WebKit, un `Tab` laisse le focus sur `<body>`
+— Safari ne tabule pas sur les liens sans l'option « Press Tab to highlight
+each item on a webpage ». Mais un `focus()` programmé y fonctionne
+parfaitement, et le lien passe de `left: -9999` à `left: 0` : le CSS du site
+est correct dans WebKit.
+
+La spec mélangeait donc deux choses, une propriété du **site** et un modèle
+clavier de **navigateur**. Elles sont séparées : le comportement du site est
+vérifié sur les trois moteurs par focus programmé, et « un seul Tab suffit »
+n'est vérifié que là où Tab atteint les liens, avec un `test.skip` qui dit
+pourquoi.
+
+Leçon générale : quand un moteur diverge, mesurer **avant** de conclure au
+défaut, et se demander si l'assertion ne mélangeait pas deux questions.
 
 ### Tailwind scanne les tests et les configs racine
 
@@ -281,6 +372,17 @@ exécutées le 07.10 :
 | Un mot de la liste rouge inséré dans une valeur de `en.json` | `vocabulary` rouge, en nommant le fichier et le chemin de clé exact |
 | `<script>console.log(1)</script>` dans `BaseLayout.astro` | `zero-js` rouge, en listant les 26 pages touchées |
 | `posts.map(` vers `posts.slice(1).map(` dans le `getStaticPaths` du blog FR | garde-fou de pages rouge, `missing` non vide |
+| Image Open Graph de la mauvaise locale | `seo-meta` rouge, en nommant la locale |
+| `left: -9999px` vers `left: 0` sur le lien d'evitement | `skip-link` rouge |
+| Mot interdit dans une ligne de **code** du generateur Open Graph | `og-copy` rouge, avec le numero de ligne |
+| Mot interdit dans un **commentaire** du generateur | **passe** — le filtre fait ce qui etait prevu, verifie dans les deux sens |
+| Feuille de style externe chargee par le layout | `zero-external` rouge cote fichiers **et** cote navigateur |
+| Slug avec espaces et accent | `sitemap` rouge sur les URLs encodees, `blog-contract` rouge sur le kebab-case |
+| Une police auto-hebergee supprimee | `assets` rouge, trois messages |
+| Une entree retiree de la liste d'exception 375px | rouge en « NOUVEAU » |
+| `prod-http` pointe le preview local au lieu de la production | rouge sur le garde-fou : « aucun lien non canonique ne redirige » |
+| Une URL de depot morte dans la cartographie | `external-links` rouge, URL nommee, et la parite FR/EN rouge aussi |
+| `.reveal { opacity: 0 }` sans animation pour le rattraper | `reduced-motion` rouge sur « le contenu n'est jamais masque » |
 
 Note : passer un article en `draft: true` ne fait **pas** échouer le garde-fou,
 et c'est correct — le catalogue exclut les brouillons comme le build. C'est la
@@ -295,6 +397,33 @@ unique ; deux workflows l'appellent :
 |---|---|---|
 | `pr.yml` | `pull_request` vers `main` | Le gate sur chaque PR. Il n'existait **aucun** déclencheur de PR avant. |
 | `deploy.yml` | `push` sur `main` | Un job `gate` en amont de `build`. |
+| `qa-nightly.yml` | `schedule` 04:17 UTC + `workflow_dispatch` | Ce que le gate ne fait délibérément pas. |
+
+### Le nocturne
+
+Il fait les deux choses qu'un gate ne peut pas faire sans devenir faux ou
+instable : regarder la **production** (le 301 de GitHub Pages n'existe pas sous
+`astro preview`) et dépendre de **tiers** et d'autres moteurs de rendu.
+
+C'est aussi le run d'**instrument**, par opposition au run de **gate** :
+retries à 2 et quality gate Allure désactivé. Un gate est une mesure à
+tentative unique ; les retries sont un instrument de mesure de l'instabilité,
+pas un comportement de gate — et le quality gate d'Allure est de toute façon
+incompatible avec les retries. Les deux ne partagent jamais le même run.
+
+Trois jobs. `resolve` ne fait rien d'autre que transformer les entrées en plan,
+et l'écrit dans le résumé du run : les paramètres effectifs apparaissent ainsi
+en **un seul endroit**, ce qui compte le jour où la question devient « qu'a
+exactement lancé le nocturne de mardi ? ». Puis `live` (contre la production)
+et `preview` (contre un build frais) tournent selon ce plan.
+
+**Entrées du lancement manuel** : `suite`
+(`full` · `live` · `gate` · `cross-browser` · `motion` · `prod-http` ·
+`external-links`), `browsers`, `retries`. Sur un déclenchement `schedule` le
+contexte `inputs` est vide, donc `inputs.x` vaut `''` — les défauts `||` du job
+`resolve` **sont** le contrat du nocturne. L'asymétrie est voulue : le défaut
+du lancement manuel est `chromium`, parce qu'un humain qui lance à la main veut
+une réponse rapide, alors que le `schedule` prend les trois moteurs.
 
 **Comment le gate bloque.** Le job `gate` tourne **avant** que l'artefact Pages
 existe. S'il échoue, `build` ne tourne pas (il porte `needs: gate`), donc rien
@@ -329,7 +458,12 @@ atterriront.
 
 ## Pas encore en place
 
-- **Le cron nocturne et le `workflow_dispatch` paramétré** arrivent en PR 4.
+- **La persistance de l'historique Allure et du JUnit.** `historyPath` pointe
+  `.qa-history/allure/history.jsonl`, mais rien ne le conserve encore entre
+  deux runs : les tendances du rapport sont donc vides. Repoussé dans son
+  propre changement, parce que cela demande une branche de stockage et une
+  poussée depuis la CI — une surface de risque distincte, qui mérite sa propre
+  relecture.
 - **Pas de vérification de types.** `tsconfig.json` est strict et couvre
   `tests/`, mais `astro build` ne lance pas `tsc` : les erreurs de type ne sont
   donc visibles que dans l'éditeur. Un script `typecheck` exigerait

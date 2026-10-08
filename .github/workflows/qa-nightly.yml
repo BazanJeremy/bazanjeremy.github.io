@@ -1,0 +1,190 @@
+name: QA nightly
+
+# Two things the deploy gate deliberately does not do, because they would make
+# a gate non-deterministic or wrong:
+#
+#   - look at PRODUCTION. The trailing-slash 301 of GitHub Pages does not exist
+#     under `astro preview`, so only a run against the live site can check it.
+#   - depend on third parties (external destinations) and on other rendering
+#     engines, which are slow to install.
+#
+# This is also the instrument run, as opposed to the gate run: retries are ON
+# and the Allure quality gate is OFF. A gate is a single-attempt measurement;
+# retries are an instrument for measuring flakiness, not a gate behaviour, and
+# Allure's quality gate is incompatible with retries anyway. The two never
+# share a run.
+
+on:
+  schedule:
+    # 04:17 UTC — off the hour, where hosted runners are less contended.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Which part to run.
+        type: choice
+        default: full
+        options:
+          - full
+          - live
+          - gate
+          - cross-browser
+          - motion
+          - prod-http
+          - external-links
+      browsers:
+        description: Browsers to install for the preview part.
+        type: choice
+        default: chromium
+        options:
+          - chromium
+          - chromium firefox webkit
+      retries:
+        description: Retries. Keep above 0 to feed the flakiness signal.
+        type: string
+        default: "2"
+
+permissions:
+  contents: read
+
+# Its own group, never `pages`: sharing the deploy group would queue a nightly
+# behind a production deploy, or worse, delay a deploy behind a nightly.
+# `cancel-in-progress: false` because a manual run should not kill a scheduled
+# one that is already collecting data.
+concurrency:
+  group: qa-nightly
+  cancel-in-progress: false
+
+jobs:
+  # One job whose only purpose is to turn the inputs into a plan, so that the
+  # effective parameters of a run appear in ONE place in the log. That matters
+  # later, when the question is "what exactly did last Tuesday's nightly run?".
+  #
+  # On a `schedule` trigger the `inputs` context is empty, so `inputs.x`
+  # evaluates to '' — falsy. The `||` defaults below ARE the nightly contract,
+  # and they are deliberately not the same as the dispatch defaults: a human
+  # running this by hand usually wants a fast answer (chromium), while the
+  # schedule wants full coverage (three engines).
+  resolve:
+    name: Resolve the plan
+    runs-on: ubuntu-latest
+    outputs:
+      suite: ${{ steps.plan.outputs.suite }}
+      browsers: ${{ steps.plan.outputs.browsers }}
+      retries: ${{ steps.plan.outputs.retries }}
+      live_projects: ${{ steps.plan.outputs.live_projects }}
+      preview_projects: ${{ steps.plan.outputs.preview_projects }}
+    steps:
+      - name: Resolve
+        id: plan
+        shell: bash
+        env:
+          IN_SUITE: ${{ inputs.suite }}
+          IN_BROWSERS: ${{ inputs.browsers }}
+          IN_RETRIES: ${{ inputs.retries }}
+          IS_SCHEDULE: ${{ github.event_name == 'schedule' }}
+        run: |
+          set -euo pipefail
+
+          SUITE="${IN_SUITE:-full}"
+          RETRIES="${IN_RETRIES:-2}"
+
+          # The schedule covers all three engines; a manual run defaults to
+          # chromium unless the person asked for more.
+          if [ -n "${IN_BROWSERS:-}" ]; then
+            BROWSERS="$IN_BROWSERS"
+          elif [ "$IS_SCHEDULE" = "true" ]; then
+            BROWSERS="chromium firefox webkit"
+          else
+            BROWSERS="chromium"
+          fi
+
+          LIVE=""
+          PREVIEW=""
+          case "$SUITE" in
+            full)
+              LIVE="prod-http external-links"
+              PREVIEW="invariants-gate gate-desktop gate-mobile motion"
+              case "$BROWSERS" in
+                *firefox*) PREVIEW="$PREVIEW gate-firefox" ;;
+              esac
+              case "$BROWSERS" in
+                *webkit*) PREVIEW="$PREVIEW gate-webkit" ;;
+              esac
+              ;;
+            live)           LIVE="prod-http external-links" ;;
+            prod-http)      LIVE="prod-http" ;;
+            external-links) LIVE="external-links" ;;
+            gate)           PREVIEW="invariants-gate gate-desktop gate-mobile" ;;
+            motion)         PREVIEW="motion" ;;
+            cross-browser)
+              PREVIEW="gate-firefox gate-webkit"
+              BROWSERS="chromium firefox webkit"
+              ;;
+            *)
+              echo "::error::Unknown suite '$SUITE'."
+              exit 1
+              ;;
+          esac
+
+          {
+            echo "suite=$SUITE"
+            echo "browsers=$BROWSERS"
+            echo "retries=$RETRIES"
+            echo "live_projects=$LIVE"
+            echo "preview_projects=$PREVIEW"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### QA nightly plan"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| trigger | \`${{ github.event_name }}\` |"
+            echo "| suite | \`$SUITE\` |"
+            echo "| retries | \`$RETRIES\` |"
+            echo "| browsers | \`$BROWSERS\` |"
+            echo "| against production | \`${LIVE:-—}\` |"
+            echo "| against a fresh build | \`${PREVIEW:-—}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Against the live site. No build, no preview server, no page: these specs
+  # use the request context only.
+  live:
+    name: Production
+    needs: resolve
+    if: needs.resolve.outputs.live_projects != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run the production checks
+        uses: ./.github/actions/qa
+        with:
+          target: production
+          projects: ${{ needs.resolve.outputs.live_projects }}
+          retries: ${{ needs.resolve.outputs.retries }}
+          # OFF: incompatible with retries, and nothing here should gate.
+          quality-gate: "false"
+          browsers: chromium
+          artifact-suffix: -nightly-${{ github.run_number }}-live
+
+  # Against a fresh build, served locally. This is the cross-engine replay plus
+  # the motion spec.
+  preview:
+    name: Fresh build
+    needs: resolve
+    if: needs.resolve.outputs.preview_projects != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run the suite against a fresh build
+        uses: ./.github/actions/qa
+        with:
+          target: preview
+          projects: ${{ needs.resolve.outputs.preview_projects }}
+          retries: ${{ needs.resolve.outputs.retries }}
+          quality-gate: "false"
+          browsers: ${{ needs.resolve.outputs.browsers }}
+          artifact-suffix: -nightly-${{ github.run_number }}-preview
