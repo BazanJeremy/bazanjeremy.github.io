@@ -1,0 +1,33 @@
+name: QA gate
+
+on:
+  # There was no pull_request trigger at all before this workflow: nothing ran
+  # on a PR. Only `pull_request`, not `push: branches: ['feat/**']`, otherwise
+  # every branch push would run the suite twice.
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A group of its own, never `pages`. Sharing the deploy group would queue PR
+# runs behind production deployments (which use cancel-in-progress: false) and
+# could delay a deploy behind a test run.
+concurrency:
+  group: qa-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Playwright + Allure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run the QA suite
+        uses: ./.github/actions/qa
+        with:
+          target: preview
+          retries: "0"
+          quality-gate: "true"
+          artifact-suffix: -pr-${{ github.event.pull_request.number }}

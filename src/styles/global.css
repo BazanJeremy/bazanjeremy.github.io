@@ -1,15 +1,32 @@
 @import "tailwindcss";
 
 /* -------------------------------------------------------------------------- */
-/* Tailwind 4 auto-detects its sources, so it also scans the committed test    */
-/* files and the root config files (just as it already scans                   */
-/* `astro.config.mjs`). A prose word that looks like a utility then injects a  */
-/* rule and moves the content-hashed `_astro/*.css` filename — the same trap   */
-/* already documented for the word "block". Measured 07.10: the word "inline"  */
-/* in a comment of `playwright.config.ts`, and again in one under `scripts/`,  */
-/* each added a `display:inline` rule (+23 bytes). Measured: this stylesheet   */
-/* itself is NOT scanned, but `scripts/` is.                                   */
-/* These files are not style sources, so they are excluded.                    */
+/* Tailwind 4 auto-detects its sources, and the scope is wider than it looks.  */
+/* A prose word that happens to read as a utility injects a rule into the      */
+/* production CSS and moves the content-hashed `_astro/*.css` filename — the   */
+/* trap already documented for the word "block".                              */
+/*                                                                            */
+/* Measured by elimination (07.10 and 08.10), scanned: the committed test      */
+/* files, the root config files (as `astro.config.mjs` already was),           */
+/* `scripts/`, `docs/` and `.github/`. NOT scanned: this stylesheet itself.    */
+/* Two real incidents: the word "inline" in a comment of                       */
+/* `playwright.config.ts`, then in one under `scripts/`, each adding a         */
+/* `display:inline` rule (+23 bytes). And a witness proved `.github/` counts:  */
+/* "uppercase italic" in a workflow file produced both rules.                  */
+/*                                                                            */
+/* The directories below hold build and test tooling, never anything          */
+/* rendered, so they are excluded.                                            */
+/*                                                                            */
+/* `docs/` and `.github/` are deliberately NOT excluded, even though they are  */
+/* scanned, because their prose already contributes two rules the production   */
+/* stylesheet serves today: `.block` (21 bytes) from the journal entry that    */
+/* documents the "block" incident, and `.contents` (27 bytes) from            */
+/* `permissions: contents: read` in deploy.yml. Excluding them would drop 48   */
+/* bytes of dead CSS — a worthwhile cleanup, but one that changes the shipped  */
+/* bytes, so it belongs in its own change rather than riding along in another. */
+/* Until then: a prose edit in either directory can move the hash, and the     */
+/* documented procedure applies — diff the two stylesheets rule by rule before */
+/* concluding anything about a style regression.                              */
 /* -------------------------------------------------------------------------- */
 @source not "../../tests";
 @source not "../../playwright.config.ts";

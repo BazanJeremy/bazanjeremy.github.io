@@ -24,13 +24,18 @@ import { defineConfig, devices } from '@playwright/test';
  *    nocturne les activera via `PW_RETRIES`.
  */
 
-const baseURL = process.env.PW_BASE_URL ?? 'http://localhost:4321';
+// `||` et non `??` : GitHub Actions pose une variable non renseignée à CHAÎNE
+// VIDE, pas à `undefined`. Avec `??`, `baseURL` vaudrait alors `''` et toute
+// navigation relative casserait — en CI seulement, donc invisible en local.
+const baseURL = process.env.PW_BASE_URL || 'http://localhost:4321';
 
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: Number(process.env.PW_RETRIES ?? 0),
+  // `||` pour la même raison que `baseURL` : une variable vide doit retomber
+  // sur le défaut, pas produire `Number('')`.
+  retries: Number(process.env.PW_RETRIES || 0),
 
   // Volontairement sous le nombre de cœurs du runner : la contention CPU est
   // une SOURCE de flakiness, et la sortie de cette suite alimentera un jour un
