@@ -29,6 +29,9 @@ import { defineConfig, devices } from '@playwright/test';
 // navigation relative casserait — en CI seulement, donc invisible en local.
 const baseURL = process.env.PW_BASE_URL || 'http://localhost:4321';
 
+/** Le site en ligne. Certains comportements ne sont vrais QUE la-bas. */
+const PRODUCTION = 'https://bazanjeremy.github.io';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -99,6 +102,58 @@ export default defineConfig({
         viewport: { width: 375, height: 667 },
         reducedMotion: 'reduce',
       },
+    },
+    {
+      name: 'prod-http',
+      testDir: './tests/nightly',
+      testMatch: '**/prod-http.spec.ts',
+      use: {
+        // PRODUCTION UNIQUEMENT, et ce n'est pas un detail : sous
+        // `astro preview`, `trailingSlash` vaut `ignore` et la requete est
+        // reecrite en `pathname + "/index.html"`, donc le 301 de GitHub
+        // Pages n'existe pas. Un gate local asserterait quelque chose de
+        // faux en production.
+        baseURL: process.env.PW_BASE_URL || PRODUCTION,
+      },
+    },
+    {
+      name: 'external-links',
+      testDir: './tests/nightly',
+      testMatch: '**/external-links.spec.ts',
+      // Depend de la disponibilite de tiers : jamais dans un gate, sinon on
+      // importe l'indisponibilite des autres dans son propre deploiement.
+      use: { baseURL: process.env.PW_BASE_URL || PRODUCTION },
+    },
+    {
+      name: 'motion',
+      testDir: './tests/nightly',
+      testMatch: '**/reduced-motion.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        // LE SEUL projet en mouvement. Tout le reste tourne en 'reduce'
+        // pour etre deterministe ; c'est ici qu'on verifie que le
+        // mouvement existe bel et bien quand il est demande.
+        reducedMotion: 'no-preference',
+      },
+    },
+
+    // Rejeu du gate sur les deux autres moteurs. Justifie, pas reflexe : le
+    // site a 0 JS et une seule feuille de style, et la seule fonctionnalite
+    // sensible au moteur est `animation-timeline: view()`, deja derriere un
+    // `@supports` — un moteur qui ne la supporte pas n'anime pas, et c'est
+    // le repli voulu. Assurance de regression, donc : en nuit, pas en gate.
+    {
+      name: 'gate-firefox',
+      testDir: './tests/gate',
+      testIgnore: '**/mobile-375.spec.ts',
+      use: { ...devices['Desktop Firefox'], reducedMotion: 'reduce' },
+    },
+    {
+      name: 'gate-webkit',
+      testDir: './tests/gate',
+      testIgnore: '**/mobile-375.spec.ts',
+      use: { ...devices['Desktop Safari'], reducedMotion: 'reduce' },
     },
   ],
 
