@@ -19,7 +19,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The gate runs BEFORE the Pages artifact exists. If it fails, `build` never
+  # runs, nothing is uploaded, and `deploy` cannot run because `needs: build`
+  # is unsatisfied — no `if:` condition to get wrong, no way to deploy
+  # untested bytes.
+  #
+  # Why a separate job instead of folding the tests into `build`:
+  # `withastro/action@v3` installs, builds AND uploads in one step, with no
+  # point to interpose anything. Replacing it with its own steps is not the
+  # 1:1 translation it looks like — measured, it runs `setup-node@v7`,
+  # `upload-pages-artifact@v5` and an Astro build cache via `actions/cache@v6`,
+  # so we would be taking over the maintenance of three things. Meanwhile the
+  # whole `build` job takes 15 seconds (measured on run 37581627084), and the
+  # gate has to build its own dist/ anyway to serve it. Paying one extra build
+  # is far cheaper than owning the action's internals.
+  gate:
+    name: QA gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run the QA suite
+        uses: ./.github/actions/qa
+        with:
+          target: preview
+          retries: "0"
+          quality-gate: "true"
+          artifact-suffix: -main-${{ github.run_number }}
+
   build:
+    needs: gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

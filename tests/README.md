@@ -121,11 +121,16 @@ de largeur) · `sitemap` · `seo-meta` · `blog-contract` · `skip-link` ·
 ### Tailwind scanne les tests et les configs racine
 
 Tailwind 4 détecte ses sources automatiquement, et le périmètre est plus large
-qu'on ne le croit. **Mesuré le 07.10, par élimination** : sont scannés `tests/`
-(versionné), les fichiers de config à la racine (comme `astro.config.mjs` l'est
-déjà) **et `scripts/`** ; en revanche la feuille de style elle-même ne l'est
-pas — un commentaire de `global.css` contenant `.inline{display:inline}` n'a
-rien produit.
+qu'on ne le croit. **Mesuré les 07 et 08.10, par élimination** : sont scannés
+`tests/` (versionné), les fichiers de config à la racine (comme
+`astro.config.mjs` l'est déjà), `scripts/`, **`docs/` et `.github/`** ; en
+revanche la feuille de style elle-même ne l'est pas — un commentaire de
+`global.css` contenant `.inline{display:inline}` n'a rien produit.
+
+Le cas de `.github/` a été tranché par un témoin : les mots « uppercase italic »
+ajoutés dans un fichier de workflow ont produit les deux règles correspondantes
+et déplacé le hash. Ce n'était pas évident, et le périmètre d'un futur
+`@source not` doit en tenir compte.
 
 Un mot de prose qui ressemble à un utilitaire injecte donc une règle dans le CSS
 de production et fait bouger le hash de `_astro/*.css`. Deux fois de suite
@@ -143,6 +148,17 @@ chaque fois `.inline{display:inline}`, +23 octets, hash `DPDLS9i_` vers
 
 L'exclusion de `scripts/` protège aussi `scripts/og-image.mjs`, qui était
 exposé au même piège depuis le début.
+
+**`docs/` et `.github/` ne sont volontairement PAS exclus**, bien qu'ils soient
+scannés : leur prose apporte deux règles que le CSS de production sert
+aujourd'hui — `.block` (21 octets), venue de l'entrée de journal qui documente
+justement l'incident du mot « block », et `.contents` (27 octets), venue de
+`permissions: contents: read` dans `deploy.yml`. Les exclure retirerait 48
+octets de CSS mort sur 18 782 : un nettoyage qui se défend, mais qui **change
+les octets servis**, donc il mérite son propre changement plutôt que de voyager
+dans un autre. En attendant, une retouche de prose dans l'un des deux peut
+déplacer le hash, et la procédure documentée s'applique — differ les deux
+feuilles règle par règle avant de conclure à une régression de style.
 
 Contrôle qui tranche, à refaire après tout ajout de fichier à la racine :
 
@@ -270,10 +286,50 @@ Note : passer un article en `draft: true` ne fait **pas** échouer le garde-fou,
 et c'est correct — le catalogue exclut les brouillons comme le build. C'est la
 régression de `getStaticPaths` que ce garde-fou attrape.
 
+## En CI
+
+Une action composite, `.github/actions/qa/action.yml`, porte l'implémentation
+unique ; deux workflows l'appellent :
+
+| Workflow | Déclencheur | Rôle |
+|---|---|---|
+| `pr.yml` | `pull_request` vers `main` | Le gate sur chaque PR. Il n'existait **aucun** déclencheur de PR avant. |
+| `deploy.yml` | `push` sur `main` | Un job `gate` en amont de `build`. |
+
+**Comment le gate bloque.** Le job `gate` tourne **avant** que l'artefact Pages
+existe. S'il échoue, `build` ne tourne pas (il porte `needs: gate`), donc rien
+n'est téléversé, donc `deploy` ne peut pas s'exécuter faute d'artefact. Aucune
+condition `if:` à mal écrire, aucun moyen de déployer des octets non testés.
+
+**Pourquoi un job séparé et non les tests dans `build`.** `withastro/action@v3`
+installe, construit et téléverse en une seule étape, sans point d'insertion. Le
+remplacer par ses étapes internes n'est pas la traduction 1:1 qu'on croit —
+mesuré, il utilise `setup-node@v7`, `upload-pages-artifact@v5` et un cache de
+build Astro via `actions/cache@v6` : on reprendrait la maintenance de trois
+choses. Or le job `build` complet prend **15 secondes** (mesuré), et le gate doit
+de toute façon construire son propre `dist/` pour le servir. Payer un build de
+plus coûte moins cher que posséder les entrailles de l'action, qui reste donc
+**intacte**.
+
+`pr.yml` et le job `gate` ont leurs **propres groupes de concurrence**, jamais
+`pages` : partager le groupe de déploiement mettrait les runs de test en file
+derrière les mises en production (`cancel-in-progress: false`), et pourrait
+retarder un déploiement derrière un run de test.
+
+**Le quality gate d'Allure est porteur, pas décoratif.** L'étape de rapport n'est
+pas en `continue-on-error` : un gate en échec fait échouer le job. C'est ce qui
+attrape ce qu'une suite verte ne peut pas voir — des specs qui disparaissent
+discrètement, via `minTestsCount`.
+
+**Le niveau informatif existe mais est vide.** L'action accepte
+`check-projects`, dont l'échec produit une annotation d'avertissement sans
+bloquer. Rien n'y est aujourd'hui : tout ce qui est livré est déterministe et ne
+dépend que de ce dépôt. Axe, les liens externes et les autres moteurs de rendu y
+atterriront.
+
 ## Pas encore en place
 
-- **Aucune intégration CI** à ce stade : la suite se lance à la main. Le gate,
-  le cron nocturne et le `workflow_dispatch` paramétré arrivent en PR 3 et 4.
+- **Le cron nocturne et le `workflow_dispatch` paramétré** arrivent en PR 4.
 - **Pas de vérification de types.** `tsconfig.json` est strict et couvre
   `tests/`, mais `astro build` ne lance pas `tsc` : les erreurs de type ne sont
   donc visibles que dans l'éditeur. Un script `typecheck` exigerait

@@ -1,0 +1,185 @@
+name: "QA suite"
+description: >
+  Runs the Playwright suite and publishes the Allure report as a workflow
+  artifact. Single implementation shared by the deploy gate, the PR gate, and
+  (later) the nightly run.
+
+# Why a composite action rather than a reusable `workflow_call` workflow: a
+# composite action runs INSIDE the calling job, so the `dist/` it builds is
+# already on disk when the tests run. A reusable workflow would need `dist`
+# shipped between jobs as an artifact, and `upload-pages-artifact` produces a
+# tarball that is awkward to rehydrate.
+
+inputs:
+  target:
+    description: '"preview" builds and serves dist/ locally; "production" tests the live site.'
+    required: false
+    default: preview
+  projects:
+    description: >
+      Space-separated Playwright projects that BLOCK. A failure here fails the
+      job, and therefore the deployment.
+    required: false
+    default: invariants-gate gate-desktop gate-mobile
+  check-projects:
+    description: >
+      Space-separated Playwright projects that run for information only. A
+      failure is surfaced as a warning annotation and does not fail the job.
+      Empty today: everything in the suite is deterministic and depends on
+      nothing but this repository, so nothing belongs in this tier yet. Axe,
+      external links and the other browser engines will land here.
+    required: false
+    default: ""
+  retries:
+    description: >
+      0 for a gate. A gate is a single-attempt measurement; retries are an
+      instrument for measuring flakiness, not a gate behaviour.
+    required: false
+    default: "0"
+  quality-gate:
+    description: >
+      Evaluate the Allure quality gate while generating the report. It is
+      load-bearing, not decorative: it catches what a green suite cannot, such
+      as specs quietly disappearing (minTestsCount).
+    required: false
+    default: "true"
+  browsers:
+    description: Space-separated browsers to install.
+    required: false
+    default: chromium
+  artifact-suffix:
+    description: Appended to artifact names so concurrent callers do not collide.
+    required: false
+    default: ""
+  base-url:
+    description: Overrides the target URL. Required when target is "production".
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        # Astro 7 needs >= 22.12; `withastro/action` is pinned to 22 for the
+        # same reason in deploy.yml.
+        node-version: 22
+        cache: npm
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        npm ci
+        echo "npm $(npm -v) / node $(node -v)"
+
+    # `astro preview` SERVES dist/, it does not build it. The build has to
+    # happen here, and only for the preview target.
+    - name: Build the site
+      if: inputs.target == 'preview'
+      shell: bash
+      run: npm run build
+
+    - name: Restore Playwright browsers
+      id: pw-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        # The lock file pins the exact @playwright/test version, and browser
+        # builds are tied 1:1 to it. The browser list is in the key so a
+        # chromium-only cache cannot satisfy a firefox+webkit run.
+        key: pw-${{ runner.os }}-${{ inputs.browsers }}-${{ hashFiles('package-lock.json') }}
+
+    # Browsers come from the cache (the expensive part, >100 MB). The apt
+    # libraries cannot be cached, so they are reinstalled either way.
+    - name: Install Playwright browsers
+      if: steps.pw-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+      run: npx playwright install --with-deps $BROWSERS
+
+    - name: Install Playwright system dependencies
+      if: steps.pw-cache.outputs.cache-hit == 'true'
+      shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+      run: npx playwright install-deps $BROWSERS
+
+    - name: Run the blocking suite
+      shell: bash
+      env:
+        PW_RETRIES: ${{ inputs.retries }}
+        PW_BASE_URL: ${{ inputs.base-url }}
+        # "production" skips the local preview server entirely.
+        PW_NO_SERVER: ${{ inputs.target == 'production' && '1' || '' }}
+        # Passed through the environment rather than interpolated into the
+        # script: that is the pattern that cannot turn an input into shell.
+        PROJECTS: ${{ inputs.projects }}
+      run: |
+        args=""
+        for p in $PROJECTS; do args="$args --project=$p"; done
+        echo "playwright test$args"
+        npx playwright test$args
+
+    - name: Run the informative checks
+      if: always() && inputs.check-projects != ''
+      shell: bash
+      env:
+        PW_RETRIES: ${{ inputs.retries }}
+        PW_BASE_URL: ${{ inputs.base-url }}
+        PW_NO_SERVER: ${{ inputs.target == 'production' && '1' || '' }}
+        PROJECTS: ${{ inputs.check-projects }}
+      run: |
+        args=""
+        for p in $PROJECTS; do args="$args --project=$p"; done
+        # Deliberately swallowing the exit code: these checks inform, they do
+        # not block. A warning annotation keeps the failure visible in the run
+        # summary instead of hiding it.
+        set +e
+        npx playwright test$args
+        status=$?
+        set -e
+        if [ "$status" -ne 0 ]; then
+          echo "::warning title=Informative checks failed::They do not block the deployment. See the Allure report."
+        fi
+
+    # `always()`: a red suite is exactly when the report matters most.
+    - name: Build the Allure report
+      if: always()
+      shell: bash
+      env:
+        ALLURE_QUALITY_GATE: ${{ inputs.quality-gate == 'true' && '1' || '' }}
+      run: |
+        # No results at all means the suite never ran — a preview server that
+        # failed to start, for instance. The blocking step has already failed
+        # the job, so failing again here would only add a second, misleading
+        # error pointing at the report instead of the cause.
+        if [ ! -d allure-results ]; then
+          echo "::warning title=No Allure report::allure-results/ is missing, so the suite never produced results. Look at the test step above, not here."
+          exit 0
+        fi
+        npm run test:report
+
+    - name: Upload the Allure report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report${{ inputs.artifact-suffix }}
+        # One standalone HTML file, openable offline, with no external request.
+        path: allure-report/index.html
+        # `warn`, not `error`: the only way the report is missing is that the
+        # suite never ran, and the step above already said so. Failing here
+        # would bury the real cause under a second error.
+        if-no-files-found: warn
+        retention-days: 30
+
+    - name: Upload the raw results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results${{ inputs.artifact-suffix }}
+        # junit.xml plus the traces kept for failures.
+        path: test-results
+        if-no-files-found: warn
+        retention-days: 30
