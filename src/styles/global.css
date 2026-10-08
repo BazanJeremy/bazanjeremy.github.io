@@ -179,10 +179,33 @@
 
   /* Scroll reveal — CSS-only. Gated behind @supports so unsupported browsers  */
   /* never hide content, and disabled under reduced-motion.                    */
-  @media (prefers-reduced-motion: no-preference) {
+  /*                                                                           */
+  /* NE PAS REVENIR AU RACCOURCI `animation` ICI. Mesuré le 08.10 :            */
+  /* lightningcss (passe d'optimisation de Tailwind 4, pas esbuild) refusionne */
+  /* `animation` + `animation-timeline` en `animation: linear both             */
+  /* reveal-fade view()`. Le raccourci `animation` n'accepte pas de valeur de  */
+  /* timeline : le navigateur rejette alors la déclaration ENTIÈRE, d'où       */
+  /* `animation-name: none`. L'animation était morte en production depuis sa   */
+  /* mise en place. En longhands, le minifieur ne reconstruit aucun raccourci  */
+  /* (mesuré sur lightningcss 1.32.0) — et `gate/reveal-css.spec.ts` échoue */
+  /* si une version future s'y remettait.                                      */
+  /*                                                                           */
+  /* `animation-duration` est volontairement absent : sa valeur initiale est   */
+  /* déjà `auto`, ce que le raccourci produisait, donc l'écrire n'ajouterait    */
+  /* qu'une déclaration à faire rejeter par un moteur plus ancien.             */
+  /*                                                                           */
+  /* `screen` n'est pas décoratif : à l'impression il n'y a pas de scrollport,  */
+  /* donc une timeline de vue ne progresse jamais et `both` figerait les        */
+  /* sections à opacité 0 — page blanche. Mesuré le 08.10 sous `media: print` : */
+  /* 11 `.reveal` sur 11 à opacité 0 sans ce garde. Tant que le raccourci était */
+  /* rejeté, l'impression était intacte par accident ; ce garde la préserve     */
+  /* maintenant que l'animation fonctionne.                                    */
+  @media screen and (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) {
       .reveal {
-        animation: reveal-fade linear both;
+        animation-name: reveal-fade;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
         animation-timeline: view();
         animation-range: entry 0% cover 20%;
       }
