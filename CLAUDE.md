@@ -45,13 +45,16 @@ dans `src/i18n/fr.json`.
   Animations (mise à jour T9 « plus affirmé », validé Jérémy sur maquette) : fade-in scroll
   (`.reveal`) + entrée Hero échelonnée + micro-effets au survol (cartes `.card-lift`, boutons).
   CSS-only, toujours gated `prefers-reduced-motion`. Rester sobre : pas d'animation gratuite.
+  **La règle `.reveal` s'écrit en longhands, jamais avec le raccourci `animation`, et son bloc
+  reste restreint à `screen`** (T27 — voir les gotchas ; `gate/reveal-css.spec.ts` échoue sinon).
 
 ## Avancement
 
 Historique des tâches (T1–T26, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA au 08.10** : **432 tests, 8 projets Playwright**, trois workflows actifs —
+**État de la suite QA au 08.10** : **446 tests (443 passés, 3 sautés), 8 projets Playwright**,
+trois workflows actifs —
 `pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
 échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
 `qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI : gate 65 s, build
@@ -59,28 +62,25 @@ entier ; le consulter par ligne ciblée quand une décision passée doit être v
 l'historique Allure et du JUnit (les tendances du rapport sont donc vides), axe/a11y, et le
 branchement ReleaseGuard / FlakySense.
 
-**Points ouverts au 08.10 (source : lignes T23–T26 du journal), décisions de Jérémy** — cinq
-écarts trouvés en construisant la suite, **aucun corrigé**, chacun touchant le CSS ou le contenu
-servis donc chacun méritant sa propre PR :
+Le 3e test sauté est **mesuré, pas accidentel** : Firefox 155 (la build livrée avec Playwright
+1.63.0) répond `false` à `CSS.supports('animation-timeline', 'view()')`, donc l'assertion CSSOM de
+`gate/reveal-css` s'y abstient au lieu de conclure à un défaut. Chromium 153 **et WebKit 26.6**
+la supportent tous les deux et passent.
 
-1. **La révélation au scroll est morte en production, et l'a toujours été.** La source est
-   correcte en trois déclarations, mais le minifieur CSS les fusionne en un raccourci `animation`
-   qui embarque `animation-timeline` — valeur que ce raccourci n'accepte pas. Mesuré dans le
-   navigateur : la déclaration est rejetée en entier, d'où `animation-name: none`. Le CSS servi
-   par la production est identique à l'octet au build local, donc c'est l'état livré. À noter :
-   Chromium **supporte** `animation-timeline: view()`, le garde `@supports` n'est pas en cause.
-   Conséquence pour le visiteur : aucune, le contenu reste à opacité 1 — un embellissement
-   absent, pas une régression de contenu, et c'est pour ça que personne ne l'avait vu.
-2. **Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article
+**Points ouverts au 08.10 (source : lignes T23–T26 du journal), décisions de Jérémy** — des cinq
+écarts trouvés en construisant la suite, **le premier est corrigé (T27)** et **quatre restent**,
+chacun touchant le CSS ou le contenu servis donc chacun méritant sa propre PR :
+
+1. **Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article
    sur les mots de passe (FR + EN) peinte jusqu'à ~440px dans un viewport de 375px, sans que la
    page défile. 2 pages sur 26. Exception nommée dans `mobile-375.spec.ts`, qui échoue dans les
    deux sens pour ne pas pourrir.
-3. **`og:type` vaut `website` sur les pages d'article**, devrait être `article`. Asséré via
+2. **`og:type` vaut `website` sur les pages d'article**, devrait être `article`. Asséré via
    `test.fail()`.
-4. **Le sitemap n'a pas d'alternates `xhtml:link`** alors que le namespace est déclaré et que le
+3. **Le sitemap n'a pas d'alternates `xhtml:link`** alors que le namespace est déclaré et que le
    site est bilingue : l'option `i18n` de `@astrojs/sitemap` n'est pas passée. Décision de
    configuration, pas régression — délibérément non assérée.
-5. **Exclure `docs/`, `.github/` et `CLAUDE.md` du scan Tailwind retirerait 48 octets de CSS
+4. **Exclure `docs/`, `.github/` et `CLAUDE.md` du scan Tailwind retirerait 48 octets de CSS
    mort** (`.block` 21 o, venue de l'entrée de journal qui documente l'incident du mot « block »,
    et `.contents` 27 o, venue de `permissions: contents: read`). Nettoyage qui se défend, mais il
    change les octets servis.
@@ -151,12 +151,13 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
-- **`npm run test:e2e`** — 432 tests, ~2 min. Il construit et sert `dist/` tout seul. Puis
+- **`npm run test:e2e`** — 446 tests, ~2,5 min. Il construit et sert `dist/` tout seul. Puis
   `npm run test:report` pour le rapport Allure (un fichier HTML autonome dans `allure-report/`).
   Pour un sous-ensemble : `npx playwright test --project=gate-desktop` (voir `tests/README.md`
   pour les 8 projets). La suite tourne aussi sur chaque PR via `pr.yml`.
 - **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
-  rester `_astro_content.DPDLS9i_.css`. Tailwind scanne plus large qu'on ne croit (voir les
+  rester `_astro_content.CerI2rm-.css` (il valait `DPDLS9i_` jusqu'à T27, qui a réparé la
+  révélation au scroll : +70 octets, une seule règle, écart mesuré ligne à ligne). Tailwind scanne plus large qu'on ne croit (voir les
   gotchas), et un mot de prose peut injecter une règle.
 - **Plusieurs contrôles manuels sont désormais automatisés**, et il ne faut pas les refaire à la
   main : débordement horizontal à 375px (avec la précondition de largeur qui ferme le piège de
@@ -213,6 +214,19 @@ Vaut aussi pour les commentaires de PR et les issues.
   injecter leur règle — c'est arrivé trois fois pendant la construction de la suite, dont une en
   rédigeant ce gotcha. Les mots exacts déjà constatés vivent dans `tests/README.md`, hors
   périmètre scanné.
+- **Le minifieur peut détruire une déclaration CSS correcte, et c'est `lightningcss`.** Les deux
+  minifieurs sont là (`esbuild` via Vite, `lightningcss` via la passe d'optimisation de
+  Tailwind 4) ; **mesuré le 08.10**, c'est `lightningcss` qui refusionne un raccourci `animation`
+  et un `animation-timeline` en `animation: linear both reveal-fade view()`. Ce raccourci
+  n'accepte aucune valeur de timeline, donc le navigateur rejette la déclaration **en entier**
+  (`cssText: ""`, d'où `animation-name: none`) : l'animation de `.reveal` n'a jamais tourné en
+  production. La parade est d'écrire **tous les longhands** — mesuré, il ne reconstruit pas le
+  raccourci à partir d'eux ; deux règles au même sélecteur, en revanche, sont fusionnées et le
+  raccourci revient. Corollaire : réparer une animation d'apparition **rallume son mode de
+  panne** — à l'impression il n'y a pas de scrollport, la timeline ne progresse pas et
+  `animation-fill-mode: both` figerait les sections à opacité 0 (mesuré : 11 `.reveal` sur 11),
+  d'où la portée `screen`. Leçon générale : pour une propriété récente portée par un raccourci,
+  **asserter sur les octets servis**, pas sur la source. Détail complet dans `tests/README.md`.
 - **`astro preview` se démonise quand il détecte un agent** (lu dans
   `node_modules/astro/dist/cli/preview/index.js` : `isRunByAgent()` via le paquet `am-i-vibing`),
   ce qui casse le contrat `webServer` de Playwright — « Process from config.webServer exited

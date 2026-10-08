@@ -80,6 +80,7 @@ déterministe et ne dépendre que de nous.
 | `gate/sitemap` | P basse-moy × I moyen | Correspondance exacte avec les pages construites, slash final, **aucune URL encodée** (le piège `%20`), aucun doublon, chaque URL en 200. |
 | `gate/seo-meta` | P moyenne × I moy-haut | Canonical = `og:url`, image Open Graph **par locale**, `og:locale`, titres uniques, les trois `hreflang`. |
 | `gate/blog-contract` | P moy-haute × I moyen | Un seul `h1` égal au titre, aucun saut de niveau, date affichée = frontmatter, slug kebab-case et fichier homonyme. |
+| `gate/reveal-css` | P moyenne × I faible (écran) à moyen (impression) | Les OCTETS de la révélation au scroll : aucun raccourci `animation` ne transporte de timeline (c'est le minifieur qu'on surveille, pas la règle), `.reveal` déclare bien sa timeline en longhand **dans son propre bloc**, la portée `screen` est là, et le moteur a réellement ACCEPTÉ la déclaration (CSSOM). Verrouille un défaut qui a vécu en production depuis sa mise en place sans être vu. |
 | `gate/skip-link` | P basse × I moyen | Hors écran sans focus, visible au focus, mène à `#contenu` — vérifié sur les trois moteurs. Et « un seul Tab suffit » là où Tab atteint les liens. |
 | `invariants/zero-js` | P basse × I **maximal** | Aucun `.js`, aucune balise de script, aucun handler en attribut. Plus un garde-fou : toutes les pages déclarées sont construites. |
 | `invariants/zero-external` | P basse-moy × I moy-haut | L'invariant « 0 requête externe », côté fichiers **et** côté navigateur. |
@@ -99,7 +100,7 @@ jour sans aucun défaut.
 |---|---|---|
 | `nightly/prod-http` | impact faible-moyen | **Production uniquement.** Chaque page et chaque URL du sitemap en 200 ; un lien non canonique redirige en **une seule** étape vers exactement sa canonique ; un chemin inconnu répond 404 ; la feuille de style référencée est bien servie. Avec un garde-fou qui échoue si aucune redirection n'est observée — sinon la spec passerait sans rien vérifier de propre à la production. |
 | `nightly/external-links` | P basse-moy × I moyen | Les 7 dépôts de la cartographie, LinkedIn, GitHub et le champ `linkedin:` des articles. Un statut qu'on ne peut pas interpréter est compté « inconnu », pas « vérifié ». |
-| `nightly/reduced-motion` | P basse × I moyen | La seule spec autorisée à s'intéresser au mouvement. Surtout : **le contenu n'est jamais masqué**, dans les deux préférences — c'est le mode de panne grave de ce motif. |
+| `nightly/reduced-motion` | P basse × I moyen | La seule spec autorisée à s'intéresser au mouvement : sous `reduce` rien n'est animé et tout est visible ; sous `no-preference` l'animation s'applique ; **aucun contenu ne RESTE masqué** (chaque `.reveal` amené dans la vue atteint l'opacité 1) ; et à l'impression rien n'est animé ni masqué. Le mode de panne grave de ce motif est du contenu qui reste invisible, pas du contenu invisible à un instant donné. |
 | `gate-firefox` / `gate-webkit` | assurance de régression | Rejeu du gate sur les deux autres moteurs. Justifié, pas réflexe : le site a 0 JS et une seule feuille de style, et la seule fonctionnalité sensible au moteur est derrière un `@supports`. |
 
 ### À venir
@@ -150,43 +151,23 @@ Allure et accumulation du JUnit · branchement ReleaseGuard et FlakySense.
 ## Défauts du site trouvés par la suite, non corrigés
 
 Chacun est documenté dans sa spec, asséré dans le sens souhaité, et attend un
-arbitrage. Aucun n'est corrigé au passage : les trois touchent le CSS ou le
+arbitrage. Aucun n'est corrigé au passage : les deux touchent le CSS ou le
 contenu servis, donc ils méritent leur propre changement et leur propre
 vérification.
 
-**1. La révélation au scroll est morte en production, et l'a toujours été.**
-Mesuré le 08.10. La source est correcte, en trois déclarations :
+Le premier défaut de cette liste — **la révélation au scroll morte en
+production** — a été corrigé le 08.10 dans son propre changement. Le récit
+mesuré est passé plus bas, dans les pièges, parce que la leçon survit au
+correctif : le minifieur peut détruire une déclaration correcte. Les assertions
+sont dans `gate/reveal-css.spec.ts`.
 
-```css
-animation: reveal-fade linear both;
-animation-timeline: view();
-animation-range: entry 0% cover 20%;
-```
-
-mais le minifieur CSS les fusionne en un seul raccourci :
-
-```css
-animation: linear both reveal-fade view()
-```
-
-Or `animation-timeline` n'est pas une valeur acceptée par le raccourci
-`animation`. Vérifié dans le navigateur : poser ce raccourci donne
-`cssText: ""` — la déclaration est rejetée **en entier** — d'où
-`animation-name: none`. La forme source, elle, donne bien
-`animation-name: reveal-fade`. Et le CSS servi par la production est identique
-à l'octet au build local, donc c'est bien l'état livré.
-
-Conséquence pour le visiteur : aucune. Le contenu reste à opacité 1, donc rien
-n'est caché — c'est un embellissement absent, pas une régression de contenu.
-C'est précisément pour ça que personne ne l'a vu.
-
-**2. Un tableau d'article est inatteignable à 375px.** La troisième colonne du
+**1. Un tableau d'article est inatteignable à 375px.** La troisième colonne du
 tableau de l'article sur les mots de passe (FR + EN) est peinte jusqu'à ~440px
 dans un viewport de 375px, sans que la page défile : la colonne n'est ni
 visible ni accessible. Deux pages sur 26. Exception nommée dans
 `mobile-375.spec.ts`, qui échoue **dans les deux sens**.
 
-**3. `og:type` vaut `website` sur les pages d'article.** Devrait être
+**2. `og:type` vaut `website` sur les pages d'article.** Devrait être
 `article`. Asséré via `test.fail()` dans `seo-meta.spec.ts`.
 
 ## Pièges mesurés — à ne pas redécouvrir
@@ -208,6 +189,85 @@ pourquoi.
 
 Leçon générale : quand un moteur diverge, mesurer **avant** de conclure au
 défaut, et se demander si l'assertion ne mélangeait pas deux questions.
+
+### Le minifieur peut détruire une déclaration correcte
+
+**Mesuré le 08.10**, et c'est le défaut le plus instructif trouvé jusqu'ici :
+une source juste peut être servie morte.
+
+La révélation au scroll s'écrivait en trois déclarations correctes —
+`animation: reveal-fade linear both`, puis `animation-timeline: view()`, puis
+`animation-range`. Le CSS servi, lui, portait :
+
+```css
+animation: linear both reveal-fade view()
+```
+
+Or le raccourci `animation` **n'accepte aucune valeur de timeline**. Poser cette
+déclaration dans un navigateur donne `cssText: ""` : elle est rejetée **en
+entier**, donc `animation-name: none`. L'animation n'a donc jamais tourné en
+production, depuis sa mise en place, sans que personne le voie — ni la source,
+qui était correcte, ni l'œil, le contenu restant lisible.
+
+**Attribution mesurée, pas devinée** : les deux minifieurs sont présents dans ce
+dépôt (`esbuild` via Vite, `lightningcss` via la passe d'optimisation de
+Tailwind 4). Rejouer `lightningcss` **seul** sur l'extrait reproduit la sortie
+fautive à l'octet. Le garde `@supports` est innocent :
+`CSS.supports('animation-timeline', 'view()')` vaut `true` sur Chromium.
+
+Le correctif est d'écrire **tous les longhands** et aucun raccourci : mesuré,
+`lightningcss` ne reconstruit pas le raccourci à partir des longhands. Deux
+contournements testés ont échoué ou sont pires — **deux règles au même
+sélecteur** sont fusionnées, raccourci reconstruit inclus, et une indirection
+par `var()` marche mais rend la règle illisible. Comme rien ne garantit qu'une
+version future ne se remettra pas à fusionner, c'est `gate/reveal-css.spec.ts`
+qui tient la garantie, et pas une confiance dans le minifieur.
+
+Leçon transférable : pour une propriété récente portée par un raccourci,
+**l'assertion doit porter sur les octets servis**, pas sur la source.
+
+Et un effet de bord à ne pas rater : réparer une animation d'apparition
+**rallume son mode de panne**. À l'impression il n'y a pas de scrollport, donc
+une timeline de vue ne progresse jamais et `animation-fill-mode: both` fige les
+sections à opacité 0 — mesuré sous `media: print`, 11 `.reveal` sur 11. D'où la
+portée `screen` du bloc. Tant que le raccourci était rejeté, l'impression était
+intacte **par accident**.
+
+### Lire le CSSOM : un `CSSStyleRule` a lui aussi des `cssRules`
+
+**Mesuré le 08.10** en écrivant la spec. Depuis le nesting CSS, une règle de
+style expose une collection `cssRules` (vide la plupart du temps), exactement
+comme `@media` ou `@supports`. Un parcours récursif qui descend *dès que*
+`cssRules` existe saute donc **toutes** les règles de style et ne trouve jamais
+rien : premier jet rouge pour cette raison, pas pour un défaut du site. Tester
+`selectorText` d'abord.
+
+Deuxième piège de la même famille : chercher une déclaration dans **toute** la
+feuille au lieu du bloc concerné. `animation-timeline:view()` figure aussi dans
+la condition `@supports (animation-timeline:view())` — l'assertion restait donc
+verte alors que la mutation avait supprimé la déclaration de la règle. Trouvé
+par mutation, et c'est précisément à ça que servent les mutations : l'assertion
+ne mesurait rien.
+
+### Une opacité lue à l'ouverture n'est pas déterministe
+
+**Mesuré neuf fois le 08.10** sur le même build, au même `scrollY`, au même
+viewport : l'opacité des `.reveal` à l'ouverture, sous `no-preference`, rend
+`0` ou `1` selon le run. **Cause inconnue** — ce n'est pas une explication qui
+manque de place, c'est une mesure qui n'a pas été faite. Aucune spec n'assère
+donc là-dessus.
+
+L'invariant utile n'est de toute façon pas celui-là. « Tous les `.reveal` à
+opacité 1 » n'était vrai que **tant que l'animation était morte** : une
+révélation au scroll qui fonctionne laisse légitimement à 0 ce qui n'est pas
+encore entré dans la vue. La formulation qui protège le lecteur est « aucun
+contenu ne **reste** masqué » : amener l'élément dans la vue, puis **attendre**
+l'opacité 1 avec une borne.
+
+Et pour l'y amener, `scrollIntoViewIfNeeded()` est le mauvais instrument : il
+fait défiler le **minimum**, donc il laisse l'élément collé au bord du viewport,
+là où la plage `entry 0% cover 20%` n'est légitimement pas terminée. Mesuré :
+rouge sur le 6e élément, sans aucun défaut du site. Centrer.
 
 ### Tailwind scanne les tests et les configs racine
 
@@ -382,7 +442,16 @@ exécutées le 07.10 :
 | Une entree retiree de la liste d'exception 375px | rouge en « NOUVEAU » |
 | `prod-http` pointe le preview local au lieu de la production | rouge sur le garde-fou : « aucun lien non canonique ne redirige » |
 | Une URL de depot morte dans la cartographie | `external-links` rouge, URL nommee, et la parite FR/EN rouge aussi |
-| `.reveal { opacity: 0 }` sans animation pour le rattraper | `reduced-motion` rouge sur « le contenu n'est jamais masque » |
+| `.reveal { opacity: 0 }` sans animation pour le rattraper | `reduced-motion` rouge sur le contenu masqué |
+
+Mutations exécutées le 08.10, sur la révélation au scroll :
+
+| Mutation | Résultat |
+|---|---|
+| Retour au raccourci `animation: reveal-fade linear both` + `animation-timeline` (le défaut d'origine) | `reveal-css` rouge **3 fois** : raccourci porteur de timeline, longhand absent du bloc, CSSOM qui a rejeté la déclaration |
+| Retrait du garde `screen` de la media query | `reveal-css` rouge 2 fois (portée, puis condition lue dans le CSSOM) et `reduced-motion` rouge sur l'impression |
+| Suppression de `animation-timeline: view()` | `reveal-css` rouge 2 fois — et c'est la mutation qui a révélé qu'une des deux assertions ne mesurait rien, corrigée aussitôt |
+| Keyframe d'arrivée passée à `opacity: 0.2` | `reduced-motion` rouge sur « aucun contenu ne RESTE masqué », en nommant l'index de l'élément |
 
 Note : passer un article en `draft: true` ne fait **pas** échouer le garde-fou,
 et c'est correct — le catalogue exclut les brouillons comme le build. C'est la
@@ -469,6 +538,6 @@ atterriront.
   donc visibles que dans l'éditeur. Un script `typecheck` exigerait
   `@astrojs/check` et `typescript` en devDependencies — **deux dépendances non
   approuvées**, donc non ajoutées. À arbitrer.
-- **Pas d'historique Allure.** `historyPath` pointe
-  `.qa-history/allure/history.jsonl`, mais rien ne le persiste encore entre deux
-  runs (PR 4).
+- **Axe / a11y.** Demande `@axe-core/playwright`, une dépendance hors de la
+  stack verrouillée, donc **non ajoutée sans accord**. Les contrastes WCAG AA
+  restent le seul contrôle manuel que la suite ne reprend pas.
