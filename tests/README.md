@@ -410,9 +410,11 @@ au lieu de coder un nombre en dur.
   donc le sujet d'une seule spec, en production uniquement — ailleurs, c'est une
   source de conclusions fausses.
 - **`reducedMotion: 'reduce'` partout.** Les `.reveal` animent leur opacité au
-  scroll derrière `@media (prefers-reduced-motion: no-preference)`. Motion
-  réduit, ils restent à opacité 1 et les assertions sont déterministes. Le gate
-  ne doit jamais dépendre de l'avancement d'une animation.
+  scroll derrière `@media screen and (prefers-reduced-motion: no-preference)`.
+  Motion réduit, ils restent à opacité 1 et les assertions sont déterministes.
+  Le gate ne doit jamais dépendre de l'avancement d'une animation — ce que
+  `gate/reveal-css` respecte en lisant le CSSOM et les octets servis, jamais un
+  rendu animé.
 - **Retries à 0 dans le gate.** Un gate est une mesure à tentative unique ; les
   retries sont un instrument de mesure de l'instabilité, pas un comportement de
   gate. Les deux ne partagent jamais le même run — et le quality gate d'Allure

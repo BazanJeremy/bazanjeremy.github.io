@@ -50,7 +50,7 @@ dans `src/i18n/fr.json`.
 
 ## Avancement
 
-Historique des tâches (T1–T26, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
+Historique des tâches (T1–T27, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
 **État de la suite QA au 08.10** : **446 tests (443 passés, 3 sautés), 8 projets Playwright**,
@@ -209,7 +209,7 @@ Vaut aussi pour les commentaires de PR et les issues.
   lui-même**. N'est **pas** scannée : la feuille de style. Donc un mot de prose dans ce fichier,
   dans un workflow ou dans le journal peut injecter une règle et déplacer le hash du CSS.
   `src/styles/global.css` exclut déjà `tests/`, les configs racine et `scripts/` ; `docs/`,
-  `.github/` et `CLAUDE.md` ne le sont volontairement pas (voir le point ouvert n° 5).
+  `.github/` et `CLAUDE.md` ne le sont volontairement pas (voir le point ouvert n° 4).
   ⚠️ **Ne pas écrire les mots pièges ici** : ce fichier étant scanné, les nommer suffit à
   injecter leur règle — c'est arrivé trois fois pendant la construction de la suite, dont une en
   rédigeant ce gotcha. Les mots exacts déjà constatés vivent dans `tests/README.md`, hors

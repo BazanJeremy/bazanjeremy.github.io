@@ -15,8 +15,9 @@ import { defineConfig, devices } from '@playwright/test';
  *    `animation-timeline: view()`, derrière `@media (prefers-reduced-motion:
  *    no-preference)`. Motion réduit ⇒ le bloc ne matche jamais ⇒ les éléments
  *    restent à opacité 1 ⇒ les assertions sont déterministes. Le gate ne doit
- *    jamais dépendre de l'avancement d'une animation. L'animation elle-même
- *    sera testée par une spec dédiée qui rebascule en `no-preference`.
+ *    jamais dépendre de l'avancement d'une animation : `gate/reveal-css` tient
+ *    la révélation au scroll en lisant les OCTETS SERVIS et le CSSOM, et le
+ *    projet `motion` (en nuit) est le seul à regarder un rendu animé.
  *
  * 3. RETRIES À 0 PAR DÉFAUT. Un gate est une mesure à tentative unique ; les
  *    retries sont un instrument de mesure de l'instabilité, pas un
@@ -143,6 +144,12 @@ export default defineConfig({
     // sensible au moteur est `animation-timeline: view()`, deja derriere un
     // `@supports` — un moteur qui ne la supporte pas n'anime pas, et c'est
     // le repli voulu. Assurance de regression, donc : en nuit, pas en gate.
+    //
+    // MESURE DU 08.10, qui justifie ce rejeu autrement que par principe :
+    // Chromium 153 et WebKit 26.6 supportent `animation-timeline: view()` et
+    // animent ; Firefox 155 repond `false` a `CSS.supports`, donc l'assertion
+    // CSSOM de `reveal-css` s'y SAUTE avec son motif, et le repli laisse le
+    // contenu a opacite 1. Trois moteurs, trois comportements, un seul voulu.
     {
       name: 'gate-firefox',
       testDir: './tests/gate',
