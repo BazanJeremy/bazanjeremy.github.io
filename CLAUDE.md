@@ -31,6 +31,16 @@ dans `src/i18n/fr.json`.
   mesuré le 30.09 sur `dist/` et `src/i18n/*.json`).
   On dit « outils », « série d'outils », ou le nom du projet. Le fichier `Portfolio.astro` garde
   son nom : c'est du code, pas du texte publié.
+- **Suite de tests (accord Jérémy, 07.10)** : Playwright + rapport Allure 3, en `devDependencies`
+  uniquement — `@playwright/test` **épinglé exact** (les binaires de navigateur sont liés à la
+  version), `allure-playwright`, `allure` (CLI 3, aucun JRE), `@types/node` (il était déjà
+  transitif). Rapport publié en **artefact de workflow** (`singleFile`), jamais sous le site :
+  l'invariant « `dist/` sans `.js` » est l'argument qui répond aux alertes Dependabot, et un
+  rapport Allure le ferait tomber. Gate **bloquant restreint** (ce qui est déterministe et ne
+  dépend que de ce dépôt), reste en informatif. **Pas de régression visuelle** (Windows en dev,
+  Linux en CI : les baselines seraient inutilisables en local).
+  Le registre de risque, la liste argumentée de ce qu'on ne teste **pas**, et tous les pièges
+  mesurés vivent dans **`tests/README.md`** — à lire avant de toucher à la suite.
 - **Pas de dépendance hors stack ci-dessus sans accord.** Pas d'emoji dans le contenu.
   Animations (mise à jour T9 « plus affirmé », validé Jérémy sur maquette) : fade-in scroll
   (`.reveal`) + entrée Hero échelonnée + micro-effets au survol (cartes `.card-lift`, boutons).
@@ -38,8 +48,42 @@ dans `src/i18n/fr.json`.
 
 ## Avancement
 
-Historique des tâches (T1–T21, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
+Historique des tâches (T1–T26, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
+
+**État de la suite QA au 08.10** : **432 tests, 8 projets Playwright**, trois workflows actifs —
+`pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
+échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
+`qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI : gate 65 s, build
+14 s, deploy 10 s, soit ~94 s contre 36 s avant. **Pas encore en place** : la persistance de
+l'historique Allure et du JUnit (les tendances du rapport sont donc vides), axe/a11y, et le
+branchement ReleaseGuard / FlakySense.
+
+**Points ouverts au 08.10 (source : lignes T23–T26 du journal), décisions de Jérémy** — cinq
+écarts trouvés en construisant la suite, **aucun corrigé**, chacun touchant le CSS ou le contenu
+servis donc chacun méritant sa propre PR :
+
+1. **La révélation au scroll est morte en production, et l'a toujours été.** La source est
+   correcte en trois déclarations, mais le minifieur CSS les fusionne en un raccourci `animation`
+   qui embarque `animation-timeline` — valeur que ce raccourci n'accepte pas. Mesuré dans le
+   navigateur : la déclaration est rejetée en entier, d'où `animation-name: none`. Le CSS servi
+   par la production est identique à l'octet au build local, donc c'est l'état livré. À noter :
+   Chromium **supporte** `animation-timeline: view()`, le garde `@supports` n'est pas en cause.
+   Conséquence pour le visiteur : aucune, le contenu reste à opacité 1 — un embellissement
+   absent, pas une régression de contenu, et c'est pour ça que personne ne l'avait vu.
+2. **Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article
+   sur les mots de passe (FR + EN) peinte jusqu'à ~440px dans un viewport de 375px, sans que la
+   page défile. 2 pages sur 26. Exception nommée dans `mobile-375.spec.ts`, qui échoue dans les
+   deux sens pour ne pas pourrir.
+3. **`og:type` vaut `website` sur les pages d'article**, devrait être `article`. Asséré via
+   `test.fail()`.
+4. **Le sitemap n'a pas d'alternates `xhtml:link`** alors que le namespace est déclaré et que le
+   site est bilingue : l'option `i18n` de `@astrojs/sitemap` n'est pas passée. Décision de
+   configuration, pas régression — délibérément non assérée.
+5. **Exclure `docs/`, `.github/` et `CLAUDE.md` du scan Tailwind retirerait 48 octets de CSS
+   mort** (`.block` 21 o, venue de l'entrée de journal qui documente l'incident du mot « block »,
+   et `.contents` 27 o, venue de `permissions: contents: read`). Nettoyage qui se défend, mais il
+   change les octets servis.
 
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
 d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en mode LLM ; toute version
@@ -107,14 +151,23 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
+- **`npm run test:e2e`** — 432 tests, ~2 min. Il construit et sert `dist/` tout seul. Puis
+  `npm run test:report` pour le rapport Allure (un fichier HTML autonome dans `allure-report/`).
+  Pour un sous-ensemble : `npx playwright test --project=gate-desktop` (voir `tests/README.md`
+  pour les 8 projets). La suite tourne aussi sur chaque PR via `pr.yml`.
+- **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
+  rester `_astro_content.DPDLS9i_.css`. Tailwind scanne plus large qu'on ne croit (voir les
+  gotchas), et un mot de prose peut injecter une règle.
+- **Plusieurs contrôles manuels sont désormais automatisés**, et il ne faut pas les refaire à la
+  main : débordement horizontal à 375px (avec la précondition de largeur qui ferme le piège de
+  mesure de T16 — un test qui ne vérifie que le débordement passerait pour la même mauvaise
+  raison), vocabulaire banni sur trois surfaces, ancres mortes, chaînage `translationSlug`,
+  métadonnées par locale, contrat des articles, invariants 0-JS et 0 requête externe.
+  **Pas encore couvert** : les contrastes WCAG AA (axe arrive plus tard), et le rendu visuel —
+  pour ça, la comparaison `dist/` contre la prod ci-dessous reste la méthode.
 - Aperçu réel : `npm run preview` puis vérifs. **Les screenshots du browser pane plantent dans
   cet environnement** → vérifier via `javascript_tool` + `getComputedStyle` (couleurs, tailles),
   et via la prod (`curl` du CSS `/_astro/*.css`).
-- Responsive **mobile 375px** (iPhone SE) : pas de débordement horizontal. Contrastes WCAG AA.
-  ⚠️ `resize_window` peut répondre « Viewport set to 375x812 » **sans que l'émulation soit
-  appliquée** : toujours relire `document.documentElement.clientWidth` dans la même mesure,
-  et recharger la page si la largeur n'est pas 375 avant de conclure (vu en T16 : première
-  mesure faite à 785px, donc sans valeur).
 - **Bump de dépendance ou correctif de contenu** : ne pas juger à l'œil, comparer le `dist/`
   au site en prod (qui est l'état de `main`) — `curl` de chaque type de page + `diff`, `cmp` sur
   le CSS `/_astro/*.css` (son nom est un hash de contenu : nom identique ⇒ CSS identique), `diff`
@@ -141,7 +194,42 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Gotchas
 
 - CI = `.github/workflows/deploy.yml`, `withastro/action` **avec `node-version: 22`**
-  (Astro 7 exige ≥ 22.12 ; l'action est en Node 20 par défaut).
+  (Astro 7 exige ≥ 22.12 ; l'action est en Node 20 par défaut). **L'action reste intacte** : la
+  réécrire à la main n'est pas la traduction 1:1 qu'on croit — mesuré, elle utilise
+  `setup-node@v7`, `upload-pages-artifact@v5` et un cache de build Astro via `actions/cache@v6`.
+  Comme le job `build` complet prend 14 s et que le gate doit de toute façon construire son
+  propre `dist/`, un build de plus coûte moins cher que reprendre la maintenance de ses
+  entrailles. Le gate est donc un **job séparé en amont**, et `build` porte `needs: gate`.
+  `pr.yml` et `qa-nightly.yml` ont leurs **propres groupes de concurrence**, jamais `pages` :
+  partager le groupe de déploiement mettrait les tests en file derrière les mises en production.
+- **Le périmètre de scan de Tailwind est plus large que « le contenu »** — extension du piège du
+  mot « block » déjà documenté. Mesuré par élimination les 07 et 08.10, sont scannés : `tests/`,
+  les fichiers de config à la racine, `scripts/`, `docs/`, `.github/` et **`CLAUDE.md`
+  lui-même**. N'est **pas** scannée : la feuille de style. Donc un mot de prose dans ce fichier,
+  dans un workflow ou dans le journal peut injecter une règle et déplacer le hash du CSS.
+  `src/styles/global.css` exclut déjà `tests/`, les configs racine et `scripts/` ; `docs/`,
+  `.github/` et `CLAUDE.md` ne le sont volontairement pas (voir le point ouvert n° 5).
+  ⚠️ **Ne pas écrire les mots pièges ici** : ce fichier étant scanné, les nommer suffit à
+  injecter leur règle — c'est arrivé trois fois pendant la construction de la suite, dont une en
+  rédigeant ce gotcha. Les mots exacts déjà constatés vivent dans `tests/README.md`, hors
+  périmètre scanné.
+- **`astro preview` se démonise quand il détecte un agent** (lu dans
+  `node_modules/astro/dist/cli/preview/index.js` : `isRunByAgent()` via le paquet `am-i-vibing`),
+  ce qui casse le contrat `webServer` de Playwright — « Process from config.webServer exited
+  early ». `playwright.config.ts` pose `ASTRO_PREVIEW_BACKGROUND` dans `webServer.env` pour
+  désactiver la détection, plus `--ignore-lock` contre un verrou laissé par une session
+  précédente. **En CI il n'y a pas d'agent, donc le défaut ne s'y voit pas** : sans ce
+  correctif, la suite passerait en CI et échouerait en local.
+- **GitHub Actions pose une entrée non renseignée à CHAÎNE VIDE, pas à `undefined`.** Un
+  `process.env.X ?? défaut` ne retombe donc pas sur le défaut en CI — utiliser `||`. Vu sur
+  `PW_BASE_URL`, qui serait devenu vide et aurait cassé toute navigation relative, en CI
+  seulement.
+- **Rapport Allure** : seul `allure generate` lit `allurerc.mjs` (`allure awesome <dir>` ignore
+  `plugins.awesome.options` et sort un rapport multi-fichiers). Et le plugin `awesome` injecte un
+  traceur Google Analytics **en dur, sans opt-out** — `scripts/allure-report.mjs` le retire et
+  échoue s'il ne trouve rien à retirer. Ne pas revenir à un enchaînement par `&&` : un quality
+  gate en échec fait sortir `allure generate` en non-zéro, le `&&` court-circuite, et le traceur
+  reste dans le rapport qu'on va justement ouvrir.
 - L'environnement `github-pages` n'autorise que la **branche par défaut** → doit rester `main`.
 - **Articles de veille** : Jérémy en pousse lui-même. Le schéma (`src/content.config.ts`)
   ne valide pas tout → à vérifier à chaque nouvel article (contrat documenté dans le README) :
