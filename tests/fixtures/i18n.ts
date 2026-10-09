@@ -37,7 +37,13 @@ export interface Dictionary {
   };
   readonly proofs: { readonly id: string; readonly items: readonly { readonly value: string; readonly text: string }[] };
   readonly portfolio: { readonly id: string; readonly blocks: readonly { readonly title: string; readonly repos: readonly Repo[] }[] };
-  readonly blog: { readonly id: string; readonly index_title: string; readonly index_description: string };
+  readonly blog: {
+    readonly id: string;
+    readonly index_title: string;
+    readonly index_description: string;
+    /** Nom accessible de la région défilable qui enveloppe chaque tableau. */
+    readonly table_aria: string;
+  };
   readonly stack: { readonly id: string; readonly items: readonly string[] };
   readonly journey: { readonly id: string };
   readonly contact: {

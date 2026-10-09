@@ -50,16 +50,16 @@ dans `src/i18n/fr.json`.
 
 ## Avancement
 
-Historique des tâches (T1–T30, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
+Historique des tâches (T1–T31, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA, relancée en entier le 09.10** : **443 tests — 440 passés, 3 sautés**,
-8 projets Playwright, sortie Playwright 0, 1,8 min. Le compte **valait 446 jusqu'à T30**, qui a
-retiré un test en déplaçant son assertion dans une boucle déjà paramétrée sur les 26 pages (−1 par
-projet lançant ce spec, soit −3) : **moins de tests pour plus de couverture**, donc ne pas lire la
-baisse comme une perte. Le plancher du quality gate est à `minTestsCount: 20`, délibérément loin
-du compte réel, parce que la suite est paramétrée sur les articles et qu'en ajouter un change le
-nombre.
+**État de la suite QA, relancée en entier le 09.10** : **446 tests — 443 passés, 3 sautés**,
+8 projets Playwright, sortie Playwright 0, 1,8 min. Le compte a bougé deux fois ce jour-là —
+446 → 443 en T30 (une assertion déplacée dans une boucle déjà paramétrée, donc moins de tests pour
+plus de couverture), puis 443 → 446 en T31 (+2 invariants, +1 test clavier). **Ne pas lire ces
+variations comme un signal** : le plancher du quality gate est à `minTestsCount: 20`, délibérément
+loin du compte réel, parce que la suite est paramétrée sur les articles et qu'en ajouter un change
+le nombre.
 ⚠️ **Un `npm run test:e2e` local lance les 8 projets, nocturnes compris**, dont
 `external-links`, qui dépend de tiers : au **premier** des trois runs il est tombé sur un
 **504** de `github.com/BazanJeremy`, l'URL répondant **200** aux trois réessais puis aux deux
@@ -79,19 +79,16 @@ Le 3e test sauté est **mesuré, pas accidentel** : Firefox 155 (la build livré
 `gate/reveal-css` s'y abstient au lieu de conclure à un défaut. Chromium 153 **et WebKit 26.6**
 la supportent tous les deux et passent.
 
-**Point ouvert (source : lignes T23–T30 du journal), décision de Jérémy** — des cinq écarts
-trouvés en construisant la suite, **quatre sont tranchés** (voir juste après) et **un seul
-reste** :
+**Les cinq écarts trouvés en construisant la suite sont tous tranchés** (source : lignes T23–T31
+du journal). Trois corrigés, deux fermés par décision. Détail juste en dessous — il reste écrit
+parce que chacun porte une mesure qu'une session fraîche refera sinon à ses frais.
 
-**Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article sur
-les mots de passe (FR + EN) peinte jusqu'à ~440px dans un viewport de 375px, sans que la page
-défile : la colonne n'est ni visible ni atteignable. 2 pages sur 26. Exception nommée dans
-`mobile-375.spec.ts`, qui échoue dans les deux sens pour ne pas pourrir. C'est **le seul des cinq
-écarts avec une conséquence réelle pour un visiteur**, et le plus délicat des cinq —
-⚠️ **le correctif réflexe `display: block; overflow-x: auto` sur `<table>` peut faire perdre la
-sémantique de tableau aux lecteurs d'écran** selon le moteur, mauvais échange pour un site qui
-publie sur l'accessibilité : préférer une région défilable focalisable autour du tableau, et
-**mesurer avant de livrer** plutôt que de faire confiance au correctif courant.
+**Et le fil rouge des trois correctifs mérite d'être lu avant le prochain défaut** : dans les
+trois cas, **la mesure a corrigé l'énoncé du défaut avant de corriger le défaut**. T27 : la cause
+attribuée au garde `@supports` était en fait le minifieur. T29 : les 48 octets étaient 27, et
+`.block` ne venait pas du journal. T31 : « la colonne est inatteignable » était faux — elle
+défilait déjà, le défaut était l'accès clavier. Un énoncé de défaut écrit de mémoire est une
+hypothèse, pas un constat.
 
 ### Tranchés — ne pas reproposer
 
@@ -114,6 +111,17 @@ qu'une session fraîche refera sinon à ses frais.
   `translationSlug`, soit du vrai code pour un gain nul. **TRANCHÉ le 09.10 (décision de
   Jérémy) : on ne le fait pas**, avec cette mesure comme motif. L'option `i18n` a été évaluée
   et écartée, pas oubliée.
+- **Le tableau à 375px** : corrigé en T31. L'énoncé était faux et la mesure l'a montré avant
+  tout correctif — le tableau était **déjà** un scrollport qui défilait (`scrollWidth` 433 contre
+  `clientWidth` 327, `scrollLeft` poussé à 106 ramenant la dernière colonne entièrement dans le
+  viewport), donc la colonne n'était pas perdue. Et `display: block` était **innocent** : les
+  trois moteurs exposaient la sémantique intacte (`table`, 7 `row`, 3 `columnheader`, 18 `cell`),
+  contrairement à la crainte inscrite ici. Le défaut réel était `tabIndex: -1` sur ce scrollport :
+  **inatteignable au clavier** (WCAG 2.1.1) et jamais annoncé. Corrigé par
+  `src/plugins/satteri-scrollable-tables.mjs`, qui enveloppe chaque tableau dans un
+  `role="region"` focalisable, libellé depuis `src/i18n/*.json`. La liste d'exceptions de
+  `mobile-375.spec.ts` a disparu au profit d'une **règle** : un texte dans un scrollport dont le
+  rectangle tient dans le viewport est atteignable, donc il ne compte plus comme débordement.
 - **`og:type` sur les pages d'article** : corrigé en T30. `BaseLayout` codait `website` en dur
   pour les 26 pages ; il prend maintenant une prop `ogType` (défaut `website`) et les deux
   gabarits d'article passent `article` — mesuré, **22 articles en `article`, 4 pages en
@@ -226,7 +234,7 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
-- **`npm run test:e2e`** — 443 tests, ~2 min (1,8 mesuré le 09.10 ; valait 446 avant T30).
+- **`npm run test:e2e`** — 446 tests, ~2 min (1,8 mesuré le 09.10).
   Il construit et sert `dist/` tout seul. Puis `npm run test:report` pour le rapport Allure
   (un fichier HTML autonome dans `allure-report/`). Pour un sous-ensemble :
   `npx playwright test --project=gate-desktop` (voir `tests/README.md` pour les 8 projets).
@@ -237,9 +245,10 @@ Vaut aussi pour les commentaires de PR et les issues.
   déploiement dont on veut vérifier le rendu réel :
   `PW_NO_SERVER=1 PW_BASE_URL=https://bazanjeremy.github.io npx playwright test --project=motion`
 - **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
-  rester `_astro_content.DRDROTEC.css`, 18 836 octets (il valait `DPDLS9i_` jusqu'à T27, qui a
-  réparé la révélation au scroll — +81 octets, une seule règle —, puis `CerI2rm-` jusqu'à T29,
-  qui a exclu la documentation du scan : −27 octets, une seule règle, `.contents`).
+  rester `_astro_content.CAfsBN8X.css`, 18 862 octets (il valait `DPDLS9i_` jusqu'à T27 — +81
+  octets pour réparer la révélation au scroll —, `CerI2rm-` jusqu'à T29 — −27 octets, la règle
+  `.contents`, documentation sortie du scan —, puis `DRDROTEC` jusqu'à T31 : +26 octets, une règle
+  devenue deux, le scrollport des tableaux passant du `<table>` à son conteneur).
   **Depuis T29, une édition de `docs/`, `.github/` ou `CLAUDE.md` ne peut plus déplacer ce
   hash** — c'était tout l'objet du changement. Mais Tailwind scanne toujours plus large qu'on
   ne croit (voir les gotchas), et un mot de prose **d'article** peut injecter une règle.
@@ -301,6 +310,21 @@ Vaut aussi pour les commentaires de PR et les issues.
   `accessible-at-71-percent.md` et non du journal, comme on l'a cru jusqu'au 09.10. La procédure
   tient donc pour tout changement sous `src/` : si le hash bouge, `diff` les deux CSS **par
   règle** (`sed 's/}/}\n/g'`) avant de conclure à une régression.
+- **Le cache de contenu rend INVISIBLE toute mutation d'un plugin Markdown.** Mesuré le 09.10 :
+  `node_modules/.astro/data-store.json` garde le HTML rendu des collections. Il est invalidé par
+  un changement de fichier source **et** par un changement d'`astro.config.mjs`, mais **pas** par
+  un changement d'un module que la config importe — donc pas par un plugin. En vérifiant le
+  plugin de T31, **quatre mutations d'affilée ont laissé le HTML identique et la suite verte** :
+  retirer `tabIndex`, puis `role="region"`, et le HTML servait encore les deux. Une suite verte
+  ne disait rien du plugin. ⚠️ **Avant toute mutation d'un plugin Markdown : `rm -rf
+  node_modules/.astro`.** Cache vidé, les mêmes mutations rougissent aussitôt. Même famille
+  qu'`astro preview` et `DOMContentLoaded` : l'état de la machine décidait du verdict.
+- **Sätteri sérialise `tabindex` en tout ou rien.** Mesuré le 09.10, cache vidé à chaque essai :
+  `tabIndex: 0`, `-1`, `5` et la forme littérale `'tabindex': '3'` sortent **toutes**
+  `tabindex="0"`. Seule la présence de la propriété compte. Donc on ne désactive pas le focus en
+  passant `-1` depuis un plugin hast, et une assertion écrite sur la source du plugin ne mesure
+  rien : asserter sur les octets servis, dont le seul levier de mutation est la **suppression** de
+  la propriété.
 - **Le minifieur peut détruire une déclaration CSS correcte, et c'est `lightningcss`.** Les deux
   minifieurs sont là (`esbuild` via Vite, `lightningcss` via la passe d'optimisation de
   Tailwind 4) ; **mesuré le 08.10**, c'est `lightningcss` qui refusionne un raccourci `animation`
