@@ -133,8 +133,13 @@ Allure et accumulation du JUnit · branchement ReleaseGuard et FlakySense.
 7. **Les alternates `xhtml:link` du sitemap.** Mesuré absents le 07.10 (0
    occurrence dans `dist/sitemap-0.xml`, alors que le namespace est déclaré).
    Les assérer rendrait le gate rouge dès le premier jour pour une
-   *fonctionnalité manquante*, pas une régression. C'est une décision de
-   configuration `@astrojs/sitemap`, à arbitrer séparément.
+   *fonctionnalité manquante*, pas une régression. **TRANCHÉ le 09.10
+   (décision de Jérémy) : on ne le fait pas**, donc l'absence est voulue et
+   reste non assérée. Motif mesuré : l'intégration groupe les alternates par
+   chemin identique après retrait du préfixe de langue, or aucun des 22
+   articles ne partage son slug entre FR et EN, donc l'option `i18n`
+   produirait des alternates sur 4 URLs sur 26 et sur **aucun** article — là
+   où le `hreflang` HTML est déjà complet et réciproque. Ne pas reproposer.
 8. **Vrais appareils mobiles / Mobile Safari.** Pas de device cloud. Le risque
    mobile réel est le débordement à 375px, que l'émulation Chromium mesure
    fidèlement.
@@ -150,16 +155,16 @@ Allure et accumulation du JUnit · branchement ReleaseGuard et FlakySense.
 
 ## Défauts du site trouvés par la suite, non corrigés
 
-Chacun est documenté dans sa spec, asséré dans le sens souhaité, et attend un
-arbitrage. Aucun n'est corrigé au passage : les deux touchent le CSS ou le
-contenu servis, donc ils méritent leur propre changement et leur propre
+Il n'en reste **qu'un**. Il est documenté dans sa spec, asséré dans le sens
+souhaité, et attend un arbitrage ; il n'est pas corrigé au passage, parce qu'il
+touche le contenu servi et mérite donc son propre changement et sa propre
 vérification.
 
-Le premier défaut de cette liste — **la révélation au scroll morte en
-production** — a été corrigé le 08.10 dans son propre changement. Le récit
-mesuré est passé plus bas, dans les pièges, parce que la leçon survit au
-correctif : le minifieur peut détruire une déclaration correcte. Les assertions
-sont dans `gate/reveal-css.spec.ts`.
+**Deux sont fermés.** La **révélation au scroll morte en production**, corrigée
+le 08.10 dans son propre changement : le récit mesuré est passé plus bas, dans
+les pièges, parce que la leçon survit au correctif — le minifieur peut détruire
+une déclaration correcte. Les assertions sont dans `gate/reveal-css.spec.ts`.
+Et **`og:type`**, corrigé le 09.10 (voir juste après).
 
 **1. Un tableau d'article est inatteignable à 375px.** La troisième colonne du
 tableau de l'article sur les mots de passe (FR + EN) est peinte jusqu'à ~440px
@@ -167,8 +172,33 @@ dans un viewport de 375px, sans que la page défile : la colonne n'est ni
 visible ni accessible. Deux pages sur 26. Exception nommée dans
 `mobile-375.spec.ts`, qui échoue **dans les deux sens**.
 
-**2. `og:type` vaut `website` sur les pages d'article.** Devrait être
-`article`. Asséré via `test.fail()` dans `seo-meta.spec.ts`.
+**CORRIGÉ le 09.10 — `og:type` valait `website` sur les pages d'article.**
+`BaseLayout` codait la valeur en dur pour les 26 pages. Il prend désormais une
+prop `ogType` (défaut `website`), et les deux gabarits d'article passent
+`article` : mesuré sur le build, **22 articles en `article` et 4 pages en
+`website`**, et sur les 26 pages la ligne `og:type` est le **seul** écart avec
+la production — 4 pages identiques à l'octet, 22 à deux lignes de diff, 0 autre
+écart.
+
+Le `test.fail()` n'a pas été transformé en assertion : il a été **supprimé**, et
+l'assertion est entrée dans la boucle paramétrée de `seo-meta.spec.ts`, qui
+visite déjà chaque page. Trois raisons, toutes vérifiées : la vérification est
+gratuite (aucune navigation de plus), l'échec **nomme la page** au lieu de
+désigner un article pris au hasard, et le `kind` du catalogue permet d'asséré
+**dans les deux sens** — un article doit dire `article`, une page qui n'en est
+pas une doit rester `website`. L'ancien test ne voyait ni les 21 autres
+articles, ni la régression inverse, et il fallait penser à retirer son marqueur.
+
+**Deux mutations réelles, annulées.** Recoder `website` en dur dans
+`BaseLayout` : 22 rouges, 6 verts — exactement les pages concernées. Faire
+déclarer `article` à un index de blog : **1 rouge, `/blog/`**, la page mutée,
+nommée. Coût : −3 tests (un par projet qui lance ce spec ; `gate-mobile` ne le
+lance pas, son `testMatch` se limitant à `mobile-375.spec.ts`).
+
+À noter, non fait et dit comme tel : `og:type: article` appelle normalement
+`article:published_time` et `article:modified_time`, que le site ne sert pas.
+Hors du périmètre de ce point, qui ne portait que sur `og:type` — à arbitrer
+séparément si le partage social devient un sujet.
 
 ## Pièges mesurés — à ne pas redécouvrir
 

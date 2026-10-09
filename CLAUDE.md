@@ -50,11 +50,16 @@ dans `src/i18n/fr.json`.
 
 ## Avancement
 
-Historique des tâches (T1–T29, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
+Historique des tâches (T1–T30, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA, relancée en entier le 09.10** : **446 tests — 443 passés, 3 sautés**,
-8 projets Playwright, sortie Playwright 0 (trois runs ce jour : 2,0 / 1,9 / 1,8 min).
+**État de la suite QA, relancée en entier le 09.10** : **443 tests — 440 passés, 3 sautés**,
+8 projets Playwright, sortie Playwright 0, 1,8 min. Le compte **valait 446 jusqu'à T30**, qui a
+retiré un test en déplaçant son assertion dans une boucle déjà paramétrée sur les 26 pages (−1 par
+projet lançant ce spec, soit −3) : **moins de tests pour plus de couverture**, donc ne pas lire la
+baisse comme une perte. Le plancher du quality gate est à `minTestsCount: 20`, délibérément loin
+du compte réel, parce que la suite est paramétrée sur les articles et qu'en ajouter un change le
+nombre.
 ⚠️ **Un `npm run test:e2e` local lance les 8 projets, nocturnes compris**, dont
 `external-links`, qui dépend de tiers : au **premier** des trois runs il est tombé sur un
 **504** de `github.com/BazanJeremy`, l'URL répondant **200** aux trois réessais puis aux deux
@@ -74,24 +79,19 @@ Le 3e test sauté est **mesuré, pas accidentel** : Firefox 155 (la build livré
 `gate/reveal-css` s'y abstient au lieu de conclure à un défaut. Chromium 153 **et WebKit 26.6**
 la supportent tous les deux et passent.
 
-**Points ouverts (source : lignes T23–T29 du journal), décisions de Jérémy** — des cinq écarts
-trouvés en construisant la suite, **trois sont tranchés** (voir juste après) et **deux restent**,
-chacun touchant le CSS ou le contenu servis donc chacun méritant sa propre PR :
+**Point ouvert (source : lignes T23–T30 du journal), décision de Jérémy** — des cinq écarts
+trouvés en construisant la suite, **quatre sont tranchés** (voir juste après) et **un seul
+reste** :
 
-1. **Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article
-   sur les mots de passe (FR + EN) peinte jusqu'à ~440px dans un viewport de 375px, sans que la
-   page défile. 2 pages sur 26. Exception nommée dans `mobile-375.spec.ts`, qui échoue dans les
-   deux sens pour ne pas pourrir.
-2. **`og:type` vaut `website` sur les pages d'article**, devrait être `article`. Asséré via
-   `test.fail()`.
-
-**Ordre recommandé pour les deux qui restent (recommandation, pas décision)** : n° 2 (`og:type`),
-une ligne de layout, risque nul, et un `test.fail()` qui devient une vraie assertion. Puis
-n° 1 (le tableau à 375px), le seul avec une conséquence réelle pour un visiteur —
-⚠️ **le correctif réflexe `display: block; overflow-x: auto` sur `<table>` peut faire
-perdre la sémantique de tableau aux lecteurs d'écran** selon le moteur, mauvais échange
-pour un site qui publie sur l'accessibilité : préférer une région défilable focalisable
-autour du tableau, et **mesurer avant de livrer**.
+**Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article sur
+les mots de passe (FR + EN) peinte jusqu'à ~440px dans un viewport de 375px, sans que la page
+défile : la colonne n'est ni visible ni atteignable. 2 pages sur 26. Exception nommée dans
+`mobile-375.spec.ts`, qui échoue dans les deux sens pour ne pas pourrir. C'est **le seul des cinq
+écarts avec une conséquence réelle pour un visiteur**, et le plus délicat des cinq —
+⚠️ **le correctif réflexe `display: block; overflow-x: auto` sur `<table>` peut faire perdre la
+sémantique de tableau aux lecteurs d'écran** selon le moteur, mauvais échange pour un site qui
+publie sur l'accessibilité : préférer une région défilable focalisable autour du tableau, et
+**mesurer avant de livrer** plutôt que de faire confiance au correctif courant.
 
 ### Tranchés — ne pas reproposer
 
@@ -114,6 +114,17 @@ qu'une session fraîche refera sinon à ses frais.
   `translationSlug`, soit du vrai code pour un gain nul. **TRANCHÉ le 09.10 (décision de
   Jérémy) : on ne le fait pas**, avec cette mesure comme motif. L'option `i18n` a été évaluée
   et écartée, pas oubliée.
+- **`og:type` sur les pages d'article** : corrigé en T30. `BaseLayout` codait `website` en dur
+  pour les 26 pages ; il prend maintenant une prop `ogType` (défaut `website`) et les deux
+  gabarits d'article passent `article` — mesuré, **22 articles en `article`, 4 pages en
+  `website`**, la ligne `og:type` étant le seul écart sur les 26 pages. Le `test.fail()` a été
+  **supprimé** plutôt que converti : l'assertion est entrée dans la boucle déjà paramétrée de
+  `seo-meta.spec.ts`, ce qui ne coûte aucune navigation, **nomme la page** en échec, et assère
+  dans les deux sens via le `kind` du catalogue (un article dit `article`, le reste reste
+  `website`) — l'ancien test ne voyait ni les 21 autres articles ni la régression inverse.
+  **Non fait, et dit comme tel** : `article:published_time` / `article:modified_time`, que
+  `og:type: article` appelle normalement, ne sont pas servis — hors périmètre du point, à
+  arbitrer séparément.
 - **Le scan Tailwind de la documentation** : fait en T29 (#66), déployé. Le point annonçait
   **48 octets** de CSS mort (`.block` 21 o « venue de l'entrée de journal », plus `.contents`
   27 o venue de `permissions: contents: read`). **Mesuré en l'appliquant : 27 octets et une
@@ -215,7 +226,7 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
-- **`npm run test:e2e`** — 446 tests, ~2 min (1,8 / 1,9 / 2,0 sur trois runs du 09.10).
+- **`npm run test:e2e`** — 443 tests, ~2 min (1,8 mesuré le 09.10 ; valait 446 avant T30).
   Il construit et sert `dist/` tout seul. Puis `npm run test:report` pour le rapport Allure
   (un fichier HTML autonome dans `allure-report/`). Pour un sous-ensemble :
   `npx playwright test --project=gate-desktop` (voir `tests/README.md` pour les 8 projets).
