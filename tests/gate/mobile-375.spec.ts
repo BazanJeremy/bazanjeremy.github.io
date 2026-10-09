@@ -30,6 +30,7 @@
  * vraie question : ce texte est-il atteignable ?
  */
 import { test, expect } from '@playwright/test';
+import { gotoStyled } from '../fixtures/styled-page.ts';
 import { pages } from '../fixtures/pages.ts';
 
 const EXPECTED_WIDTH = 375;
@@ -60,7 +61,7 @@ const KNOWN_TEXT_OVERFLOW: readonly string[] = [
 test.describe('Mobile 375px', () => {
   for (const p of pages) {
     test(`${p.path} — la page ne défile pas horizontalement`, async ({ page }) => {
-      await page.goto(p.path, { waitUntil: 'domcontentloaded' });
+      await gotoStyled(page, p.path);
 
       // Une seule évaluation : la largeur constatée et le débordement viennent
       // du même instant, donc l'une valide l'autre.
@@ -89,7 +90,7 @@ test.describe('Mobile 375px', () => {
     const offenders = new Map<string, string[]>();
 
     for (const p of pages) {
-      await page.goto(p.path, { waitUntil: 'domcontentloaded' });
+      await gotoStyled(page, p.path);
 
       const found = await page.evaluate((limit) => {
         const out: string[] = [];

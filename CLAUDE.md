@@ -157,7 +157,7 @@ Vaut aussi pour les commentaires de PR et les issues.
   pour les 8 projets). La suite tourne aussi sur chaque PR via `pr.yml`.
 - **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
   rester `_astro_content.CerI2rm-.css` (il valait `DPDLS9i_` jusqu'à T27, qui a réparé la
-  révélation au scroll : +70 octets, une seule règle, écart mesuré ligne à ligne). Tailwind scanne plus large qu'on ne croit (voir les
+  révélation au scroll : +81 octets, une seule règle, écart mesuré ligne à ligne). Tailwind scanne plus large qu'on ne croit (voir les
   gotchas), et un mot de prose peut injecter une règle.
 - **Plusieurs contrôles manuels sont désormais automatisés**, et il ne faut pas les refaire à la
   main : débordement horizontal à 375px (avec la précondition de largeur qui ferme le piège de
@@ -227,6 +227,15 @@ Vaut aussi pour les commentaires de PR et les issues.
   `animation-fill-mode: both` figerait les sections à opacité 0 (mesuré : 11 `.reveal` sur 11),
   d'où la portée `screen`. Leçon générale : pour une propriété récente portée par un raccourci,
   **asserter sur les octets servis**, pas sur la source. Détail complet dans `tests/README.md`.
+- **`DOMContentLoaded` n'attend pas la feuille de style sur un site à 0 JS.** Sans script à
+  bloquer, lire un style à `domcontentloaded` est une **course** avec le chargement de la
+  feuille externe. Mesuré le 08.10 : à `domcontentloaded` la prod servait 1 feuille et 7
+  règles (`animationName: none`), à `load` 2 feuilles et 38 règles (`reveal-fade`). En local le
+  preview répond si vite que la course est toujours gagnée — la suite était donc verte en local
+  et en CI, et annonçait un défaut inexistant dès qu'on la pointait sur la prod. Les specs qui
+  lisent du style passent par `gotoStyled` (T28) ; celles qui ne lisent que du DOM gardent
+  `domcontentloaded`. Même famille que le piège `astro preview` ci-dessous, asymétrie inversée :
+  **l'endroit où on lance la suite décidait du verdict.**
 - **`astro preview` se démonise quand il détecte un agent** (lu dans
   `node_modules/astro/dist/cli/preview/index.js` : `isRunByAgent()` via le paquet `am-i-vibing`),
   ce qui casse le contrat `webServer` de Playwright — « Process from config.webServer exited

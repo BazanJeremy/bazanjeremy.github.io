@@ -25,13 +25,14 @@
  * un moteur.
  */
 import { test, expect } from '@playwright/test';
+import { gotoStyled } from '../fixtures/styled-page.ts';
 
 const ENTRY_POINTS = ['/', '/en/'] as const;
 
 test.describe('Lien d\'évitement', () => {
   for (const path of ENTRY_POINTS) {
     test(`${path} — hors écran, puis visible au focus, puis mène au contenu`, async ({ page }) => {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      await gotoStyled(page, path);
 
       // La cible doit exister avant de parler du lien.
       await expect(page.locator('main#contenu')).toHaveCount(1);
@@ -78,7 +79,7 @@ test.describe('Lien d\'évitement', () => {
         'WebKit ne tabule pas sur les liens par défaut (préférence Safari), le site n\'y est pour rien',
       );
 
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      await gotoStyled(page, path);
       await page.keyboard.press('Tab');
       await expect(
         page.locator('a.skip-link'),

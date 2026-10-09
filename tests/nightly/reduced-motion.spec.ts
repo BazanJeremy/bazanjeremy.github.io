@@ -33,6 +33,7 @@
  * atteint l'opacité 1.
  */
 import { test, expect } from '@playwright/test';
+import { gotoStyled } from '../fixtures/styled-page.ts';
 
 /** Nombre d'éléments et leurs styles calculés, en une seule évaluation. */
 const readReveal = () => ({
@@ -55,7 +56,7 @@ test.describe('Mouvement et prefers-reduced-motion', () => {
     // les animations. Sous `reduce`, le bloc ne matche pas du tout : il n'y a
     // ni animation ni raison d'attendre quoi que ce soit.
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await gotoStyled(page, '/');
 
     const s = await page.evaluate(readReveal);
     expect(s.prefersReduce, 'l\'émulation de reduce n\'a pas été appliquée').toBe(true);
@@ -72,7 +73,7 @@ test.describe('Mouvement et prefers-reduced-motion', () => {
 
   test('sous `no-preference`, la révélation au scroll est active', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await gotoStyled(page, '/');
 
     const s = await page.evaluate(readReveal);
 
@@ -107,7 +108,7 @@ test.describe('Mouvement et prefers-reduced-motion', () => {
     // cette raison, pas pour un défaut du site : c'était l'instrument de mesure
     // qui était faux.
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await gotoStyled(page, '/');
 
     const count = await page.locator('.reveal').count();
     expect(count, 'aucun élément .reveal — le scan ne vérifiait rien').toBeGreaterThan(0);
@@ -146,7 +147,7 @@ test.describe('Mouvement et prefers-reduced-motion', () => {
     // l'impression était intacte par accident ; c'est la portée `screen` du
     // bloc qui la préserve maintenant que l'animation fonctionne.
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await gotoStyled(page, '/');
     await page.emulateMedia({ media: 'print' });
 
     const s = await page.evaluate(readReveal);
