@@ -93,8 +93,11 @@ export function formatFindings(findings: readonly Finding[]): string {
  *
  * On extrait le texte et les valeurs d'attributs VISIBLES plutôt que le markup
  * brut : scanner le HTML brut ferait un faux positif de `\bP[1-7]\b` sur un nom
- * d'asset haché (`_astro_content.DPDLS9i_.css`). C'est pour ça que l'extraction
- * passe par le navigateur et pas par un `grep`.
+ * d'asset haché — `_astro_content.<hash>.css`, dont le hash est tiré à chaque
+ * build et peut contenir un `P` suivi d'un chiffre. C'est pour ça que
+ * l'extraction passe par le navigateur et pas par un `grep`. (Pas de hash
+ * réel ici : écrit en dur, il serait relu comme l'état courant une fois
+ * périmé.)
  */
 export interface PageSurfaces {
   readonly innerText: string;

@@ -3,35 +3,40 @@
 /* -------------------------------------------------------------------------- */
 /* Tailwind 4 auto-detects its sources, and the scope is wider than it looks.  */
 /* A prose word that happens to read as a utility injects a rule into the      */
-/* production CSS and moves the content-hashed `_astro/*.css` filename — the   */
-/* trap already documented for the word "block".                              */
+/* production CSS and moves the content-hashed `_astro/*.css` filename.        */
 /*                                                                            */
 /* Measured by elimination (07.10 and 08.10), scanned: the committed test      */
 /* files, the root config files (as `astro.config.mjs` already was),           */
-/* `scripts/`, `docs/` and `.github/`. NOT scanned: this stylesheet itself.    */
-/* Two real incidents: the word "inline" in a comment of                       */
+/* `scripts/`, `docs/`, `.github/` and `CLAUDE.md`. NOT scanned: this          */
+/* stylesheet itself. Three real incidents: the word "inline" in a comment of  */
 /* `playwright.config.ts`, then in one under `scripts/`, each adding a         */
 /* `display:inline` rule (+23 bytes). And a witness proved `.github/` counts:  */
 /* "uppercase italic" in a workflow file produced both rules.                  */
 /*                                                                            */
-/* The directories below hold build and test tooling, never anything          */
-/* rendered, so they are excluded.                                            */
+/* Everything below holds tooling or documentation, never anything rendered,   */
+/* so none of it should decide the bytes the site ships.                      */
 /*                                                                            */
-/* `docs/` and `.github/` are deliberately NOT excluded, even though they are  */
-/* scanned, because their prose already contributes two rules the production   */
-/* stylesheet serves today: `.block` (21 bytes) from the journal entry that    */
-/* documents the "block" incident, and `.contents` (27 bytes) from            */
-/* `permissions: contents: read` in deploy.yml. Excluding them would drop 48   */
-/* bytes of dead CSS — a worthwhile cleanup, but one that changes the shipped  */
-/* bytes, so it belongs in its own change rather than riding along in another. */
-/* Until then: a prose edit in either directory can move the hash, and the     */
-/* documented procedure applies — diff the two stylesheets rule by rule before */
-/* concluding anything about a style regression.                              */
+/* MEASURED 09.10, and it corrects what this comment used to claim: excluding  */
+/* `docs/`, `.github/` and `CLAUDE.md` drops ONE rule, `.contents` (27 bytes,  */
+/* from `permissions: contents: read`), not two. `.block` survives, because    */
+/* its source was never the journal entry that documents the "block" incident  */
+/* — it is the prose of a published EN article. Isolated by excluding that one  */
+/* file on top of the three: the rule then disappears. The journal and the     */
+/* article produced the same rule, so dropping the journal alone never         */
+/* removed it, and the earlier attribution confused a co-occurrence for a      */
+/* cause. The byte count was therefore 27, never 48.                          */
+/*                                                                            */
+/* The point of these exclusions was never the bytes: it is that no rule in    */
+/* the shipped stylesheet depends on documentation any more, so editing a      */
+/* journal entry can no longer move the hash and spoil a PR's hash check.     */
 /* -------------------------------------------------------------------------- */
 @source not "../../tests";
 @source not "../../playwright.config.ts";
 @source not "../../allurerc.mjs";
 @source not "../../scripts";
+@source not "../../docs";
+@source not "../../.github";
+@source not "../../CLAUDE.md";
 
 /* -------------------------------------------------------------------------- */
 /* Self-hosted fonts (variable, latin subset — covers −, œ, «», —, curly ').  */
