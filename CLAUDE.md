@@ -50,11 +50,17 @@ dans `src/i18n/fr.json`.
 
 ## Avancement
 
-Historique des tâches (T1–T28, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
+Historique des tâches (T1–T29, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA au 08.10** : **446 tests (443 passés, 3 sautés), 8 projets Playwright**,
-trois workflows actifs —
+**État de la suite QA, relancée en entier le 09.10** : **446 tests — 443 passés, 3 sautés**,
+1,9 min, 8 projets Playwright, sortie Playwright 0. ⚠️ **Un `npm run test:e2e` local lance les 8
+projets, nocturnes compris**, dont `external-links`, qui dépend de tiers : au premier des deux
+runs du 09.10 il est tombé sur un **504** de `github.com/BazanJeremy`, l'URL répondant **200**
+aux trois réessais puis au second run. Un rouge venu d'un tiers est donc attendu en local et ne
+dit rien du site — et il ne bloque aucune PR, le défaut de `projects` dans
+`.github/actions/qa/action.yml` étant `invariants-gate gate-desktop gate-mobile`.
+Trois workflows actifs —
 `pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
 échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
 `qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI : gate 65 s, build
@@ -67,9 +73,10 @@ Le 3e test sauté est **mesuré, pas accidentel** : Firefox 155 (la build livré
 `gate/reveal-css` s'y abstient au lieu de conclure à un défaut. Chromium 153 **et WebKit 26.6**
 la supportent tous les deux et passent.
 
-**Points ouverts au 08.10 (source : lignes T23–T26 du journal), décisions de Jérémy** — des cinq
-écarts trouvés en construisant la suite, **le premier est corrigé (T27)** et **quatre restent**,
-chacun touchant le CSS ou le contenu servis donc chacun méritant sa propre PR :
+**Points ouverts (source : lignes T23–T29 du journal), décisions de Jérémy** — des cinq écarts
+trouvés en construisant la suite, **trois sont tranchés** (n° 5 corrigé en T27, n° 4 corrigé en
+T29, n° 3 fermé en « on ne le fait pas » le 09.10) et **deux restent**, chacun touchant le CSS ou
+le contenu servis donc chacun méritant sa propre PR :
 
 1. **Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article
    sur les mots de passe (FR + EN) peinte jusqu'à ~440px dans un viewport de 375px, sans que la
@@ -88,34 +95,44 @@ chacun touchant le CSS ou le contenu servis donc chacun méritant sa propre PR :
    sur 26** et sur **aucun article** — les pages où l'information est la moins utile. Et le
    `hreflang` HTML est déjà complet et réciproque, `x-default` compris (vérifié sur une paire
    d'articles réelle). Faire mieux demanderait un `serialize` piloté par `translationSlug`, soit
-   du vrai code pour un gain nul. **Ma recommandation : fermer ce point en « on ne le fait pas »**,
-   avec cette mesure comme motif — mais c'est ton arbitrage.
-4. **Exclure `docs/`, `.github/` et `CLAUDE.md` du scan Tailwind retirerait 48 octets de CSS
-   mort** (`.block` 21 o, venue de l'entrée de journal qui documente l'incident du mot « block »,
-   et `.contents` 27 o, venue de `permissions: contents: read`). Nettoyage qui se défend, mais il
-   change les octets servis.
+   du vrai code pour un gain nul. **TRANCHÉ le 09.10 (décision de Jérémy) : on ne le fait pas**,
+   avec cette mesure comme motif. Ne pas reproposer l'option `i18n` : elle a été évaluée et
+   écartée, pas oubliée.
+4. **Exclure `docs/`, `.github/` et `CLAUDE.md` du scan Tailwind** — **FAIT en T29.** Ce point
+   annonçait **48 octets** de CSS mort (`.block` 21 o « venue de l'entrée de journal », plus
+   `.contents` 27 o venue de `permissions: contents: read`). **Mesuré le 09.10 en l'appliquant :
+   c'est 27 octets et une seule règle**, `.contents` — hash `CerI2rm-` → `DRDROTEC`, 18 863 →
+   18 836 octets, diff règle par règle contre la production ne montrant que cette ligne.
+   `.block` **survit**, parce que sa source n'a jamais été le journal mais la prose d'un article
+   EN publié (`accessible-at-71-percent.md`, « what would block the most people ») — isolé en
+   excluant ce seul fichier en plus des trois. Les deux produisaient la même règle, donc retirer
+   le journal seul ne la retirait pas : l'attribution avait pris une **co-occurrence pour une
+   cause**, et le chiffre a survécu trois PR parce qu'il avait la forme d'une mesure.
 
-**Ordre recommandé (recommandation, pas décision)** : n° 4 d'abord — pas pour les 48 octets, mais
-parce que le piège a mordu **une fois de plus le 08.10**, un mot de la prose du journal ayant
-injecté une règle de 29 octets et déplacé le hash, ce qui a coûté une enquête `diff` par règle ;
-l'exclure stabilise le hash contre toute édition de documentation, et le faire en premier évite
-que les PR suivantes aient leur vérification de hash polluée. Puis n° 2 (`og:type`), une ligne de
-layout, risque nul, et un `test.fail()` qui devient une vraie assertion. Puis n° 1 (le tableau à
-375px), le seul avec une conséquence réelle pour un visiteur — ⚠️ **le correctif réflexe
-`display: block; overflow-x: auto` sur `<table>` peut faire perdre la sémantique de tableau aux
-lecteurs d'écran** selon le moteur, mauvais échange pour un site qui publie sur l'accessibilité :
-préférer une région défilable focalisable autour du tableau, et **mesurer avant de livrer**.
+**Ordre recommandé pour les deux qui restent (recommandation, pas décision)** : n° 2 (`og:type`),
+une ligne de layout, risque nul, et un `test.fail()` qui devient une vraie assertion. Puis
+n° 1 (le tableau à 375px), le seul avec une conséquence réelle pour un visiteur —
+⚠️ **le correctif réflexe `display: block; overflow-x: auto` sur `<table>` peut faire
+perdre la sémantique de tableau aux lecteurs d'écran** selon le moteur, mauvais échange
+pour un site qui publie sur l'accessibilité : préférer une région défilable focalisable
+autour du tableau, et **mesurer avant de livrer**.
 
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
 d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en mode LLM ; toute version
 ajoutée au test paramétré change le nombre de tests (182, publié dans l'article T19).
 
-**Point ouvert au 29.09 (source : ligne T20 du journal), décision de Jérémy** : `main` de
-`ReleaseGuard` n'est **pas protégée** (re-mesuré le 30.09 : `gh api .../branches/main` →
-`protected: false`, aucun ruleset). Le job CI échoue bien sur NO GO (`test "$status" -le 1`),
-mais rien n'empêche un merge par-dessus — or l'article T20 et le README écrivent que l'outil
-« est le verrou de sortie du projet ». Même écart que celui fermé en T19 sur `anomaly-sentinel`,
-où Jérémy avait choisi d'activer la protection. Ne rien changer sans son arbitrage.
+**T20 — `main` de `ReleaseGuard` est protégée depuis le 09.10** (décision de Jérémy), ce qui
+ferme le point ouvert du 29.09 : l'article T20 et le README écrivaient que l'outil « est le verrou
+de sortie du projet » alors que rien n'empêchait un merge par-dessus un NO GO. Posé puis **relu**
+le 09.10 : PR obligatoire, check requis, **administrateurs inclus**, force-push et suppression
+interdits, `strict: false`, 0 approbation — identique à `anomaly-sentinel` **sauf le contexte
+requis**.
+⚠️ **Le check requis s'appelle `tests`, pas `Quality gate`.** Même piège que sur ce dépôt-ci, et
+mesuré avant de poser : `ReleaseGuard` n'a qu'un workflow (`ci.yml`, nommé « CI ») avec un seul
+job dont la clé est `tests` et qui ne porte pas de `name:`, donc **c'est `tests` qui est rapporté
+comme contexte**, vérifié sur `main` et sur la PR #6. Copier `Quality gate` depuis
+`anomaly-sentinel` aurait rendu **toute PR immergeable**. Si ce job est renommé un jour, mettre à
+jour le contexte requis dans la même PR.
 
 **Point ouvert au 01.10 (source : ligne T21 du journal), décision de Jérémy** : l'article T21
 s'appuie sur « une analyse récente des sites des dix universités françaises », sans auteur. Cette
@@ -191,9 +208,12 @@ Vaut aussi pour les commentaires de PR et les issues.
   déploiement dont on veut vérifier le rendu réel :
   `PW_NO_SERVER=1 PW_BASE_URL=https://bazanjeremy.github.io npx playwright test --project=motion`
 - **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
-  rester `_astro_content.CerI2rm-.css` (il valait `DPDLS9i_` jusqu'à T27, qui a réparé la
-  révélation au scroll : +81 octets, une seule règle, écart mesuré ligne à ligne). Tailwind scanne plus large qu'on ne croit (voir les
-  gotchas), et un mot de prose peut injecter une règle.
+  rester `_astro_content.DRDROTEC.css`, 18 836 octets (il valait `DPDLS9i_` jusqu'à T27, qui a
+  réparé la révélation au scroll — +81 octets, une seule règle —, puis `CerI2rm-` jusqu'à T29,
+  qui a exclu la documentation du scan : −27 octets, une seule règle, `.contents`).
+  **Depuis T29, une édition de `docs/`, `.github/` ou `CLAUDE.md` ne peut plus déplacer ce
+  hash** — c'était tout l'objet du changement. Mais Tailwind scanne toujours plus large qu'on
+  ne croit (voir les gotchas), et un mot de prose **d'article** peut injecter une règle.
 - **Plusieurs contrôles manuels sont désormais automatisés**, et il ne faut pas les refaire à la
   main : débordement horizontal à 375px (avec la précondition de largeur qui ferme le piège de
   mesure de T16 — un test qui ne vérifie que le débordement passerait pour la même mauvaise
@@ -238,17 +258,20 @@ Vaut aussi pour les commentaires de PR et les issues.
   entrailles. Le gate est donc un **job séparé en amont**, et `build` porte `needs: gate`.
   `pr.yml` et `qa-nightly.yml` ont leurs **propres groupes de concurrence**, jamais `pages` :
   partager le groupe de déploiement mettrait les tests en file derrière les mises en production.
-- **Le périmètre de scan de Tailwind est plus large que « le contenu »** — extension du piège du
-  mot « block » déjà documenté. Mesuré par élimination les 07 et 08.10, sont scannés : `tests/`,
-  les fichiers de config à la racine, `scripts/`, `docs/`, `.github/` et **`CLAUDE.md`
-  lui-même**. N'est **pas** scannée : la feuille de style. Donc un mot de prose dans ce fichier,
-  dans un workflow ou dans le journal peut injecter une règle et déplacer le hash du CSS.
-  `src/styles/global.css` exclut déjà `tests/`, les configs racine et `scripts/` ; `docs/`,
-  `.github/` et `CLAUDE.md` ne le sont volontairement pas (voir le point ouvert n° 4).
-  ⚠️ **Ne pas écrire les mots pièges ici** : ce fichier étant scanné, les nommer suffit à
-  injecter leur règle — c'est arrivé trois fois pendant la construction de la suite, dont une en
-  rédigeant ce gotcha. Les mots exacts déjà constatés vivent dans `tests/README.md`, hors
-  périmètre scanné.
+- **Le périmètre de scan de Tailwind est plus large que « le contenu ».** Mesuré par élimination
+  les 07 et 08.10, sont scannés : `tests/`, les fichiers de config à la racine, `scripts/`,
+  `docs/`, `.github/` et **`CLAUDE.md` lui-même**. N'est **pas** scannée : la feuille de style.
+  **Depuis T29, `src/styles/global.css` les exclut tous les sept** (`tests/`, les trois configs
+  racine, `scripts/`, `docs/`, `.github/`, `CLAUDE.md`), donc **ce fichier et le journal ne
+  peuvent plus injecter de règle**, et les mots pièges peuvent y être nommés librement — ce qui
+  était interdit avant, les nommer suffisant à injecter leur règle (arrivé trois fois pendant la
+  construction de la suite, dont une en rédigeant ce gotcha).
+  ⚠️ **Ce qui reste exposé, et c'est l'essentiel** : tout `src/`, **la prose des articles
+  comprise**. Un mot d'article qui ressemble à un utilitaire injecte toujours sa règle — c'est le
+  cas de `.block`, qui vient de « what would block the most people » dans
+  `accessible-at-71-percent.md` et non du journal, comme on l'a cru jusqu'au 09.10. La procédure
+  tient donc pour tout changement sous `src/` : si le hash bouge, `diff` les deux CSS **par
+  règle** (`sed 's/}/}\n/g'`) avant de conclure à une régression.
 - **Le minifieur peut détruire une déclaration CSS correcte, et c'est `lightningcss`.** Les deux
   minifieurs sont là (`esbuild` via Vite, `lightningcss` via la passe d'optimisation de
   Tailwind 4) ; **mesuré le 08.10**, c'est `lightningcss` qui refusionne un raccourci `animation`

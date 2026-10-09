@@ -300,14 +300,15 @@ fait défiler le **minimum**, donc il laisse l'élément collé au bord du viewp
 là où la plage `entry 0% cover 20%` n'est légitimement pas terminée. Mesuré :
 rouge sur le 6e élément, sans aucun défaut du site. Centrer.
 
-### Tailwind scanne les tests et les configs racine
+### Tailwind scanne les tests, les configs racine et la documentation
 
 Tailwind 4 détecte ses sources automatiquement, et le périmètre est plus large
 qu'on ne le croit. **Mesuré les 07 et 08.10, par élimination** : sont scannés
 `tests/` (versionné), les fichiers de config à la racine (comme
-`astro.config.mjs` l'est déjà), `scripts/`, **`docs/` et `.github/`** ; en
-revanche la feuille de style elle-même ne l'est pas — un commentaire de
-`global.css` contenant `.inline{display:inline}` n'a rien produit.
+`astro.config.mjs` l'est déjà), `scripts/`, **`docs/`, `.github/` et
+`CLAUDE.md` lui-même** ; en revanche la feuille de style elle-même ne l'est
+pas — un commentaire de `global.css` contenant `.inline{display:inline}`
+n'a rien produit.
 
 Le cas de `.github/` a été tranché par un témoin : les mots « uppercase italic »
 ajoutés dans un fichier de workflow ont produit les deux règles correspondantes
@@ -326,21 +327,50 @@ chaque fois `.inline{display:inline}`, +23 octets, hash `DPDLS9i_` vers
 @source not "../../playwright.config.ts";
 @source not "../../allurerc.mjs";
 @source not "../../scripts";
+@source not "../../docs";
+@source not "../../.github";
+@source not "../../CLAUDE.md";
 ```
 
 L'exclusion de `scripts/` protège aussi `scripts/og-image.mjs`, qui était
 exposé au même piège depuis le début.
 
-**`docs/` et `.github/` ne sont volontairement PAS exclus**, bien qu'ils soient
-scannés : leur prose apporte deux règles que le CSS de production sert
-aujourd'hui — `.block` (21 octets), venue de l'entrée de journal qui documente
-justement l'incident du mot « block », et `.contents` (27 octets), venue de
-`permissions: contents: read` dans `deploy.yml`. Les exclure retirerait 48
-octets de CSS mort sur 18 782 : un nettoyage qui se défend, mais qui **change
-les octets servis**, donc il mérite son propre changement plutôt que de voyager
-dans un autre. En attendant, une retouche de prose dans l'un des deux peut
-déplacer le hash, et la procédure documentée s'applique — differ les deux
-feuilles règle par règle avant de conclure à une régression de style.
+**`docs/`, `.github/` et `CLAUDE.md` sont exclus depuis le 09.10**, et la
+mesure qui a motivé l'exclusion a corrigé au passage ce que ce paragraphe
+affirmait avant elle.
+
+Ce qui était écrit ici : leur prose apportait **deux** règles au CSS servi —
+`.block` (21 octets) « venue de l'entrée de journal qui documente justement
+l'incident du mot "block" », et `.contents` (27 octets) venue de
+`permissions: contents: read` dans `deploy.yml` —, soit **48 octets** à gagner.
+
+**Mesuré le 09.10 : c'est 27 octets, et une seule règle.** L'exclusion appliquée
+puis le build diffé règle par règle contre la production ne retire que
+`.contents` (18 863 → 18 836 octets, hash `CerI2rm-` → `DRDROTEC`).
+
+`.block` survit, parce que sa source n'a jamais été le journal : c'est la prose
+d'un **article EN publié** (`src/content/blog/en/accessible-at-71-percent.md`,
+« what would block the most people », introduite par #50 et jamais retirée —
+cohérent avec la décision de ne pas réécrire la copy pour 21 octets inutilisés).
+Isolé en excluant ce seul fichier **en plus** des trois : la règle disparaît
+alors. `Portfolio.astro` n'y est pour rien non plus, bien qu'il contienne
+`portfolio.blocks.map((block) => …)` — l'extracteur ne capte pas cet
+identifiant dans ce contexte, et la même mesure le montre.
+
+**La leçon est doctrinale, pas comptable** : le journal *et* l'article
+produisaient la même règle, donc retirer le journal seul ne la retirait pas.
+L'attribution a pris une co-occurrence pour une cause, et le chiffre est resté
+faux trois PR durant parce qu'il avait la forme d'une mesure. Quand deux sources
+peuvent produire le même octet, en exclure une ne prouve rien sur l'autre :
+il faut les isoler une par une.
+
+**Et le motif réel de l'exclusion n'a jamais été les octets** : c'est qu'aucune
+règle du CSS servi ne dépend plus de la documentation. Une retouche de prose
+dans `docs/`, `.github/` ou `CLAUDE.md` ne peut donc plus déplacer le hash —
+ce qui, avant, polluait la vérification de hash de la PR suivante (arrivé une
+fois de plus le 08.10, pour 29 octets, au prix d'une enquête `diff` par règle).
+Corollaire utile : **les mots pièges peuvent désormais être nommés** dans ces
+trois endroits, ce qui était interdit tant qu'ils étaient scannés.
 
 Contrôle qui tranche, à refaire après tout ajout de fichier à la racine :
 
@@ -348,7 +378,7 @@ Contrôle qui tranche, à refaire après tout ajout de fichier à la racine :
 npm run build && ls dist/_astro/
 ```
 
-Le nom doit rester `_astro_content.DPDLS9i_.css`. S'il bouge, diffe les deux
+Le nom doit rester `_astro_content.DRDROTEC.css`. S'il bouge, diffe les deux
 CSS **règle par règle** avant de conclure : un hash différent ne veut pas dire
 régression de style.
 
