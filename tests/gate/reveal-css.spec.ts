@@ -50,6 +50,7 @@
  * dépend jamais de l'avancement d'une animation.
  */
 import { test, expect } from '@playwright/test';
+import { gotoStyled } from '../fixtures/styled-page.ts';
 import { listFiles, readDistText, requireDist } from '../fixtures/dist.ts';
 
 /** Le CSS réellement servi, tous fichiers concaténés. */
@@ -209,7 +210,7 @@ test.describe('Révélation au scroll — les octets servis', () => {
     // Lecture du CSSOM, pas du rendu : elle est donc valide dans ce projet, qui
     // tourne en `prefers-reduced-motion: reduce`. Une règle sous une media query
     // qui ne matche pas reste présente et analysée.
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await gotoStyled(page, '/');
     const lu = await page.evaluate(readRevealRuleFromCssom);
 
     // Précondition honnête : un moteur sans timelines de vue laisse tomber la

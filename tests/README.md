@@ -190,6 +190,37 @@ pourquoi.
 Leçon générale : quand un moteur diverge, mesurer **avant** de conclure au
 défaut, et se demander si l'assertion ne mélangeait pas deux questions.
 
+### `DOMContentLoaded` n'attend pas la feuille de style
+
+**Mesuré le 08.10 contre la production.** Ce site a **0 JS**, et
+`DOMContentLoaded` n'attend pas les feuilles externes en l'absence de script à
+bloquer. Lire un style à `domcontentloaded` est donc une **course** :
+
+| moment de lecture | feuilles appliquées | règles | `animationName` |
+|---|---|---|---|
+| `domcontentloaded` | 1 (l'inline seule) | 7 | `none` |
+| `load` | 2 | 38 | `reveal-fade` |
+
+En local, `astro preview` sert la feuille si vite que la course est **toujours**
+gagnée : la suite était verte en local et en CI. Pointée sur la production,
+`nightly/reduced-motion` l'a perdue **deux fois de suite** et annonçait un
+défaut du site — alors que le CSS servi était identique à l'octet au build
+local. Dans le même temps `gate-desktop` et `gate-mobile` la gagnaient. **La
+répartition gagne/perd est de cause inconnue** ; seul le mécanisme est mesuré.
+Un test qui dépend d'une course ne vaut rien, qu'il passe ou non.
+
+Remède : `fixtures/styled-page.ts` expose `gotoStyled(page, path)`, qui navigue
+en `load` **et** attend que la feuille externe soit appliquée, avec un message
+d'échec qui dit « la page n'est pas stylée » au lieu de « le site est cassé ».
+Les 4 specs qui lisent du style y passent (`reveal-css`, `skip-link`,
+`mobile-375`, `reduced-motion`) ; les 5 qui ne lisent que du DOM restent en
+`domcontentloaded`, mesuré : aucune n'appelle `getComputedStyle`,
+`getBoundingClientRect` ni `styleSheets`.
+
+C'est la famille du piège `astro preview` plus bas, avec l'asymétrie inversée :
+là, faux en local et vert en CI ; ici, vert en local et faux sur le réseau.
+Dans les deux cas, **l'endroit où on lance la suite décidait du verdict**.
+
 ### Le minifieur peut détruire une déclaration correcte
 
 **Mesuré le 08.10**, et c'est le défaut le plus instructif trouvé jusqu'ici :
@@ -419,6 +450,10 @@ au lieu de coder un nombre en dur.
   retries sont un instrument de mesure de l'instabilité, pas un comportement de
   gate. Les deux ne partagent jamais le même run — et le quality gate d'Allure
   est de toute façon incompatible avec les retries.
+- **Une spec qui lit du STYLE navigue avec `gotoStyled`**, jamais avec
+  `page.goto(..., { waitUntil: 'domcontentloaded' })` — voir le piège
+  correspondant. Celles qui ne lisent que du DOM gardent `domcontentloaded`,
+  qui est plus rapide et correct.
 - **Un message d'échec doit localiser le défaut**, pas seulement le signaler.
   Les specs nomment la surface exacte (le fichier puis le chemin de clé), la
   règle violée et le contexte.
@@ -454,6 +489,17 @@ Mutations exécutées le 08.10, sur la révélation au scroll :
 | Retrait du garde `screen` de la media query | `reveal-css` rouge 2 fois (portée, puis condition lue dans le CSSOM) et `reduced-motion` rouge sur l'impression |
 | Suppression de `animation-timeline: view()` | `reveal-css` rouge 2 fois — et c'est la mutation qui a révélé qu'une des deux assertions ne mesurait rien, corrigée aussitôt |
 | Keyframe d'arrivée passée à `opacity: 0.2` | `reduced-motion` rouge sur « aucun contenu ne RESTE masqué », en nommant l'index de l'élément |
+
+Et une mesure qui n'est pas une mutation mais qui vaut autant : **pointer la
+suite sur la production**. Avant `gotoStyled`, `motion` y échouait 2 fois sur 2
+en annonçant un défaut inexistant ; après, `motion`, `gate-desktop` et
+`gate-mobile` y sont verts 2 passes sur 2. C'est ce qui a révélé la course
+documentée plus haut, et c'est devenu une vérification à refaire après tout
+changement de spec lisant du style :
+
+```
+PW_NO_SERVER=1 PW_BASE_URL=https://bazanjeremy.github.io npx playwright test --project=motion
+```
 
 Note : passer un article en `draft: true` ne fait **pas** échouer le garde-fou,
 et c'est correct — le catalogue exclut les brouillons comme le build. C'est la
