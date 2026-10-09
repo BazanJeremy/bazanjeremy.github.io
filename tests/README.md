@@ -153,24 +153,33 @@ Allure et accumulation du JUnit · branchement ReleaseGuard et FlakySense.
 11. **Charge, concurrence, scan de sécurité.** Site statique sur CDN, sans code
     serveur ni entrée utilisateur.
 
-## Défauts du site trouvés par la suite, non corrigés
+## Défauts du site trouvés par la suite
 
-Il n'en reste **qu'un**. Il est documenté dans sa spec, asséré dans le sens
-souhaité, et attend un arbitrage ; il n'est pas corrigé au passage, parce qu'il
-touche le contenu servi et mérite donc son propre changement et sa propre
-vérification.
+**Il n'en reste aucun.** Les trois sont corrigés, chacun dans son propre
+changement et avec sa propre vérification — et dans les trois cas la mesure a
+corrigé l'énoncé du défaut avant de le corriger lui-même, ce qui est le vrai
+produit de cette suite.
 
-**Deux sont fermés.** La **révélation au scroll morte en production**, corrigée
-le 08.10 dans son propre changement : le récit mesuré est passé plus bas, dans
-les pièges, parce que la leçon survit au correctif — le minifieur peut détruire
-une déclaration correcte. Les assertions sont dans `gate/reveal-css.spec.ts`.
-Et **`og:type`**, corrigé le 09.10 (voir juste après).
-
-**1. Un tableau d'article est inatteignable à 375px.** La troisième colonne du
-tableau de l'article sur les mots de passe (FR + EN) est peinte jusqu'à ~440px
-dans un viewport de 375px, sans que la page défile : la colonne n'est ni
-visible ni accessible. Deux pages sur 26. Exception nommée dans
-`mobile-375.spec.ts`, qui échoue **dans les deux sens**.
+- **La révélation au scroll, morte en production** (08.10). Le récit mesuré est
+  passé plus bas, dans les pièges, parce que la leçon survit au correctif : le
+  minifieur peut détruire une déclaration correcte. Assertions dans
+  `gate/reveal-css.spec.ts`.
+- **`og:type` valait `website` sur les pages d'article** (09.10). Voir juste
+  après.
+- **Un tableau d'article était hors d'atteinte au clavier à 375px** (09.10).
+  L'énoncé disait « la colonne n'est ni visible ni accessible par défilement »
+  et c'était faux : le tableau était un scrollport qui défilait déjà
+  (`scrollWidth` 433 contre `clientWidth` 327, `scrollLeft` poussé à 106
+  ramenant la colonne entièrement dans le viewport). Le défaut réel était
+  `tabIndex: -1` sur ce scrollport : personne au clavier ne pouvait l'atteindre
+  (WCAG 2.1.1), et rien n'annonçait la région. Et `display: block` était
+  innocent — les trois moteurs exposaient la sémantique intacte (`table`, 7
+  `row`, 3 `columnheader`, 18 `cell`). Corrigé par
+  `src/plugins/satteri-scrollable-tables.mjs`, qui enveloppe chaque tableau
+  dans une région défilable focalisable ; la liste d'exceptions de
+  `mobile-375.spec.ts` a disparu **au profit d'une règle** — un texte dans un
+  scrollport dont le rectangle tient dans le viewport est atteignable, donc il
+  n'est plus compté comme débordement.
 
 **CORRIGÉ le 09.10 — `og:type` valait `website` sur les pages d'article.**
 `BaseLayout` codait la valeur en dur pour les 26 pages. Il prend désormais une
@@ -329,6 +338,40 @@ Et pour l'y amener, `scrollIntoViewIfNeeded()` est le mauvais instrument : il
 fait défiler le **minimum**, donc il laisse l'élément collé au bord du viewport,
 là où la plage `entry 0% cover 20%` n'est légitimement pas terminée. Mesuré :
 rouge sur le 6e élément, sans aucun défaut du site. Centrer.
+
+### Le cache de contenu rend INVISIBLE toute mutation d'un plugin Markdown
+
+**Mesuré le 09.10, et c'est le piège le plus coûteux rencontré sur la suite** :
+`node_modules/.astro/data-store.json` garde le HTML rendu des collections de
+contenu. Il est invalidé quand un fichier source change, et quand
+`astro.config.mjs` change — mais **pas** quand change un module que la config
+importe, comme un plugin Markdown.
+
+Conséquence directe : en vérifiant `satteri-scrollable-tables.mjs`, quatre
+mutations successives du plugin ont toutes laissé le HTML identique, donc la
+suite verte. Retirer `tabIndex`, puis `role="region"` : le HTML servait encore
+les deux. Une suite verte ne disait donc **rien** du plugin, et sans vider le
+cache on aurait pu livrer un plugin mort en croyant l'avoir prouvé.
+
+La règle : **avant toute mutation d'un plugin Markdown, `rm -rf
+node_modules/.astro`**. Avec le cache vidé, les mêmes mutations rougissent
+immédiatement, et l'invariant nomme l'attribut manquant.
+
+Même famille que `astro preview` et `DOMContentLoaded` : ce n'est pas le site
+qui décidait du verdict, c'est l'état de la machine.
+
+### Sätteri sérialise `tabindex` en tout ou rien
+
+**Mesuré le 09.10**, avec le cache vidé à chaque essai : `tabIndex: 0`,
+`tabIndex: -1`, `tabIndex: 5` et la forme littérale `'tabindex': '3'` sortent
+**toutes** `tabindex="0"` dans le HTML. Seule la présence de la propriété
+compte ; sa valeur est ignorée.
+
+Deux conséquences. On ne peut pas désactiver le focus en passant `-1` depuis un
+plugin hast — il faut ne pas poser la propriété. Et une assertion écrite sur la
+source du plugin ne mesurerait rien : `invariants/scrollable-tables.spec.ts`
+assère donc sur **les octets servis**, et son seul levier de mutation est la
+suppression de la propriété, pas le changement de sa valeur.
 
 ### Tailwind scanne les tests, les configs racine et la documentation
 
