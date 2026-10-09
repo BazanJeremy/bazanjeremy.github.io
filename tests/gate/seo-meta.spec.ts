@@ -47,6 +47,17 @@ test.describe('Métadonnées SEO et Open Graph', () => {
       // og:locale, depuis le dictionnaire plutôt qu'un littéral recopié.
       expect(await meta(page, 'meta[property="og:locale"]')).toBe(dict[p.lang].meta.og_locale);
 
+      // og:type dérivé du `kind` du catalogue, donc asséré DANS LES DEUX
+      // SENS : un article doit dire `article`, et une page qui n'en est pas
+      // une doit rester `website`. C'était un `test.fail()` sur un seul
+      // article jusqu'au 09.10 — il ne voyait ni les 21 autres, ni la
+      // régression inverse, et il fallait penser à retirer le marqueur.
+      const expectedOgType = p.kind === 'article' ? 'article' : 'website';
+      expect(
+        await meta(page, 'meta[property="og:type"]'),
+        `og:type doit valoir « ${expectedOgType} » sur une page de type « ${p.kind} »`,
+      ).toBe(expectedOgType);
+
       // Titre et description non vides.
       expect((await page.title()).trim().length, 'titre vide').toBeGreaterThan(0);
       expect(
@@ -74,20 +85,6 @@ test.describe('Métadonnées SEO et Open Graph', () => {
       .map(([t, paths]) => `« ${t} » : ${paths.join(', ')}`);
 
     expect(dupes, dupes.length ? `Titres en doublon :\n  ${dupes.join('\n  ')}` : '').toEqual([]);
-  });
-
-  test('og:type vaut `article` sur les pages d\'article', async ({ page }) => {
-    // DÉFAUT CONNU, mesuré le 07.10 : `BaseLayout` code `og:type="website"` en
-    // dur, y compris sur les articles. Signalé à Jérémy, non corrigé ici.
-    //
-    // La spec assère la valeur SOUHAITÉE et est marquée `test.fail()` : elle
-    // documente l'écart, reste verte tant qu'il existe, et passe au rouge le
-    // jour où quelqu'un le corrige — ce qui invite à retirer le marqueur au
-    // lieu de laisser l'écart pourrir en silence.
-    test.fail();
-    const article = pages.find((p) => p.kind === 'article');
-    await page.goto(article?.path ?? '/', { waitUntil: 'domcontentloaded' });
-    expect(await meta(page, 'meta[property="og:type"]')).toBe('article');
   });
 
   test('les trois hreflang sont présents et cohérents', async ({ page }) => {
