@@ -54,10 +54,11 @@ Historique des tâches (T1–T29, correctifs, maintenance) : `docs/JOURNAL.md`. 
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
 **État de la suite QA, relancée en entier le 09.10** : **446 tests — 443 passés, 3 sautés**,
-1,9 min, 8 projets Playwright, sortie Playwright 0. ⚠️ **Un `npm run test:e2e` local lance les 8
-projets, nocturnes compris**, dont `external-links`, qui dépend de tiers : au premier des deux
-runs du 09.10 il est tombé sur un **504** de `github.com/BazanJeremy`, l'URL répondant **200**
-aux trois réessais puis au second run. Un rouge venu d'un tiers est donc attendu en local et ne
+8 projets Playwright, sortie Playwright 0 (trois runs ce jour : 2,0 / 1,9 / 1,8 min).
+⚠️ **Un `npm run test:e2e` local lance les 8 projets, nocturnes compris**, dont
+`external-links`, qui dépend de tiers : au **premier** des trois runs il est tombé sur un
+**504** de `github.com/BazanJeremy`, l'URL répondant **200** aux trois réessais puis aux deux
+runs suivants. Un rouge venu d'un tiers est donc attendu en local et ne
 dit rien du site — et il ne bloque aucune PR, le défaut de `projects` dans
 `.github/actions/qa/action.yml` étant `invariants-gate gate-desktop gate-mobile`.
 Trois workflows actifs —
@@ -74,9 +75,8 @@ Le 3e test sauté est **mesuré, pas accidentel** : Firefox 155 (la build livré
 la supportent tous les deux et passent.
 
 **Points ouverts (source : lignes T23–T29 du journal), décisions de Jérémy** — des cinq écarts
-trouvés en construisant la suite, **trois sont tranchés** (n° 5 corrigé en T27, n° 4 corrigé en
-T29, n° 3 fermé en « on ne le fait pas » le 09.10) et **deux restent**, chacun touchant le CSS ou
-le contenu servis donc chacun méritant sa propre PR :
+trouvés en construisant la suite, **trois sont tranchés** (voir juste après) et **deux restent**,
+chacun touchant le CSS ou le contenu servis donc chacun méritant sa propre PR :
 
 1. **Un tableau d'article est inatteignable à 375px.** Troisième colonne du tableau de l'article
    sur les mots de passe (FR + EN) peinte jusqu'à ~440px dans un viewport de 375px, sans que la
@@ -84,30 +84,6 @@ le contenu servis donc chacun méritant sa propre PR :
    deux sens pour ne pas pourrir.
 2. **`og:type` vaut `website` sur les pages d'article**, devrait être `article`. Asséré via
    `test.fail()`.
-3. **Le sitemap n'a pas d'alternates `xhtml:link`** alors que le namespace est déclaré et que le
-   site est bilingue : l'option `i18n` de `@astrojs/sitemap` n'est pas passée. Décision de
-   configuration, pas régression — délibérément non assérée. **Mesuré le 09.10, et ça change la
-   conclusion : ne pas activer l'option telle quelle.** Dans le code de l'intégration
-   (`dist/utils/parse-i18n-url.js` + `dist/generate-sitemap.js`), les alternates sont groupés par
-   **chemin identique après retrait du préfixe de langue**, et un groupe d'un seul membre n'émet
-   rien. Or **aucun de nos 22 articles ne partage son slug** entre FR et EN (11 + 11 mesurés,
-   chaînage `translationSlug` valide 11/11). L'option produirait donc des alternates sur **4 URLs
-   sur 26** et sur **aucun article** — les pages où l'information est la moins utile. Et le
-   `hreflang` HTML est déjà complet et réciproque, `x-default` compris (vérifié sur une paire
-   d'articles réelle). Faire mieux demanderait un `serialize` piloté par `translationSlug`, soit
-   du vrai code pour un gain nul. **TRANCHÉ le 09.10 (décision de Jérémy) : on ne le fait pas**,
-   avec cette mesure comme motif. Ne pas reproposer l'option `i18n` : elle a été évaluée et
-   écartée, pas oubliée.
-4. **Exclure `docs/`, `.github/` et `CLAUDE.md` du scan Tailwind** — **FAIT en T29.** Ce point
-   annonçait **48 octets** de CSS mort (`.block` 21 o « venue de l'entrée de journal », plus
-   `.contents` 27 o venue de `permissions: contents: read`). **Mesuré le 09.10 en l'appliquant :
-   c'est 27 octets et une seule règle**, `.contents` — hash `CerI2rm-` → `DRDROTEC`, 18 863 →
-   18 836 octets, diff règle par règle contre la production ne montrant que cette ligne.
-   `.block` **survit**, parce que sa source n'a jamais été le journal mais la prose d'un article
-   EN publié (`accessible-at-71-percent.md`, « what would block the most people ») — isolé en
-   excluant ce seul fichier en plus des trois. Les deux produisaient la même règle, donc retirer
-   le journal seul ne la retirait pas : l'attribution avait pris une **co-occurrence pour une
-   cause**, et le chiffre a survécu trois PR parce qu'il avait la forme d'une mesure.
 
 **Ordre recommandé pour les deux qui restent (recommandation, pas décision)** : n° 2 (`og:type`),
 une ligne de layout, risque nul, et un `test.fail()` qui devient une vraie assertion. Puis
@@ -116,6 +92,41 @@ n° 1 (le tableau à 375px), le seul avec une conséquence réelle pour un visit
 perdre la sémantique de tableau aux lecteurs d'écran** selon le moteur, mauvais échange
 pour un site qui publie sur l'accessibilité : préférer une région défilable focalisable
 autour du tableau, et **mesurer avant de livrer**.
+
+### Tranchés — ne pas reproposer
+
+Trois des cinq écarts sont fermés. Ils restent écrits ici parce que chacun porte une mesure
+qu'une session fraîche refera sinon à ses frais.
+
+- **Le 5e, la révélation au scroll** : corrigé en T27 (#62), vérifié en production. Voir le
+  gotcha du minifieur.
+- **Les alternates `xhtml:link` du sitemap** : le namespace est déclaré et le site est
+  bilingue, mais l'option `i18n` de `@astrojs/sitemap` n'est pas passée. Décision de
+  configuration, pas régression — délibérément non assérée. **Mesuré le 09.10, et ça change la
+  conclusion : ne pas activer l'option telle quelle.** Dans le code de l'intégration
+  (`dist/utils/parse-i18n-url.js` + `dist/generate-sitemap.js`), les alternates sont groupés
+  par **chemin identique après retrait du préfixe de langue**, et un groupe d'un seul membre
+  n'émet rien. Or **aucun de nos 22 articles ne partage son slug** entre FR et EN (11 + 11
+  mesurés, chaînage `translationSlug` valide 11/11). L'option produirait donc des alternates
+  sur **4 URLs sur 26** et sur **aucun article** — les pages où l'information est la moins
+  utile. Et le `hreflang` HTML est déjà complet et réciproque, `x-default` compris (vérifié sur
+  une paire d'articles réelle). Faire mieux demanderait un `serialize` piloté par
+  `translationSlug`, soit du vrai code pour un gain nul. **TRANCHÉ le 09.10 (décision de
+  Jérémy) : on ne le fait pas**, avec cette mesure comme motif. L'option `i18n` a été évaluée
+  et écartée, pas oubliée.
+- **Le scan Tailwind de la documentation** : fait en T29 (#66), déployé. Le point annonçait
+  **48 octets** de CSS mort (`.block` 21 o « venue de l'entrée de journal », plus `.contents`
+  27 o venue de `permissions: contents: read`). **Mesuré en l'appliquant : 27 octets et une
+  seule règle**, `.contents` — `CerI2rm-` → `DRDROTEC`, 18 863 → 18 836 octets, le diff par
+  règle contre la production ne montrant que cette ligne. `.block` **survit** : sa source n'a
+  jamais été le journal mais la prose d'un article EN publié (`accessible-at-71-percent.md`,
+  « what would block the most people »), isolée en excluant ce seul fichier en plus des trois.
+  Les deux produisaient la même règle, donc retirer le journal seul ne la retirait pas :
+  l'attribution avait pris une **co-occurrence pour une cause**, et le chiffre a survécu trois
+  PR parce qu'il avait la forme d'une mesure — alors que ce fichier portait **déjà** la bonne
+  cause 120 lignes plus loin, dans le gotcha de l'incident #50. Leçon : quand deux sources
+  peuvent produire le même octet, en exclure une ne prouve rien sur l'autre ; il faut les
+  isoler une par une.
 
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
 d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en mode LLM ; toute version
@@ -173,10 +184,16 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
 `git add` si possible. Observé le 08.10 : après le merge de #62 par Jérémy, le checkout est passé
 sur `main` et a été fast-forwardé **entre deux tours** — ce qui a lancé ces commandes reste
 inconnu. La session a enchaîné un commit en croyant être encore sur sa branche, et `18a5629` est
-parti **directement sur `main`**, sans PR. Le push a réussi parce que `main` n'est pas protégée :
-rien ne l'aurait arrêté. Dégâts nuls dans ce cas (0 fichier sous `src/` ou `public/`), mais
-l'annuler aurait demandé un second push direct sur `main`, donc de répéter la faute. Une branche
-lue au tour précédent n'est pas une branche courante.
+parti **directement sur `main`**, sans PR. Le push a réussi parce que `main` n'était pas encore
+protégée : rien ne l'aurait arrêté. Dégâts nuls dans ce cas (0 fichier sous `src/` ou `public/`),
+mais l'annuler aurait demandé un second push direct sur `main`, donc de répéter la faute. Une
+branche lue au tour précédent n'est pas une branche courante.
+**Le phénomène s'est reproduit le 09.10 après le merge de #66** : le checkout était déjà sur
+`main` à `f8ad899`, et la branche locale déjà supprimée, avant tout `git switch` ou `git pull` de
+ma part. Donc ce n'est pas un accident isolé mais le comportement normal après un merge — **la
+cause reste inconnue**, et c'est la garde qui compte, pas son explication. Deux filets tiennent
+désormais : relire la branche dans la commande du `git add`, et la protection de `main`, qui
+refuserait le push.
 
 **La ligne d'avancement qu'on ajoute dans une PR (dans `docs/JOURNAL.md`) est périmée dès le merge** : elle
 décrit son propre état d'avant, donc elle reste sur « PR ouverte, à merger ». C'est ce
@@ -198,10 +215,11 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
-- **`npm run test:e2e`** — 446 tests, ~2,5 min. Il construit et sert `dist/` tout seul. Puis
-  `npm run test:report` pour le rapport Allure (un fichier HTML autonome dans `allure-report/`).
-  Pour un sous-ensemble : `npx playwright test --project=gate-desktop` (voir `tests/README.md`
-  pour les 8 projets). La suite tourne aussi sur chaque PR via `pr.yml`.
+- **`npm run test:e2e`** — 446 tests, ~2 min (1,8 / 1,9 / 2,0 sur trois runs du 09.10).
+  Il construit et sert `dist/` tout seul. Puis `npm run test:report` pour le rapport Allure
+  (un fichier HTML autonome dans `allure-report/`). Pour un sous-ensemble :
+  `npx playwright test --project=gate-desktop` (voir `tests/README.md` pour les 8 projets).
+  La suite tourne aussi sur chaque PR via `pr.yml`.
 - **La suite peut être pointée sur la production, et depuis T28 c'est concluant** — avant, les
   specs qui lisent du style couraient contre le chargement de la feuille et annonçaient des
   défauts inexistants. À refaire après tout changement de spec lisant du style, et après tout
