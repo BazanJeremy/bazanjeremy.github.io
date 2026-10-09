@@ -50,7 +50,7 @@ dans `src/i18n/fr.json`.
 
 ## Avancement
 
-Historique des tâches (T1–T27, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
+Historique des tâches (T1–T28, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
 **État de la suite QA au 08.10** : **446 tests (443 passés, 3 sautés), 8 projets Playwright**,
@@ -79,11 +79,32 @@ chacun touchant le CSS ou le contenu servis donc chacun méritant sa propre PR :
    `test.fail()`.
 3. **Le sitemap n'a pas d'alternates `xhtml:link`** alors que le namespace est déclaré et que le
    site est bilingue : l'option `i18n` de `@astrojs/sitemap` n'est pas passée. Décision de
-   configuration, pas régression — délibérément non assérée.
+   configuration, pas régression — délibérément non assérée. **Mesuré le 09.10, et ça change la
+   conclusion : ne pas activer l'option telle quelle.** Dans le code de l'intégration
+   (`dist/utils/parse-i18n-url.js` + `dist/generate-sitemap.js`), les alternates sont groupés par
+   **chemin identique après retrait du préfixe de langue**, et un groupe d'un seul membre n'émet
+   rien. Or **aucun de nos 22 articles ne partage son slug** entre FR et EN (11 + 11 mesurés,
+   chaînage `translationSlug` valide 11/11). L'option produirait donc des alternates sur **4 URLs
+   sur 26** et sur **aucun article** — les pages où l'information est la moins utile. Et le
+   `hreflang` HTML est déjà complet et réciproque, `x-default` compris (vérifié sur une paire
+   d'articles réelle). Faire mieux demanderait un `serialize` piloté par `translationSlug`, soit
+   du vrai code pour un gain nul. **Ma recommandation : fermer ce point en « on ne le fait pas »**,
+   avec cette mesure comme motif — mais c'est ton arbitrage.
 4. **Exclure `docs/`, `.github/` et `CLAUDE.md` du scan Tailwind retirerait 48 octets de CSS
    mort** (`.block` 21 o, venue de l'entrée de journal qui documente l'incident du mot « block »,
    et `.contents` 27 o, venue de `permissions: contents: read`). Nettoyage qui se défend, mais il
    change les octets servis.
+
+**Ordre recommandé (recommandation, pas décision)** : n° 4 d'abord — pas pour les 48 octets, mais
+parce que le piège a mordu **une fois de plus le 08.10**, un mot de la prose du journal ayant
+injecté une règle de 29 octets et déplacé le hash, ce qui a coûté une enquête `diff` par règle ;
+l'exclure stabilise le hash contre toute édition de documentation, et le faire en premier évite
+que les PR suivantes aient leur vérification de hash polluée. Puis n° 2 (`og:type`), une ligne de
+layout, risque nul, et un `test.fail()` qui devient une vraie assertion. Puis n° 1 (le tableau à
+375px), le seul avec une conséquence réelle pour un visiteur — ⚠️ **le correctif réflexe
+`display: block; overflow-x: auto` sur `<table>` peut faire perdre la sémantique de tableau aux
+lecteurs d'écran** selon le moteur, mauvais échange pour un site qui publie sur l'accessibilité :
+préférer une région défilable focalisable autour du tableau, et **mesurer avant de livrer**.
 
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
 d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en mode LLM ; toute version
@@ -131,6 +152,15 @@ Une **branche `feat/*` (ou `fix/`, `chore/`) par tâche → PR → squash-merge*
    `gh pr create`.
 5. **S'arrêter** : donner le lien PR + `gh pr merge <n> --squash --delete-branch`. **Jérémy merge.**
 
+⚠️ **Relire `git branch --show-current` juste avant CHAQUE commit**, dans la même commande que le
+`git add` si possible. Observé le 08.10 : après le merge de #62 par Jérémy, le checkout est passé
+sur `main` et a été fast-forwardé **entre deux tours** — ce qui a lancé ces commandes reste
+inconnu. La session a enchaîné un commit en croyant être encore sur sa branche, et `18a5629` est
+parti **directement sur `main`**, sans PR. Le push a réussi parce que `main` n'est pas protégée :
+rien ne l'aurait arrêté. Dégâts nuls dans ce cas (0 fichier sous `src/` ou `public/`), mais
+l'annuler aurait demandé un second push direct sur `main`, donc de répéter la faute. Une branche
+lue au tour précédent n'est pas une branche courante.
+
 **La ligne d'avancement qu'on ajoute dans une PR (dans `docs/JOURNAL.md`) est périmée dès le merge** : elle
 décrit son propre état d'avant, donc elle reste sur « PR ouverte, à merger ». C'est ce
 qui a produit #36, #37, #38 et #42. À fermer soit dans la PR suivante, soit par un
@@ -155,6 +185,11 @@ Vaut aussi pour les commentaires de PR et les issues.
   `npm run test:report` pour le rapport Allure (un fichier HTML autonome dans `allure-report/`).
   Pour un sous-ensemble : `npx playwright test --project=gate-desktop` (voir `tests/README.md`
   pour les 8 projets). La suite tourne aussi sur chaque PR via `pr.yml`.
+- **La suite peut être pointée sur la production, et depuis T28 c'est concluant** — avant, les
+  specs qui lisent du style couraient contre le chargement de la feuille et annonçaient des
+  défauts inexistants. À refaire après tout changement de spec lisant du style, et après tout
+  déploiement dont on veut vérifier le rendu réel :
+  `PW_NO_SERVER=1 PW_BASE_URL=https://bazanjeremy.github.io npx playwright test --project=motion`
 - **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
   rester `_astro_content.CerI2rm-.css` (il valait `DPDLS9i_` jusqu'à T27, qui a réparé la
   révélation au scroll : +81 octets, une seule règle, écart mesuré ligne à ligne). Tailwind scanne plus large qu'on ne croit (voir les
