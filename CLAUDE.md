@@ -288,6 +288,17 @@ Vaut aussi pour les commentaires de PR et les issues.
   échoue s'il ne trouve rien à retirer. Ne pas revenir à un enchaînement par `&&` : un quality
   gate en échec fait sortir `allure generate` en non-zéro, le `&&` court-circuite, et le traceur
   reste dans le rapport qu'on va justement ouvrir.
+- **`main` est protégée depuis le 09.10** (décision de Jérémy, même configuration
+  qu'`anomaly-sentinel`) : PR obligatoire, check requis, **administrateurs inclus**, force-push et
+  suppression interdits, `strict: false`, 0 approbation exigée (sinon une PR solo serait
+  indéblocable). Plus aucun push direct sur `main`, pour personne — c'est la réponse au push
+  direct de `18a5629`.
+  ⚠️ **Le nom du check requis est `Playwright + Allure`, PAS `QA gate`.** Mesuré avant de poser la
+  protection : `pr.yml` s'appelle « QA gate » mais son job porte `name: Playwright + Allure`, et
+  c'est le NOM DU JOB qui devient le contexte rapporté sur une PR ; `QA gate` est le nom du job de
+  `deploy.yml`, qui ne rapporte que sur `main`. Exiger « QA gate » rendrait **toute PR impossible à
+  merger**, en attente d'un check qui ne rapporte jamais là. Donc si un jour on renomme ce job,
+  **mettre à jour le contexte requis dans la même PR**, sinon le dépôt se verrouille.
 - L'environnement `github-pages` n'autorise que la **branche par défaut** → doit rester `main`.
 - **Articles de veille** : Jérémy en pousse lui-même. Le schéma (`src/content.config.ts`)
   ne valide pas tout → à vérifier à chaque nouvel article (contrat documenté dans le README) :
