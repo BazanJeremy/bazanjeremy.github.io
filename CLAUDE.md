@@ -219,6 +219,18 @@ décrit son propre état d'avant, donc elle reste sur « PR ouverte, à merger �
 qui a produit #36, #37, #38 et #42. À fermer soit dans la PR suivante, soit par un
 `docs(handoff)` dédié — et à relire **avant tout `/clear`**, puisque ce fichier est la
 seule continuité.
+⚠️ **Compter les lignes ouvertes, ne pas regarder seulement la dernière.** Observé le 09.10 : T31
+a été ajoutée dans la PR suivante **sans** que T30 soit fermée, donc deux lignes périmées se sont
+accumulées alors que la règle ci-dessus était déjà écrite. Elle dit quoi faire, pas comment le
+vérifier. La vérification tient en une commande, à lancer avant d'ajouter une ligne **et** avant
+tout `/clear` :
+
+```bash
+grep -c "🔄 PR ouverte" docs/JOURNAL.md
+```
+
+Le résultat attendu est `0` avant un `/clear`, et au plus `1` pendant une PR en cours — celle
+qu'on vient d'ouvrir.
 
 **Langue des commits : le français est accepté** (Jérémy, 19.09 — l'ancienne règle « anglais »
 n'est plus impérative). Quand Jérémy fournit un message de commit, l'utiliser **pour le commit**,

@@ -451,9 +451,15 @@ Contrôle qui tranche, à refaire après tout ajout de fichier à la racine :
 npm run build && ls dist/_astro/
 ```
 
-Le nom doit rester `_astro_content.DRDROTEC.css`. S'il bouge, diffe les deux
-CSS **règle par règle** avant de conclure : un hash différent ne veut pas dire
-régression de style.
+**Le hash attendu n'est pas écrit ici, et c'est délibéré** : il vit dans la
+section « Vérification » de `CLAUDE.md`, en un seul endroit. Il a été écrit en
+dur ici pendant un temps, et il y a été **périmé deux fois** — à T27, puis à
+T31 —, chaque fois parce qu'on avait mis à jour `CLAUDE.md` en oubliant ce
+fichier. Deux copies d'un nombre qui bouge à chaque changement de CSS font une
+copie fausse.
+
+S'il bouge, diffe les deux CSS **règle par règle** avant de conclure : un hash
+différent ne veut pas dire régression de style.
 
 ### `astro preview` se démonise sous un agent
 
