@@ -13,13 +13,22 @@
  * l'image FR sur une page EN est donc un défaut invisible à tout scan de texte.
  */
 import { test, expect } from '@playwright/test';
-import { pages } from '../fixtures/pages.ts';
+import { articles, pages } from '../fixtures/pages.ts';
 import { dict } from '../fixtures/i18n.ts';
 
 const SITE = 'https://bazanjeremy.github.io';
 
 const meta = (page: import('@playwright/test').Page, selector: string) =>
   page.locator(selector).getAttribute('content');
+
+/**
+ * Date de publication attendue, DÉRIVÉE du frontmatter — jamais recopiée.
+ * Les 22 articles l'écrivent en `YYYY-MM-DD` (mesuré), et `z.coerce.date()`
+ * en fait un minuit UTC, donc `toISOString()` est la forme servie.
+ */
+const publishedByPath = new Map(
+  articles.map((a) => [a.path, new Date(a.date).toISOString()]),
+);
 
 test.describe('Métadonnées SEO et Open Graph', () => {
   for (const p of pages) {
@@ -57,6 +66,40 @@ test.describe('Métadonnées SEO et Open Graph', () => {
         await meta(page, 'meta[property="og:type"]'),
         `og:type doit valoir « ${expectedOgType} » sur une page de type « ${p.kind} »`,
       ).toBe(expectedOgType);
+
+      // `article:published_time`, que `og:type: article` appelle normalement.
+      // Asséré DANS LES DEUX SENS pour la même raison qu'`og:type` : un
+      // article doit la porter, et une page qui n'en est pas une ne doit pas
+      // l'inventer. La valeur vient du frontmatter, pas d'un littéral.
+      const published = page.locator('meta[property="article:published_time"]');
+      if (p.kind === 'article') {
+        const expected = publishedByPath.get(p.path);
+        expect(expected, `aucune date au catalogue pour ${p.path}`).toBeDefined();
+        await expect(
+          published,
+          `article:published_time manque sur ${p.path}, alors qu'og:type y vaut « article »`,
+        ).toHaveCount(1);
+        expect(
+          await published.getAttribute('content'),
+          `article:published_time ne correspond pas au frontmatter sur ${p.path}`,
+        ).toBe(expected);
+      } else {
+        await expect(
+          published,
+          `article:published_time sur ${p.path}, qui est de type « ${p.kind} » et non un article`,
+        ).toHaveCount(0);
+      }
+
+      // AUCUNE page ne sert `article:modified_time`, et c'est une DÉCISION,
+      // pas un oubli : le dépôt n'a aucune source de vérité pour une date de
+      // modification (le schéma de contenu porte `date` et rien d'autre).
+      // La dériver de `date` affirmerait une modification qu'on ne connaît
+      // pas, et la tirer du mtime git la ferait bouger à chaque reformatage.
+      // Cette assertion est là pour qu'on ne la fabrique pas plus tard.
+      await expect(
+        page.locator('meta[property="article:modified_time"]'),
+        `article:modified_time sur ${p.path} : aucune donnée du dépôt ne permet de l'affirmer`,
+      ).toHaveCount(0);
 
       // Titre et description non vides.
       expect((await page.title()).trim().length, 'titre vide').toBeGreaterThan(0);
