@@ -60,7 +60,9 @@ Historique des tâches (T1–T31, correctifs, maintenance) : `docs/JOURNAL.md`. 
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
 **État de la suite QA, relancée en entier le 10.10** : **472 tests — 469 passés, 3 sautés**,
-**9 projets** Playwright, sortie Playwright 0 (mesurée), 2,0 min. Le compte a bougé trois fois —
+**9 projets** Playwright, sortie Playwright 0 (mesurée), 2,0 min. `a11y-axe` a aussi été pointé
+sur la **production** le 11.10 : 26 tests verts, sortie 0, 24,4 s — la conformité tient sur les
+octets servis, et les 10 nœuds indécis de l'accueil s'y comportent à l'identique. Le compte a bougé trois fois —
 446 → 443 en T30 (une assertion déplacée dans une boucle déjà paramétrée, donc moins de tests pour
 plus de couverture), 443 → 446 en T31 (+2 invariants, +1 test clavier), puis 446 → 472 en T32
 (+26, le projet `a11y-axe`, un test par page). **Ne pas lire ces
@@ -80,8 +82,10 @@ si l'un change, changer l'autre dans la même PR.
 Trois workflows actifs —
 `pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
 échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
-`qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI : gate 65 s, build
-14 s, deploy 10 s, soit ~94 s contre 36 s avant. **Pas encore en place** : la persistance de
+`qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI sur le run du merge
+de T32 : gate **99 s**, build 19 s, deploy 8 s, soit **~2 min 14** de bout en bout (c'était gate
+65 s / build 14 s / deploy 10 s, ~94 s avant axe, et 36 s avant toute suite) — les +34 s du gate
+sont le prix des 26 pages analysées par axe, payé une fois par PR et une fois par déploiement. **Pas encore en place** : la persistance de
 l'historique Allure et du JUnit (les tendances du rapport sont donc vides), la vérification de
 types, le correctif du niveau informatif, et le branchement ReleaseGuard / FlakySense.
 
