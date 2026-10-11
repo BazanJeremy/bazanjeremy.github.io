@@ -19,15 +19,31 @@ inputs:
     description: >
       Space-separated Playwright projects that BLOCK. A failure here fails the
       job, and therefore the deployment.
+
+      `a11y-axe` blocks on measurement, not on principle: 0 violations across
+      the 26 pages, three green runs, it depends on nothing but this repository,
+      and `@axe-core/playwright` is pinned EXACT — so a ruleset change can only
+      arrive through a dependency PR, which is exactly where a red belongs.
     required: false
-    default: invariants-gate gate-desktop gate-mobile
+    default: invariants-gate gate-desktop gate-mobile a11y-axe
   check-projects:
     description: >
       Space-separated Playwright projects that run for information only. A
       failure is surfaced as a warning annotation and does not fail the job.
-      Empty today: everything in the suite is deterministic and depends on
-      nothing but this repository, so nothing belongs in this tier yet. Axe,
-      external links and the other browser engines will land here.
+
+      STILL EMPTY, and it cannot be used as written — MEASURED on 10.10, which
+      is why `a11y-axe` ended up in `projects` instead. Both runs write to the
+      SAME `allure-results`, the quality gate below carries `maxFailures: 0`,
+      and the report step is deliberately not `continue-on-error`. So an
+      informative failure fails the report step and therefore the job: the
+      warning annotation appears, and the job goes red anyway. Reproduced
+      locally — 150 blocking results green plus 2 informative failures gave
+      `maxFailures actual 2` and exit code 1.
+
+      Making this tier real requires a results directory of its own (an env
+      var on the allure-playwright reporter) plus its own report artifact, so
+      that the quality gate only ever covers the blocking run. Not done, and
+      not needed while this input is empty.
     required: false
     default: ""
   retries:

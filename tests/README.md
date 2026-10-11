@@ -20,9 +20,15 @@ une décision ; une omission tacite est un trou.
 
 ```bash
 npm run test:e2e      # build + preview + toute la suite
-npm run test:gate     # le sous-ensemble bloquant seulement
+npm run test:gate     # le sous-ensemble bloquant seulement (204 tests)
 npm run test:report   # genere le rapport Allure (un fichier HTML autonome)
 ```
+
+`test:gate` liste **exactement** les quatre projets du défaut `projects` de
+`.github/actions/qa/action.yml`, qui est la définition de l'ensemble bloquant.
+Les deux étaient désalignés jusqu'au 10.10 — le script omettait `gate-mobile` —,
+donc un run local vert ne disait rien du gate. Si l'un des deux change, changer
+l'autre dans la même PR.
 
 Pour un projet precis, `--project=` est le selecteur unique :
 
@@ -40,9 +46,27 @@ Remove-Item Env:PW_NO_SERVER
 ```
 
 Le rapport sort dans `allure-report/index.html` — **un seul fichier**, ouvrable
-hors ligne, sans aucune requête externe. Il pèse environ **4 Mo** même pour un
-run vert : c'est le bundle de l'application Allure, inliné en base64. Ce n'est
-pas « léger », c'est autonome.
+hors ligne, sans aucune requête externe : c'est le bundle de l'application
+Allure, inliné en base64. Ce n'est pas « léger », c'est autonome.
+
+⚠️ **Le « environ 4 Mo » qui était écrit ici est faux, et la correction vaut
+plus que le chiffre.** Mesuré le 10.10, trois runs verts, résultats nettoyés
+avant chacun : **13,0 Mo** pour le sous-ensemble du gate (150 tests), **19,4 Mo**
+pour la suite complète sans axe (446 tests), **18,8 Mo** avec axe (472 tests).
+Donc le rapport est 3 à 5 fois plus gros qu'annoncé, l'essentiel est une base
+constante, et l'ajout de 26 tests ne l'a pas fait grossir — il a même donné un
+fichier plus petit que le run sans eux, ce qui situe la variation dans le bruit
+et non dans le nombre de tests. **La cause de l'écart avec le 4 Mo d'origine est
+inconnue** : montée de version d'Allure, changement de `singleFile`, ou chiffre
+faux dès l'écriture — je ne l'ai pas mesurée, et le dire est plus utile que de
+choisir une explication plausible. Conséquence pratique, elle : un artefact de
+~19 Mo par run, trois workflows, 30 jours de rétention.
+
+Et une mesure annexe qui pique : `allure-results` **s'accumule** d'un run à
+l'autre, les échecs y déposent captures et traces, et `singleFile` inline tout.
+Après une série de runs de mutation, le même rapport pesait **505 Mo**. En CI le
+dossier part vide, donc le cas ne s'y produit pas ; en local, nettoyer
+`allure-results/` avant de juger une taille.
 
 Pour cibler la production au lieu du preview local (PowerShell) :
 
@@ -82,6 +106,7 @@ déterministe et ne dépendre que de nous.
 | `gate/blog-contract` | P moy-haute × I moyen | Un seul `h1` égal au titre, aucun saut de niveau, date affichée = frontmatter, slug kebab-case et fichier homonyme. |
 | `gate/reveal-css` | P moyenne × I faible (écran) à moyen (impression) | Les OCTETS de la révélation au scroll : aucun raccourci `animation` ne transporte de timeline (c'est le minifieur qu'on surveille, pas la règle), `.reveal` déclare bien sa timeline en longhand **dans son propre bloc**, la portée `screen` est là, et le moteur a réellement ACCEPTÉ la déclaration (CSSOM). Verrouille un défaut qui a vécu en production depuis sa mise en place sans être vu. |
 | `gate/skip-link` | P basse × I moyen | Hors écran sans focus, visible au focus, mène à `#contenu` — vérifié sur les trois moteurs. Et « un seul Tab suffit » là où Tab atteint les liens. |
+| `a11y/axe` | P moyenne × I haut | Les règles WCAG 2.0 et 2.1 niveaux A et AA d'axe-core sur les 26 pages (`best-practice` exclu : opinion d'outil, pas critère de conformité). Plus deux choses que « 0 violation » ne dit pas tout seul : que la règle de contraste a trouvé du texte à mesurer, et que l'indécision d'axe reste **bornée par une règle** — un nœud dont il refuse de trancher le contraste n'est toléré que dans le Hero ou le header translucide. Ferme le seul contrôle manuel que la suite ne reprenait pas. |
 | `invariants/zero-js` | P basse × I **maximal** | Aucun `.js`, aucune balise de script, aucun handler en attribut. Plus un garde-fou : toutes les pages déclarées sont construites. |
 | `invariants/zero-external` | P basse-moy × I moy-haut | L'invariant « 0 requête externe », côté fichiers **et** côté navigateur. |
 | `invariants/assets` | P basse × I moyen | Polices présentes, preloads avec `crossorigin`, contrat des PNG Open Graph lu dans l'en-tête IHDR. |
@@ -105,8 +130,8 @@ jour sans aucun défaut.
 
 ### À venir
 
-`a11y-axe` (PR 5, demande de dépendance séparée) · persistance de l'historique
-Allure et accumulation du JUnit · branchement ReleaseGuard et FlakySense.
+Persistance de l'historique Allure et accumulation du JUnit · branchement
+ReleaseGuard et FlakySense.
 
 ## Ce qu'on ne teste pas — et pourquoi
 
@@ -117,7 +142,11 @@ Allure et accumulation du JUnit · branchement ReleaseGuard et FlakySense.
    concluante pour cette question : comparer `dist/` à la production et `cmp`
    le CSS haché. **Rejeté sur le coût, avec une alternative nommée.**
 2. **Un vérificateur de contraste maison.** La règle `color-contrast` d'axe le
-   fera dans un vrai navigateur. Un second finirait par le contredire.
+   fait dans un vrai navigateur depuis le 10.10 ; un second finirait par le
+   contredire. Y compris — et c'est là que la tentation revient — pour les 10
+   nœuds de l'accueil qu'axe refuse de trancher : écrire notre propre calcul
+   pour ces 10-là, c'est exactement le second vérificateur. **Ils restent donc
+   inconnus**, ce que `a11y/axe` borne et affiche au lieu de le combler.
 3. **Lighthouse / budgets de performance.** Une page à 0 JS, deux polices
    auto-hébergées et une feuille de style n'a presque rien à régresser, et les
    scores varient de plusieurs points d'un run à l'autre sur un runner
@@ -259,6 +288,40 @@ Les 4 specs qui lisent du style y passent (`reveal-css`, `skip-link`,
 C'est la famille du piège `astro preview` plus bas, avec l'asymétrie inversée :
 là, faux en local et vert en CI ; ici, vert en local et faux sur le réseau.
 Dans les deux cas, **l'endroit où on lance la suite décidait du verdict**.
+
+### Axe est AVEUGLE à une page non stylée, et il la déclare conforme
+
+Corollaire direct du piège précédent, mesuré le 10.10 en écrivant `a11y/axe` —
+et il a corrigé l'énoncé de l'assertion avant que l'assertion soit figée.
+
+L'intention était de se protéger de la course ci-dessus par un garde-fou : « si
+la feuille n'est pas appliquée, la règle de contraste n'aura rien mesuré, donc
+un comptage de nœuds à zéro le révélera ». **Faux.** Feuille `_astro/*.css`
+coupée par `page.route(...).abort()`, navigation en `domcontentloaded` :
+
+| | feuille coupée | page normale |
+|---|---|---|
+| violations WCAG A/AA | **0** | 0 |
+| nœuds de contraste conformes | **85** | 74 |
+| `color-contrast` inapplicable | non | non |
+| nœuds indécis | 0 | 10 |
+
+axe mesure tranquillement le **noir sur blanc par défaut du navigateur** et le
+déclare conforme. Deux conséquences qui comptent plus que la mesure :
+
+1. **Un run d'axe vert ne dit rien tant que la feuille n'est pas prouvée
+   appliquée.** Toute spec axe passe donc par `gotoStyled` — vérifié dans la
+   même mesure : sur la page privée de sa feuille, `gotoStyled` échoue avec son
+   propre message, alors qu'axe seul y est vert.
+2. **Aucune assertion de comptage ne rattrape ça** : 85 nœuds non stylés contre
+   74 stylés, le nombre ne discrimine pas — il va dans le mauvais sens. Les
+   deux garde-fous de la spec gardent donc un périmètre réel mais étroit, écrit
+   dans son en-tête pour ne pas être relu plus large : ils attrapent une page
+   où axe n'a mesuré **aucun** texte (page blanche, injection ratée, URL sans
+   contenu), pas une page mal stylée.
+
+Leçon générale, troisième occurrence dans ce dépôt : un garde-fou qu'on n'a pas
+vu rouge est une intention, pas une protection.
 
 ### Le minifieur peut détruire une déclaration correcte
 
@@ -599,6 +662,17 @@ Mutations exécutées le 08.10, sur la révélation au scroll :
 | Suppression de `animation-timeline: view()` | `reveal-css` rouge 2 fois — et c'est la mutation qui a révélé qu'une des deux assertions ne mesurait rien, corrigée aussitôt |
 | Keyframe d'arrivée passée à `opacity: 0.2` | `reduced-motion` rouge sur « aucun contenu ne RESTE masqué », en nommant l'index de l'élément |
 
+Mutations exécutées le 10.10, sur `a11y/axe` — une par assertion, et la
+dernière a corrigé l'assertion au lieu de la confirmer :
+
+| Mutation | Résultat |
+|---|---|
+| `--color-muted` passé de `#8b949e` à `#3a4148` | rouge sur **toutes** les pages, en nommant la règle, la gravité `serious`, le nombre de nœuds (32 sur un index, 11 sur un article) et les premiers sélecteurs |
+| Dégradé posé sur `.section-alt`, donc derrière du texte **hors** du Hero | rouge sur les 2 pages qui portent cette classe, en nommant les 8 sélecteurs devenus indécis (`#preuves > .wrap > h2`, etc.) — c'est la règle de bornage, pas une liste |
+| `background-image` (data-URI) sur `.section-alt` | rouge sur le **motif nouveau** `bgImage`, qui n'est ni `bgGradient` ni `imgNode` : la carte des motifs n'est pas décorative |
+| Page stylée mais vidée de son `<body>` | rouge sur les deux garde-fous à la fois (`contrastePasses: 0`, `inapplicable: true`) |
+| Feuille `_astro/*.css` coupée (`route.abort`), navigation en `domcontentloaded` | **passe** — et c'est la mutation qui a corrigé l'énoncé, voir le piège ci-dessous. axe rend 0 violation et 85 nœuds conformes sur une page non stylée. `gotoStyled`, lui, échoue bien dans le même scénario. |
+
 Et une mesure qui n'est pas une mutation mais qui vaut autant : **pointer la
 suite sur la production**. Avant `gotoStyled`, `motion` y échouait 2 fois sur 2
 en annonçant un défaut inexistant ; après, `motion`, `gate-desktop` et
@@ -644,8 +718,10 @@ exactement lancé le nocturne de mardi ? ». Puis `live` (contre la production)
 et `preview` (contre un build frais) tournent selon ce plan.
 
 **Entrées du lancement manuel** : `suite`
-(`full` · `live` · `gate` · `cross-browser` · `motion` · `prod-http` ·
-`external-links`), `browsers`, `retries`. Sur un déclenchement `schedule` le
+(`full` · `live` · `gate` · `cross-browser` · `motion` · `a11y` · `prod-http` ·
+`external-links`), `browsers`, `retries`. ⚠️ Le plan de `resolve` **énumère** ses
+projets : un projet nouveau est absent de `full` jusqu'à ce qu'on l'y nomme —
+`a11y-axe` y a été ajouté explicitement, et le prochain devra l'être aussi. Sur un déclenchement `schedule` le
 contexte `inputs` est vide, donc `inputs.x` vaut `''` — les défauts `||` du job
 `resolve` **sont** le contrat du nocturne. L'asymétrie est voulue : le défaut
 du lancement manuel est `chromium`, parce qu'un humain qui lance à la main veut
@@ -676,11 +752,30 @@ pas en `continue-on-error` : un gate en échec fait échouer le job. C'est ce qu
 attrape ce qu'une suite verte ne peut pas voir — des specs qui disparaissent
 discrètement, via `minTestsCount`.
 
-**Le niveau informatif existe mais est vide.** L'action accepte
-`check-projects`, dont l'échec produit une annotation d'avertissement sans
-bloquer. Rien n'y est aujourd'hui : tout ce qui est livré est déterministe et ne
-dépend que de ce dépôt. Axe, les liens externes et les autres moteurs de rendu y
-atterriront.
+**Le niveau informatif existe, est vide, et NE PEUT PAS être utilisé tel
+quel.** L'action accepte `check-projects`, dont l'échec ne produit qu'une
+annotation d'avertissement — mais mesuré le 10.10 en y branchant axe, le job
+devient rouge quand même. Les deux runs écrivent dans le **même**
+`allure-results`, le quality gate porte `maxFailures: 0`, et l'étape de rapport
+n'est délibérément pas en `continue-on-error` : 150 résultats bloquants verts
+plus 2 échecs informatifs donnent `maxFailures actual 2` et un code de sortie 1.
+L'annotation s'affiche, puis le job échoue — le pire des deux mondes, puisqu'on
+croyait ne pas bloquer.
+
+⚠️ Et la première tentative de mesure avait **conclu l'inverse**, par un défaut
+de la mesure elle-même : lancer le run informatif avec `--reporter=line`
+**remplace tout le tableau `reporter`** de la config, reporter Allure compris.
+Aucun résultat n'était donc écrit, le quality gate ne voyait que les 150 du run
+bloquant, et tout semblait aller. L'action, elle, ne passe aucun `--reporter`.
+Reproduire un comportement de CI exige la **commande de la CI**, pas une
+commande voisine.
+
+Rendre ce niveau réel demanderait un dossier de résultats à lui (variable
+d'environnement sur le reporter `allure-playwright`) et son propre artefact de
+rapport, pour que le quality gate ne couvre jamais que le bloquant. **Non fait**
+— inutile tant que l'entrée est vide, et `a11y-axe` est donc dans `projects`,
+où un contrôle qui fait échouer le job porte enfin le nom de ce qu'il est.
+Les liens externes et les autres moteurs restent dans le nocturne.
 
 ## Pas encore en place
 
@@ -695,6 +790,15 @@ atterriront.
   donc visibles que dans l'éditeur. Un script `typecheck` exigerait
   `@astrojs/check` et `typescript` en devDependencies — **deux dépendances non
   approuvées**, donc non ajoutées. À arbitrer.
-- **Axe / a11y.** Demande `@axe-core/playwright`, une dépendance hors de la
-  stack verrouillée, donc **non ajoutée sans accord**. Les contrastes WCAG AA
-  restent le seul contrôle manuel que la suite ne reprend pas.
+- **Le contraste de 10 nœuds de l'accueil reste INCONNU.** Ce n'est pas un
+  défaut trouvé, ni un contrôle oublié : axe refuse de trancher, et refuser est
+  son comportement correct. `a11y/axe` borne cette indécision par une règle et
+  la fait apparaître dans le rapport, mais ne la lève pas. Mesuré le 10.10 :
+  6 nœuds du Hero (`.hero__bg` empile deux `radial-gradient`) et 4 liens de
+  navigation (`.header-blur` est translucide, et le `<svg>` `.hero__arcs` passe
+  dessous), sur les deux accueils FR et EN. La lever demanderait soit un
+  vérificateur maison — rejeté plus haut, point 2 —, soit un changement de
+  design qui rende le fond réductible à une couleur sous ces textes. **À
+  arbitrer, et à ne pas relire comme « conforme ».**
+- **Le niveau informatif de l'action composite.** Voir « En CI » : il existe
+  mais bloque quand même. Son correctif est décrit là-bas et non appliqué.
