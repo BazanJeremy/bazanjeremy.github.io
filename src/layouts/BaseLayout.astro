@@ -22,6 +22,19 @@ interface Props {
    *  else is a `website`. Passed explicitly rather than derived from the URL,
    *  so that a new page type cannot silently pick up the wrong one. */
   ogType?: 'website' | 'article';
+  /** ISO 8601 publication date, emitted as `article:published_time`. Belongs
+   *  with `ogType="article"`, and `gate/seo-meta` asserts that pairing in both
+   *  directions.
+   *
+   *  THERE IS NO `modifiedTime`, AND THAT IS DELIBERATE. `og:type: article`
+   *  normally carries `article:modified_time` too, but this repository has no
+   *  source of truth for it: the content schema holds `date` and nothing else
+   *  (measured — the 22 articles carry exactly 9 frontmatter fields, none of
+   *  them a modification date). Emitting `date` twice would assert a
+   *  modification we do not know about, and deriving it from the git mtime
+   *  would make it move on a reformat that changed no content. An incomplete
+   *  set of article metadata is honest; a fabricated one is not. */
+  publishedTime?: string;
 }
 
 const {
@@ -31,6 +44,7 @@ const {
   // Une carte de partage par langue (le texte y est incrusté).
   ogImage = lang === 'en' ? '/og-image-en.png' : '/og-image.png',
   ogType = 'website',
+  publishedTime,
   altPaths = {
     fr: switchLocalePath(Astro.url, 'fr'),
     en: switchLocalePath(Astro.url, 'en'),
@@ -85,6 +99,7 @@ const ogLocale = t.meta.og_locale;
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageUrl} />
     <meta property="og:locale" content={ogLocale} />
+    {publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />

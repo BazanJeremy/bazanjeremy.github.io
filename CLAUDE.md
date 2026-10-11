@@ -158,9 +158,14 @@ qu'une session fraîche refera sinon à ses frais.
   `seo-meta.spec.ts`, ce qui ne coûte aucune navigation, **nomme la page** en échec, et assère
   dans les deux sens via le `kind` du catalogue (un article dit `article`, le reste reste
   `website`) — l'ancien test ne voyait ni les 21 autres articles ni la régression inverse.
-  **Non fait, et dit comme tel** : `article:published_time` / `article:modified_time`, que
-  `og:type: article` appelle normalement, ne sont pas servis — hors périmètre du point, à
-  arbitrer séparément.
+  Le point laissé ouvert ici — `article:published_time` / `article:modified_time`, que
+  `og:type: article` appelle normalement — est **tranché en T33** : `published_time` est servi
+  sur les 22 articles, dérivé du `date` du frontmatter ; `modified_time` **n'est délibérément
+  pas servi**, et une assertion le verrouille sur les 26 pages. Motif mesuré : les 22 articles
+  portent exactement 9 champs de frontmatter et le schéma n'en a aucun pour une date de
+  modification, donc la dériver de `date` affirmerait une modification inconnue, et la tirer du
+  mtime git la ferait bouger à chaque reformatage. Un jeu de métadonnées incomplet est honnête ;
+  un jeu fabriqué ne l'est pas.
 - **Le scan Tailwind de la documentation** : fait en T29 (#66), déployé. Le point annonçait
   **48 octets** de CSS mort (`.block` 21 o « venue de l'entrée de journal », plus `.contents`
   27 o venue de `permissions: contents: read`). **Mesuré en l'appliquant : 27 octets et une
