@@ -30,6 +30,7 @@ on:
           - gate
           - cross-browser
           - motion
+          - a11y
           - prod-http
           - external-links
       browsers:
@@ -104,7 +105,9 @@ jobs:
           case "$SUITE" in
             full)
               LIVE="prod-http external-links"
-              PREVIEW="invariants-gate gate-desktop gate-mobile motion"
+              # `a11y-axe` is listed here explicitly: this plan enumerates its
+              # projects, so a new project is absent from "full" until named.
+              PREVIEW="invariants-gate gate-desktop gate-mobile motion a11y-axe"
               case "$BROWSERS" in
                 *firefox*) PREVIEW="$PREVIEW gate-firefox" ;;
               esac
@@ -117,6 +120,7 @@ jobs:
             external-links) LIVE="external-links" ;;
             gate)           PREVIEW="invariants-gate gate-desktop gate-mobile" ;;
             motion)         PREVIEW="motion" ;;
+            a11y)           PREVIEW="a11y-axe" ;;
             cross-browser)
               PREVIEW="gate-firefox gate-webkit"
               BROWSERS="chromium firefox webkit"

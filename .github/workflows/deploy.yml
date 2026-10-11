@@ -47,6 +47,7 @@ jobs:
           target: preview
           retries: "0"
           quality-gate: "true"
+          # `projects` left at the action's default, `a11y-axe` included.
           artifact-suffix: -main-${{ github.run_number }}
 
   build:

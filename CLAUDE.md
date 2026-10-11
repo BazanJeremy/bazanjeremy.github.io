@@ -34,11 +34,17 @@ dans `src/i18n/fr.json`.
 - **Suite de tests (accord Jérémy, 07.10)** : Playwright + rapport Allure 3, en `devDependencies`
   uniquement — `@playwright/test` **épinglé exact** (les binaires de navigateur sont liés à la
   version), `allure-playwright`, `allure` (CLI 3, aucun JRE), `@types/node` (il était déjà
-  transitif). Rapport publié en **artefact de workflow** (`singleFile`), jamais sous le site :
+  transitif), et depuis T32 **`@axe-core/playwright` épinglé exact** (accord Jérémy du 10.10 —
+  un jeu de règles est un instrument de mesure : une version mineure peut ajouter une règle,
+  donc changer le verdict sans qu'une ligne du site ait bougé). Rapport publié en **artefact de
+  workflow** (`singleFile`), jamais sous le site :
   l'invariant « `dist/` sans `.js` » est l'argument qui répond aux alertes Dependabot, et un
   rapport Allure le ferait tomber. Gate **bloquant restreint** (ce qui est déterministe et ne
-  dépend que de ce dépôt), reste en informatif. **Pas de régression visuelle** (Windows en dev,
-  Linux en CI : les baselines seraient inutilisables en local).
+  dépend que de ce dépôt). ⚠️ **Le niveau « informatif » existe mais bloque quand même** —
+  mesuré en T32, voir la section « En CI » de `tests/README.md` : les deux runs partagent
+  `allure-results`, le quality gate est à `maxFailures: 0`, et l'étape de rapport n'est pas en
+  `continue-on-error`. Il est donc resté vide, et axe est bloquant. **Pas de régression
+  visuelle** (Windows en dev, Linux en CI : les baselines seraient inutilisables en local).
   Le registre de risque, la liste argumentée de ce qu'on ne teste **pas**, et tous les pièges
   mesurés vivent dans **`tests/README.md`** — à lire avant de toucher à la suite.
 - **Pas de dépendance hors stack ci-dessus sans accord.** Pas d'emoji dans le contenu.
@@ -53,26 +59,44 @@ dans `src/i18n/fr.json`.
 Historique des tâches (T1–T31, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA, relancée en entier le 09.10** : **446 tests — 443 passés, 3 sautés**,
-8 projets Playwright, sortie Playwright 0, 1,8 min. Le compte a bougé deux fois ce jour-là —
+**État de la suite QA, relancée en entier le 10.10** : **472 tests — 469 passés, 3 sautés**,
+**9 projets** Playwright, sortie Playwright 0 (mesurée), 2,0 min. Le compte a bougé trois fois —
 446 → 443 en T30 (une assertion déplacée dans une boucle déjà paramétrée, donc moins de tests pour
-plus de couverture), puis 443 → 446 en T31 (+2 invariants, +1 test clavier). **Ne pas lire ces
+plus de couverture), 443 → 446 en T31 (+2 invariants, +1 test clavier), puis 446 → 472 en T32
+(+26, le projet `a11y-axe`, un test par page). **Ne pas lire ces
 variations comme un signal** : le plancher du quality gate est à `minTestsCount: 20`, délibérément
 loin du compte réel, parce que la suite est paramétrée sur les articles et qu'en ajouter un change
 le nombre.
-⚠️ **Un `npm run test:e2e` local lance les 8 projets, nocturnes compris**, dont
+⚠️ **Un `npm run test:e2e` local lance les 9 projets, nocturnes compris**, dont
 `external-links`, qui dépend de tiers : au **premier** des trois runs il est tombé sur un
 **504** de `github.com/BazanJeremy`, l'URL répondant **200** aux trois réessais puis aux deux
 runs suivants. Un rouge venu d'un tiers est donc attendu en local et ne
 dit rien du site — et il ne bloque aucune PR, le défaut de `projects` dans
-`.github/actions/qa/action.yml` étant `invariants-gate gate-desktop gate-mobile`.
+`.github/actions/qa/action.yml` étant depuis T32
+`invariants-gate gate-desktop gate-mobile a11y-axe`. Ce défaut **est** la définition de
+l'ensemble bloquant, et `npm run test:gate` liste exactement les mêmes quatre projets
+(204 tests) : les deux étaient désalignés avant T32 — le script omettait `gate-mobile` —, donc
+si l'un change, changer l'autre dans la même PR.
 Trois workflows actifs —
 `pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
 échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
 `qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI : gate 65 s, build
 14 s, deploy 10 s, soit ~94 s contre 36 s avant. **Pas encore en place** : la persistance de
-l'historique Allure et du JUnit (les tendances du rapport sont donc vides), axe/a11y, et le
-branchement ReleaseGuard / FlakySense.
+l'historique Allure et du JUnit (les tendances du rapport sont donc vides), la vérification de
+types, le correctif du niveau informatif, et le branchement ReleaseGuard / FlakySense.
+
+**Point ouvert au 10.10 (source : ligne T32 du journal), décision de Jérémy** : le contraste de
+**10 nœuds des deux pages d'accueil est INCONNU**, et ne doit pas être relu comme conforme. Ce
+n'est ni un défaut trouvé ni un contrôle oublié : axe **refuse de trancher**, ce qui est son
+comportement correct. Mesuré — 6 nœuds du Hero (`.hero__bg` empile deux `radial-gradient`, motif
+`bgGradient`) et 4 liens de navigation (`.header-blur` vaut
+`color-mix(in srgb, var(--color-bg) 82%, transparent)`, donc le header `sticky` est translucide,
+et le `<svg>` décoratif `.hero__arcs` passe dessous — motif `imgNode`). `a11y/axe` **borne** cette
+indécision par une règle (tolérée seulement dans le Hero ou le header, et seulement avec ces deux
+motifs) et la fait apparaître dans le rapport, mais ne la lève pas. La lever demanderait soit un
+vérificateur de contraste maison — rejeté par `tests/README.md`, un second finirait par
+contredire le premier —, soit un changement de design rendant le fond réductible à une couleur
+sous ces textes. **Arbitrage de Jérémy, rien à changer sans lui.**
 
 Le 3e test sauté est **mesuré, pas accidentel** : Firefox 155 (la build livrée avec Playwright
 1.63.0) répond `false` à `CSS.supports('animation-timeline', 'view()')`, donc l'assertion CSSOM de
@@ -246,10 +270,10 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
-- **`npm run test:e2e`** — 446 tests, ~2 min (1,8 mesuré le 09.10).
+- **`npm run test:e2e`** — 472 tests, ~2 min (2,0 mesuré le 10.10).
   Il construit et sert `dist/` tout seul. Puis `npm run test:report` pour le rapport Allure
   (un fichier HTML autonome dans `allure-report/`). Pour un sous-ensemble :
-  `npx playwright test --project=gate-desktop` (voir `tests/README.md` pour les 8 projets).
+  `npx playwright test --project=gate-desktop` (voir `tests/README.md` pour les 9 projets).
   La suite tourne aussi sur chaque PR via `pr.yml`.
 - **La suite peut être pointée sur la production, et depuis T28 c'est concluant** — avant, les
   specs qui lisent du style couraient contre le chargement de la feuille et annonçaient des
@@ -268,9 +292,14 @@ Vaut aussi pour les commentaires de PR et les issues.
   main : débordement horizontal à 375px (avec la précondition de largeur qui ferme le piège de
   mesure de T16 — un test qui ne vérifie que le débordement passerait pour la même mauvaise
   raison), vocabulaire banni sur trois surfaces, ancres mortes, chaînage `translationSlug`,
-  métadonnées par locale, contrat des articles, invariants 0-JS et 0 requête externe.
-  **Pas encore couvert** : les contrastes WCAG AA (axe arrive plus tard), et le rendu visuel —
-  pour ça, la comparaison `dist/` contre la prod ci-dessous reste la méthode.
+  métadonnées par locale, contrat des articles, invariants 0-JS et 0 requête externe, et
+  depuis T32 les **règles WCAG 2.0/2.1 A et AA d'axe sur les 26 pages**, contrastes compris.
+  **Pas encore couvert** : le rendu visuel — pour ça, la comparaison `dist/` contre la prod
+  ci-dessous reste la méthode. Et **10 nœuds de contraste des deux accueils restent inconnus**,
+  axe refusant de les trancher : voir le point ouvert plus haut. ⚠️ Ne pas conclure d'un axe vert
+  que la page est stylée : **mesuré en T32, feuille de style coupée, axe rend 0 violation et 85
+  nœuds « conformes »** en mesurant le noir sur blanc du navigateur. C'est `gotoStyled` qui
+  protège, pas axe.
 - Aperçu réel : `npm run preview` puis vérifs. **Les screenshots du browser pane plantent dans
   cet environnement** → vérifier via `javascript_tool` + `getComputedStyle` (couleurs, tailles),
   et via la prod (`curl` du CSS `/_astro/*.css`).

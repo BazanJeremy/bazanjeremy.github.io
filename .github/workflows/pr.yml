@@ -30,4 +30,6 @@ jobs:
           target: preview
           retries: "0"
           quality-gate: "true"
+          # `projects` is left at the action's default, which now includes
+          # `a11y-axe`: one place to read the blocking list, not two.
           artifact-suffix: -pr-${{ github.event.pull_request.number }}

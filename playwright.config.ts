@@ -105,6 +105,16 @@ export default defineConfig({
       },
     },
     {
+      // Axe. Repertoire dedie, donc projet dedie — voir `tests/README.md`.
+      name: 'a11y-axe',
+      testDir: './tests/a11y',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        reducedMotion: 'reduce',
+      },
+    },
+    {
       name: 'prod-http',
       testDir: './tests/nightly',
       testMatch: '**/prod-http.spec.ts',
