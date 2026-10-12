@@ -63,6 +63,19 @@ inputs:
     description: Space-separated browsers to install.
     required: false
     default: chromium
+  typecheck:
+    description: >
+      Run `astro check` before building. Blocking, and it belongs in the
+      blocking tier by this repository's own criterion: it is deterministic and
+      depends on nothing but this repository.
+
+      MEASURED on 12.10: `astro check` regenerates `.astro/` itself, so it
+      needs no prior build and runs before one — the cheap check fails before
+      the expensive browser install. Default failing severity is `error`, so
+      the 12 `ts(6385)` hints ('z' is deprecated, from `astro:content`) do not
+      fail it.
+    required: false
+    default: "true"
   artifact-suffix:
     description: Appended to artifact names so concurrent callers do not collide.
     required: false
@@ -88,6 +101,13 @@ runs:
       run: |
         npm ci
         echo "npm $(npm -v) / node $(node -v)"
+
+    # Before the build, deliberately: this is the cheapest check in the job,
+    # and failing here skips the browser install entirely.
+    - name: Check types
+      if: inputs.typecheck == 'true'
+      shell: bash
+      run: npm run typecheck
 
     # `astro preview` SERVES dist/, it does not build it. The build has to
     # happen here, and only for the preview target.

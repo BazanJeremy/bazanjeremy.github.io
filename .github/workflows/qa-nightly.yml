@@ -170,6 +170,10 @@ jobs:
           retries: ${{ needs.resolve.outputs.retries }}
           # OFF: incompatible with retries, and nothing here should gate.
           quality-gate: "false"
+          # OFF: this is the instrument run. A type error can only be red here
+          # if `main` is already broken, which the deploy gate stops before the
+          # merge — so it would only add noise to a flakiness measurement.
+          typecheck: "false"
           browsers: chromium
           artifact-suffix: -nightly-${{ github.run_number }}-live
 
@@ -190,5 +194,7 @@ jobs:
           projects: ${{ needs.resolve.outputs.preview_projects }}
           retries: ${{ needs.resolve.outputs.retries }}
           quality-gate: "false"
+          # OFF for the same reason as the `live` job above.
+          typecheck: "false"
           browsers: ${{ needs.resolve.outputs.browsers }}
           artifact-suffix: -nightly-${{ github.run_number }}-preview
