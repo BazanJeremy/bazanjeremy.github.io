@@ -34,7 +34,10 @@ dans `src/i18n/fr.json`.
 - **Suite de tests (accord Jérémy, 07.10)** : Playwright + rapport Allure 3, en `devDependencies`
   uniquement — `@playwright/test` **épinglé exact** (les binaires de navigateur sont liés à la
   version), `allure-playwright`, `allure` (CLI 3, aucun JRE), `@types/node` (il était déjà
-  transitif), et depuis T32 **`@axe-core/playwright` épinglé exact** (accord Jérémy du 10.10 —
+  transitif), depuis T39 **`@astrojs/check` et `typescript` épinglés exact** (même argument :
+  un vérificateur de types est un instrument de mesure ; et `@astrojs/check` 0.9.10 exige
+  `typescript ^5 || ^6`, donc **6.0.3 et non la 7.0.2 disponible** — c'est la plage du peer qui
+  décide, pas le dernier numéro), et depuis T32 **`@axe-core/playwright` épinglé exact** (accord Jérémy du 10.10 —
   un jeu de règles est un instrument de mesure : une version mineure peut ajouter une règle,
   donc changer le verdict sans qu'une ligne du site ait bougé). Rapport publié en **artefact de
   workflow** (`singleFile`), jamais sous le site :
@@ -116,9 +119,27 @@ Trois workflows actifs —
 `qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI sur le run du merge
 de T32 : gate **99 s**, build 19 s, deploy 8 s, soit **~2 min 14** de bout en bout (c'était gate
 65 s / build 14 s / deploy 10 s, ~94 s avant axe, et 36 s avant toute suite) — les +34 s du gate
-sont le prix des 26 pages analysées par axe, payé une fois par PR et une fois par déploiement. **Pas encore en place** : la persistance de
-l'historique Allure et du JUnit (les tendances du rapport sont donc vides), la vérification de
-types, le correctif du niveau informatif, et le branchement ReleaseGuard / FlakySense.
+sont le prix des 26 pages analysées par axe, payé une fois par PR et une fois par déploiement. **Les quatre points « pas encore en place » sont
+traités en T39** (PR ouverte) : persistance de l'historique Allure **et** du JUnit par le
+**cache d'Actions** (trois séries séparées par `history-key` ; `main-gate`, écrite par le gate
+de `deploy.yml`, est la série de référence, la seule à retries 0 sur un jeu de projets fixe),
+vérification de types bloquante (`npm run typecheck` → `astro check`, 0 erreur / 12 indications
+/ 11,7 s en local), niveau informatif réellement non bloquant, et job `verdict` au nocturne qui
+enchaîne FlakySense puis ReleaseGuard, épinglés au commit, jamais bloquants. Détail et mesures
+dans `tests/README.md`.
+⚠️ **L'historique par cache est au mieux-effort, pas durable** : une entrée non consultée
+pendant **7 jours** est supprimée (source : documentation GitHub, pas une mesure). Il survit
+parce que le nocturne le touche chaque jour — nocturne éteint, la tendance meurt une semaine
+plus tard. Le rendre durable voudrait dire la branche de stockage, écartée parce qu'elle
+exigerait `contents: write` et une poussée depuis la CI sur un dépôt dont `main` est protégée
+précisément pour les empêcher.
+⚠️ **Deux couplages trouvés en appliquant le correctif du niveau informatif**, qu'aucun fichier
+ne nommait : le run informatif **écrasait** `test-results/junit.xml` (celui que l'historique et
+ReleaseGuard consomment), et **renommer le fichier ne suffit pas** — un run Playwright
+**nettoie son `outputDir`**. C'est le dossier qu'il faut séparer. Les deux sont mesurés et
+documentés en pièges.
+**Pas encore en place après T39** : la jonction d'identité FlakySense ↔ ReleaseGuard (point
+ouvert ci-dessous) et le rapport Allure hébergé (évalué et écarté le 12.10).
 
 **Point ouvert au 10.10 (source : ligne T32 du journal), décision de Jérémy** : le contraste de
 **10 nœuds des deux pages d'accueil est INCONNU**, et ne doit pas être relu comme conforme. Ce
@@ -217,6 +238,27 @@ qu'une session fraîche refera sinon à ses frais.
   peuvent produire le même octet, en exclure une ne prouve rien sur l'autre ; il faut les
   isoler une par une.
 
+**Point ouvert au 12.10 (source : ligne T39 du journal), décision de Jérémy** : la **jonction
+d'identité entre FlakySense et ReleaseGuard est cassée sur du JUnit Playwright**, et ce n'est
+pas une hypothèse — les deux outils ont été installés, épinglés au commit, et enchaînés sur un
+vrai JUnit de ce dépôt. `flakysense` dérive `invariants/zero-external.spec.ts::[invariants-gate]
+…` (attribut `file` s'il existe, sinon `classname`) ; ReleaseGuard reconstruit un identifiant de
+nœud **pytest** depuis le `classname` (son ADR-002) et sort
+`invariants/zero-external/spec/ts.py::[invariants-gate] …`. Le JUnit de Playwright n'a **aucun**
+attribut `file` (mesuré) et son `classname` est un chemin de fichier, que ReleaseGuard découpe
+sur les points. Mesuré : les **4** tests signalés instables par le premier ont été déclarés
+« 4 non-flaky failure(s) » par le second → G1 déclenché → **NO GO**.
+**Le mode de panne est du bon côté** : l'excuse d'un échec connu comme instable ne se déclenche
+jamais, donc ReleaseGuard est plus **strict** que conçu, jamais plus laxiste. Et le signal
+d'instabilité **fonctionne** (il ne compte que la longueur de la liste), donc le score et le
+partage GO / CONDITIONAL GO sont justes : 22/22 verts plus un historique à 4 instables donne
+**CONDITIONAL GO, score 0,70**, là où le code de sortie de Playwright dirait seulement « vert ».
+C'est l'apport réel du branchement, et il tient sans la jonction.
+**La réparation est en amont** : une option de dialecte JUnit dans ReleaseGuard. La contourner
+en réécrivant notre `classname` et en fabriquant un attribut `file` ferait s'accorder les deux
+outils **en mentant sur le chemin du fichier**. Non fait, signalé plutôt que corrigé en
+silence. **Arbitrage de Jérémy.**
+
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
 d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en mode LLM ; toute version
 ajoutée au test paramétré change le nombre de tests (182, publié dans l'article T19).
@@ -265,9 +307,10 @@ mais ici **aucune commande ne la vérifiait** : le `grep -c "🔄 PR ouverte"` n
 grep -c "^\*\*Point ouvert" CLAUDE.md
 ```
 
-Le résultat attendu est le nombre de points **réellement** ouverts — au 12.10 : **2**, les 10
-nœuds de contraste inconnus et les prompts d'`anomaly-sentinel`. S'il monte sans qu'un nouvel
-arbitrage ait été demandé, c'est qu'un point fermé a survécu.
+Le résultat attendu est le nombre de points **réellement** ouverts — au 12.10, après T39 :
+**3**, les 10 nœuds de contraste inconnus, les prompts d'`anomaly-sentinel`, et la jonction
+d'identité FlakySense ↔ ReleaseGuard. S'il monte sans qu'un nouvel arbitrage ait été demandé,
+c'est qu'un point fermé a survécu.
 
 ## Workflow Git (Jérémy merge lui-même)
 

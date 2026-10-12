@@ -31,19 +31,27 @@ inputs:
       Space-separated Playwright projects that run for information only. A
       failure is surfaced as a warning annotation and does not fail the job.
 
-      STILL EMPTY, and it cannot be used as written — MEASURED on 10.10, which
-      is why `a11y-axe` ended up in `projects` instead. Both runs write to the
-      SAME `allure-results`, the quality gate below carries `maxFailures: 0`,
-      and the report step is deliberately not `continue-on-error`. So an
-      informative failure fails the report step and therefore the job: the
-      warning annotation appears, and the job goes red anyway. Reproduced
-      locally — 150 blocking results green plus 2 informative failures gave
-      `maxFailures actual 2` and exit code 1.
+      IT REALLY DOES NOT BLOCK NOW, and the fix is worth reading before
+      touching it. As written until 12.10 the tier was a trap: both runs wrote
+      to the SAME `allure-results`, the quality gate carries `maxFailures: 0`,
+      and the report step is deliberately not `continue-on-error` — so an
+      informative failure failed the report step and therefore the job. The
+      warning annotation appeared, and the job went red anyway: the worst of
+      both worlds, since we believed nothing was blocking. MEASURED on 10.10
+      (150 blocking results green plus 2 informative failures gave
+      `maxFailures actual 2` and exit code 1), which is why `a11y-axe` ended up
+      in `projects` instead.
 
-      Making this tier real requires a results directory of its own (an env
-      var on the allure-playwright reporter) plus its own report artifact, so
-      that the quality gate only ever covers the blocking run. Not done, and
-      not needed while this input is empty.
+      The informative run now writes to `allure-results-check`, its own JUnit
+      file and its own history, and gets its own report with the quality gate
+      OFF. The gate therefore only ever covers the blocking run. The JUnit
+      separation is not cosmetic either: until 12.10 the informative run
+      OVERWROTE `test-results/junit.xml`, the very file the history and
+      ReleaseGuard consume.
+
+      Still empty by default — `a11y-axe` stays in `projects`, where a check
+      that fails the job carries the name of what it is. This tier is for
+      something genuinely advisory.
     required: false
     default: ""
   retries:
@@ -63,10 +71,58 @@ inputs:
     description: Space-separated browsers to install.
     required: false
     default: chromium
+  typecheck:
+    description: >
+      Run `astro check` before building. Blocking, and it belongs in the
+      blocking tier by this repository's own criterion: it is deterministic and
+      depends on nothing but this repository.
+
+      MEASURED on 12.10: `astro check` regenerates `.astro/` itself, so it
+      needs no prior build and runs before one — the cheap check fails before
+      the expensive browser install. Default failing severity is `error`, so
+      the 12 `ts(6385)` hints ('z' is deprecated, from `astro:content`) do not
+      fail it.
+    required: false
+    default: "true"
   artifact-suffix:
     description: Appended to artifact names so concurrent callers do not collide.
     required: false
     default: ""
+  history:
+    description: >
+      Allure trend and JUnit history persistence. `off` keeps none, `read`
+      restores it so the report shows a trend, `write` restores it, appends
+      this run's JUnit and saves it back.
+
+      WHY THE ACTIONS CACHE AND NOT A STORAGE BRANCH. A branch would need
+      `contents: write` and a push from CI, on a repository whose `main` is
+      protected precisely to stop pushes. The cache needs no write permission
+      and puts nothing in the repository, so it is the smaller risk surface.
+
+      THE PRICE, AND IT IS REAL: a cache entry not accessed for 7 days is
+      removed, and the 10 GB repository ceiling evicts oldest-accessed first.
+      The history is therefore BEST EFFORT, not durable — it survives because
+      the nightly touches it every day. Turn the nightly off and the trend dies
+      a week later. Durability would mean the storage branch.
+
+      Series are kept apart by `history-key`: mixing a PR run, a main gate run
+      and a nightly instrument run into one trend would make the trend
+      meaningless. A PR run reads the main series and never writes: caches a PR
+      creates are scoped to its own merge ref anyway.
+    required: false
+    default: "off"
+  history-key:
+    description: >
+      Namespace of the history series, e.g. `main-gate` or `nightly-preview`.
+      Required as soon as `history` is not `off`.
+    required: false
+    default: ""
+  history-keep:
+    description: >
+      Number of JUnit runs kept. Matches `historyLimit` in `allurerc.mjs` on
+      purpose, so both halves of the history hold the same window.
+    required: false
+    default: "20"
   base-url:
     description: Overrides the target URL. Required when target is "production".
     required: false
@@ -88,6 +144,35 @@ runs:
       run: |
         npm ci
         echo "npm $(npm -v) / node $(node -v)"
+
+    # Fails loudly rather than silently writing a series named `qa-history--`,
+    # which would quietly merge every caller's history into one trend.
+    - name: Check the history inputs
+      if: inputs.history != 'off' && inputs.history-key == ''
+      shell: bash
+      run: |
+        echo "::error title=history-key missing::history is '${{ inputs.history }}' but history-key is empty. Name the series."
+        exit 1
+
+    # Before the suite and before the report: `allure generate` READS this file
+    # to build the trend, then appends to it.
+    - name: Restore the QA history
+      if: inputs.history != 'off'
+      uses: actions/cache/restore@v4
+      with:
+        path: .qa-history
+        # Cache entries are immutable, so the key rolls per run and the prefix
+        # in `restore-keys` is what finds the most recent one.
+        key: qa-history-${{ inputs.history-key }}-${{ github.run_id }}
+        restore-keys: |
+          qa-history-${{ inputs.history-key }}-
+
+    # Before the build, deliberately: this is the cheapest check in the job,
+    # and failing here skips the browser install entirely.
+    - name: Check types
+      if: inputs.typecheck == 'true'
+      shell: bash
+      run: npm run typecheck
 
     # `astro preview` SERVES dist/, it does not build it. The build has to
     # happen here, and only for the preview target.
@@ -146,6 +231,21 @@ runs:
         PW_BASE_URL: ${{ inputs.base-url }}
         PW_NO_SERVER: ${{ inputs.target == 'production' && '1' || '' }}
         PROJECTS: ${{ inputs.check-projects }}
+        # THE WHOLE POINT. Separate results, separate output directory,
+        # separate JUnit, separate HTML report: nothing this run writes can
+        # reach the blocking run's quality gate or the JUnit the history
+        # consumes.
+        #
+        # `PW_OUTPUT_DIR` is the one that is easy to miss — MEASURED on 12.10,
+        # a Playwright run CLEARS its `outputDir`, so without it this run
+        # deleted the blocking run's `test-results/junit.xml` whatever we named
+        # its own file. The distinct FILENAME is kept on top of the distinct
+        # directory, so `flakysense`, which searches recursively for the
+        # literal name `junit.xml`, can never pick up an advisory run.
+        ALLURE_RESULTS_DIR: allure-results-check
+        PW_OUTPUT_DIR: test-results-check
+        PW_JUNIT_FILE: test-results-check/junit-check.xml
+        PW_HTML_REPORT_DIR: playwright-report-check
       run: |
         args=""
         for p in $PROJECTS; do args="$args --project=$p"; done
@@ -175,7 +275,33 @@ runs:
           echo "::warning title=No Allure report::allure-results/ is missing, so the suite never produced results. Look at the test step above, not here."
           exit 0
         fi
-        npm run test:report
+        npm run test:report -- --results ./allure-results --output allure-report
+
+    # Its own report, with the quality gate OFF. That is what makes the tier
+    # informative: nothing here can fail the job.
+    - name: Build the informative Allure report
+      if: always() && inputs.check-projects != ''
+      shell: bash
+      env:
+        # Never '1': a gate over advisory results is the defect this step fixes.
+        ALLURE_QUALITY_GATE: ""
+        # Its own trend, so advisory runs never land in the blocking history.
+        ALLURE_HISTORY_PATH: .qa-history/allure/history-check.jsonl
+      run: |
+        if [ ! -d allure-results-check ]; then
+          echo "::warning title=No informative report::allure-results-check/ is missing, so the informative run produced nothing."
+          exit 0
+        fi
+        npm run test:report -- --results ./allure-results-check --output allure-report-check
+
+    - name: Upload the informative Allure report
+      if: always() && inputs.check-projects != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report-check${{ inputs.artifact-suffix }}
+        path: allure-report-check/index.html
+        if-no-files-found: warn
+        retention-days: 30
 
     - name: Upload the Allure report
       if: always()
@@ -190,12 +316,34 @@ runs:
         if-no-files-found: warn
         retention-days: 30
 
+    # `always()`: a red run belongs in the flakiness history more than a green
+    # one does. That is the whole signal.
+    - name: Accumulate this run's JUnit
+      if: always() && inputs.history == 'write'
+      shell: bash
+      env:
+        HISTORY_KEY: ${{ inputs.history-key }}
+        KEEP: ${{ inputs.history-keep }}
+        RUN_NUMBER: ${{ github.run_number }}
+      run: |
+        node scripts/qa-history.mjs           --junit test-results/junit.xml           --root .qa-history/junit           --run-id "$(date -u +%Y%m%dT%H%M%SZ)-${HISTORY_KEY}-${RUN_NUMBER}"           --keep "$KEEP"
+
+    - name: Save the QA history
+      if: always() && inputs.history == 'write'
+      uses: actions/cache/save@v4
+      with:
+        path: .qa-history
+        key: qa-history-${{ inputs.history-key }}-${{ github.run_id }}
+
     - name: Upload the raw results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-results${{ inputs.artifact-suffix }}
-        # junit.xml plus the traces kept for failures.
-        path: test-results
+        # junit.xml plus the traces kept for failures. Both tiers, each in its
+        # own directory — see `PW_OUTPUT_DIR` above for why they cannot share.
+        path: |
+          test-results
+          test-results-check
         if-no-files-found: warn
         retention-days: 30

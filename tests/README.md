@@ -19,10 +19,16 @@ une décision ; une omission tacite est un trou.
 ## Commandes
 
 ```bash
+npm run typecheck     # astro check — bloquant dans le gate, sans build prealable
 npm run test:e2e      # build + preview + toute la suite
 npm run test:gate     # le sous-ensemble bloquant seulement (204 tests)
 npm run test:report   # genere le rapport Allure (un fichier HTML autonome)
 ```
+
+`test:report` accepte `-- --results <dir> --output <dir>` : c'est ce qui permet
+au niveau informatif d'avoir son propre rapport sans que le quality gate du
+niveau bloquant le voie. Sans argument, les defauts sont ceux du poste de
+travail.
 
 `test:gate` liste **exactement** les quatre projets du défaut `projects` de
 `.github/actions/qa/action.yml`, qui est la définition de l'ensemble bloquant.
@@ -128,10 +134,11 @@ jour sans aucun défaut.
 | `nightly/reduced-motion` | P basse × I moyen | La seule spec autorisée à s'intéresser au mouvement : sous `reduce` rien n'est animé et tout est visible ; sous `no-preference` l'animation s'applique ; **aucun contenu ne RESTE masqué** (chaque `.reveal` amené dans la vue atteint l'opacité 1) ; et à l'impression rien n'est animé ni masqué. Le mode de panne grave de ce motif est du contenu qui reste invisible, pas du contenu invisible à un instant donné. |
 | `gate-firefox` / `gate-webkit` | assurance de régression | Rejeu du gate sur les deux autres moteurs. Justifié, pas réflexe : le site a 0 JS et une seule feuille de style, et la seule fonctionnalité sensible au moteur est derrière un `@supports`. |
 
-### À venir
+### Hors suite, dans le meme gate
 
-Persistance de l'historique Allure et accumulation du JUnit · branchement
-ReleaseGuard et FlakySense.
+| Controle | Risque | Ce qu'il verrouille |
+|---|---|---|
+| `npm run typecheck` | P moyenne × I moyen | `astro check` sur 50 fichiers. `tsconfig.json` est strict et couvre `tests/`, mais `astro build` ne lance pas `tsc` : sans cette etape les erreurs de type ne se voyaient que dans l'editeur. Bloquant, et il en a le droit par le critere de ce depot : deterministe, ne depend que de ce depot. Mesure du 12.10 : 0 erreur, 0 avertissement, **12 indications** (toutes `ts(6385)` — le `z` reexporte par `astro:content` est deprecie), 11,7 s. Le seuil d'echec par defaut est `error`, donc les indications ne bloquent pas. |
 
 ## Ce qu'on ne teste pas — et pourquoi
 
@@ -524,6 +531,58 @@ copie fausse.
 S'il bouge, diffe les deux CSS **règle par règle** avant de conclure : un hash
 différent ne veut pas dire régression de style.
 
+### Un run Playwright NETTOIE son `outputDir`
+
+Mesure du 12.10, en separant les deux niveaux de l'action composite. Donner au
+run informatif un autre NOM de fichier JUnit ne protege rien : Playwright vide
+le dossier de sortie au demarrage, donc le second run supprimait
+`test-results/junit.xml`, celui du run bloquant — le fichier que l'historique
+et ReleaseGuard consomment.
+
+Isole en deux commandes, et c'est l'experience a refaire plutot que le
+diagnostic a recopier : lancer `invariants-gate` seul laisse bien
+`test-results/junit.xml` sur le disque ; relancer ensuite n'importe quel projet
+avec `PW_JUNIT_FILE=test-results/junit-check.xml` ne laisse plus que
+`junit-check.xml`. Le premier a disparu sans que rien ne le signale.
+
+C'est le **dossier** qu'il faut separer, d'ou `PW_OUTPUT_DIR`. Le nom de
+fichier distinct est garde EN PLUS, parce que `flakysense` recherche
+recursivement le nom litteral `junit.xml` : un run consultatif ne doit pas
+pouvoir entrer dans l'historique d'instabilite.
+
+### La jonction d'identite entre FlakySense et ReleaseGuard ne marche pas sur du JUnit Playwright
+
+Mesure du 12.10, les deux outils installes et enchaines sur un vrai JUnit de ce
+depot. Les deux derivent l'identite d'un test depuis le **meme** element
+`testcase`, et ils ne tombent pas d'accord :
+
+| Outil | Ce qu'il derive | Depuis quoi |
+|---|---|---|
+| `flakysense` | `invariants/zero-external.spec.ts::[invariants-gate] …` | l'attribut `file` s'il existe, sinon `classname`, puis le nom du test |
+| `ReleaseGuard` | `invariants/zero-external/spec/ts.py::[invariants-gate] …` | il reconstruit un identifiant de nœud **pytest** depuis le `classname` (son ADR-002) |
+
+Le JUnit de Playwright ne porte **aucun** attribut `file` (mesure), et son
+`classname` est un chemin de fichier — `invariants/zero-external.spec.ts` —, que
+ReleaseGuard decoupe sur les points en `invariants/zero-external`, `spec`, `ts`
+et rejoint en chemin. Resultat mesure : les **4** tests signales instables par
+FlakySense ont ete declares « 4 non-flaky failure(s) » par ReleaseGuard, G1 s'est
+declenche, verdict **NO GO**.
+
+**Consequence, et elle est du bon cote** : l'excuse d'un echec connu comme
+instable ne se declenche jamais ici, donc ReleaseGuard est plus **STRICT** que
+concu, jamais plus laxiste. Le signal d'instabilite, lui, **fonctionne** — il ne
+compte que la longueur de la liste, pas la jonction —, donc le score et le
+partage GO / CONDITIONAL GO sont justes. Mesure a l'appui : 22/22 verts plus un
+historique a 4 instables donne **CONDITIONAL GO, score 0,70**, la ou le code de
+sortie de Playwright dirait seulement « vert ». C'est l'apport reel du
+branchement, et il tient sans la jonction.
+
+**La reparation est en amont, pas ici.** Elle demanderait une option de dialecte
+JUnit dans ReleaseGuard. La contourner en reecrivant notre `classname` et en
+fabriquant un attribut `file` ferait s'accorder les deux outils **en mentant sur
+le chemin du fichier** : un faux identifiant pytest dans notre propre artefact.
+Non fait, et signale a Jeremy plutot que corrige en silence.
+
 ### `astro preview` se démonise sous un agent
 
 **Mesuré le 07.10** dans `node_modules/astro/dist/cli/preview/index.js` :
@@ -752,15 +811,38 @@ pas en `continue-on-error` : un gate en échec fait échouer le job. C'est ce qu
 attrape ce qu'une suite verte ne peut pas voir — des specs qui disparaissent
 discrètement, via `minTestsCount`.
 
-**Le niveau informatif existe, est vide, et NE PEUT PAS être utilisé tel
-quel.** L'action accepte `check-projects`, dont l'échec ne produit qu'une
-annotation d'avertissement — mais mesuré le 10.10 en y branchant axe, le job
-devient rouge quand même. Les deux runs écrivent dans le **même**
-`allure-results`, le quality gate porte `maxFailures: 0`, et l'étape de rapport
-n'est délibérément pas en `continue-on-error` : 150 résultats bloquants verts
-plus 2 échecs informatifs donnent `maxFailures actual 2` et un code de sortie 1.
-L'annotation s'affiche, puis le job échoue — le pire des deux mondes, puisqu'on
-croyait ne pas bloquer.
+**Le niveau informatif ne bloque plus — corrige le 12.10, et il bloquait par
+TROIS voies, pas une.** L'action accepte `check-projects`, dont l'echec ne
+produit qu'une annotation d'avertissement. Jusqu'au 12.10 c'etait un piege :
+mesure le 10.10 en y branchant axe, le job devenait rouge quand meme, parce que
+les deux runs ecrivaient dans le **meme** `allure-results`, que le quality gate
+porte `maxFailures: 0` et que l'etape de rapport n'est deliberement pas en
+`continue-on-error` — 150 resultats bloquants verts plus 2 echecs informatifs
+donnaient `maxFailures actual 2` et un code de sortie 1. L'annotation
+s'affichait, puis le job echouait : le pire des deux mondes, puisqu'on croyait
+ne pas bloquer.
+
+En appliquant le correctif, **deux couplages de plus** sont apparus, qu'aucune
+version de ce fichier ne nommait :
+
+2. `test-results/junit.xml` etait partage, donc le run informatif **ecrasait le
+   JUnit du bloquant** — le fichier meme que l'historique et ReleaseGuard
+   consomment.
+3. Et renommer ce fichier **ne suffit pas** : un run Playwright **nettoie son
+   `outputDir`**. Voir le piege dedie plus bas.
+
+Le run informatif a donc maintenant ses propres `ALLURE_RESULTS_DIR`,
+`PW_OUTPUT_DIR`, `PW_JUNIT_FILE`, `PW_HTML_REPORT_DIR` et son propre historique
+Allure, plus un rapport a lui avec le gate OFF.
+
+**La mesure qui conclut est une PAIRE**, et c'est le point methodologique :
+- resultats bloquants + gate ON → **sortie 0**
+- resultats informatifs + gate ON → **sortie 1**, « The number of failed tests
+  5 exceeds the allowed threshold value 0 »
+- resultats informatifs + gate OFF → sortie 0
+
+Sans le cas du milieu, la sortie 0 du premier pourrait tout aussi bien etre un
+gate mort qu'un isolement reussi. Un seul des trois runs ne prouve rien.
 
 ⚠️ Et la première tentative de mesure avait **conclu l'inverse**, par un défaut
 de la mesure elle-même : lancer le run informatif avec `--reporter=line`
@@ -770,12 +852,10 @@ bloquant, et tout semblait aller. L'action, elle, ne passe aucun `--reporter`.
 Reproduire un comportement de CI exige la **commande de la CI**, pas une
 commande voisine.
 
-Rendre ce niveau réel demanderait un dossier de résultats à lui (variable
-d'environnement sur le reporter `allure-playwright`) et son propre artefact de
-rapport, pour que le quality gate ne couvre jamais que le bloquant. **Non fait**
-— inutile tant que l'entrée est vide, et `a11y-axe` est donc dans `projects`,
-où un contrôle qui fait échouer le job porte enfin le nom de ce qu'il est.
-Les liens externes et les autres moteurs restent dans le nocturne.
+`check-projects` **reste vide** : `a11y-axe` garde sa place dans `projects`, ou
+un controle qui fait echouer le job porte le nom de ce qu'il est. Le niveau est
+la pour quelque chose de genuinement consultatif. Les liens externes et les
+autres moteurs restent dans le nocturne.
 
 ## Le rapport dans l'UI de GitHub — évalué et écarté le 12.10
 
@@ -824,19 +904,66 @@ aucune n'est branchée aujourd'hui :
 Ni l'un ni l'autre ne rend l'UI Allure ; ensemble ils donnent le chiffre et
 l'emplacement de l'échec, qui est ce qu'on regarde en premier.
 
-## Pas encore en place
+## L'historique, et le verdict qui s'en nourrit
 
-- **La persistance de l'historique Allure et du JUnit.** `historyPath` pointe
-  `.qa-history/allure/history.jsonl`, mais rien ne le conserve encore entre
-  deux runs : les tendances du rapport sont donc vides. Repoussé dans son
-  propre changement, parce que cela demande une branche de stockage et une
-  poussée depuis la CI — une surface de risque distincte, qui mérite sa propre
-  relecture.
-- **Pas de vérification de types.** `tsconfig.json` est strict et couvre
-  `tests/`, mais `astro build` ne lance pas `tsc` : les erreurs de type ne sont
-  donc visibles que dans l'éditeur. Un script `typecheck` exigerait
-  `@astrojs/check` et `typescript` en devDependencies — **deux dépendances non
-  approuvées**, donc non ajoutées. À arbitrer.
+**Trois series, un cache, aucune poussee.** `historyPath` pointait
+`.qa-history/allure/history.jsonl` depuis T32 sans que rien ne le conserve : les
+tendances etaient vides. Elles voyagent maintenant par le **cache d'Actions**,
+et non par une branche de stockage — une branche demanderait `contents: write`
+et une poussee depuis la CI, sur un depot dont `main` est protegee precisement
+pour les empecher.
+
+⚠️ **Le prix est reel et il est a connaitre** : une entree de cache non
+consultee pendant **7 jours** est supprimee, et le plafond de 10 Go evince par
+date d'acces (source : documentation GitHub, pas une mesure). L'historique est
+donc **au mieux-effort, pas durable** — il survit parce que le nocturne le
+touche chaque jour. Nocturne eteint, la tendance meurt une semaine plus tard.
+Le rendre durable voudrait dire la branche de stockage.
+
+| Serie | Qui ecrit | Pourquoi elle est separee |
+|---|---|---|
+| `main-gate` | le gate de `deploy.yml` | **La serie de reference.** Un run par merge, retries a 0, quatre projets fixes : une mesure a tentative unique repetee sur un jeu de tests stable, ce qui est exactement ce que comparer un test a lui-meme exige. C'est elle que `flakysense` lit. |
+| `nightly-live` / `nightly-preview` | le nocturne, **sur `schedule` seulement** | Un lancement manuel choisit son `suite`, donc son jeu de projets varie — un historique dont le jeu de tests change dilue la comparaison qu'il sert. |
+| — | `pr.yml` **lit** `main-gate` et n'ecrit jamais | La PR affiche la tendance de `main`, ce qui la rend comparable, mais n'y contribue pas : son jeu de tests peut differer, et un cache cree par une PR est de toute facon cantonne a sa merge ref. |
+
+**Les deux moities sont plafonnees, et par l'outil quand il sait le faire.**
+Cote Allure, `historyLimit: 20` dans `allurerc.mjs` est l'option **native**
+(cablee jusqu'a `AllureLocalHistory`, lu dans `@allurereport/core`) : pas de
+troncature maison. Mesure du 12.10 — l'historique local est passe de
+**25 lignes / 6 713 833 octets a 20 / 6 196 653**. Necessaire, parce que la
+croissance est non bornee : ~270 Ko par run, jusqu'a 530 Ko pour un run rouge.
+Cote JUnit, `scripts/qa-history.mjs` garde les 20 derniers runs.
+
+⚠️ **Le nom de fichier `junit.xml` est contraint par l'aval** : `flakysense`
+cherche recursivement ce nom **litteral**. Un fichier copie sous un autre nom
+serait invisible, sans erreur et sans avertissement — il manquerait simplement
+de l'historique.
+
+### Le job `verdict` du nocturne
+
+Il lit l'**historique**, pas le resultat du run, donc il ne porte aucun `needs`
+et tourne aussi sur lancement manuel. Il installe `flakysense` et `ReleaseGuard`
+**epingles au commit** (ce sont des instruments de mesure : le meme historique
+doit rendre le meme verdict demain), les enchaine, et rend un tableau dans la
+page du run via `scripts/qa-verdict-summary.mjs`.
+
+**Jamais bloquant, par le critere ecrit de ce depot** : l'ensemble bloquant est
+« ce qui est deterministe et ne depend que de ce depot », et ces deux outils
+vivent dans d'autres depots et s'installent par le reseau. Les codes de sortie
+sont lus et rendus, jamais propages — et ce sont des **contrats**, pas du
+bruit : `flakysense` suit la convention de `grep` (0 = analyse faite, rien
+d'instable ; 1 = instables trouves ; 2 = n'a pas pu tourner), `ReleaseGuard`
+rend 0 GO, 1 CONDITIONAL GO, 2 NO GO, 3 erreur. Seuls 2 et 3 produisent une
+annotation.
+
+Mesure du 12.10, les deux scenarios qui comptent : historique absent → annonce,
+`runs=0`, etape en sortie 0 et resume degrade mais utile ; historique de 6 runs
+→ `flakysense` sort 1 (4 instables), le JUnit le plus recent est bien resolu,
+`ReleaseGuard` sort 1 (CONDITIONAL GO, score 0,70), etape en sortie 0.
+
+⚠️ **Lire le piege de la jonction d'identite avant de croire un verdict NO GO.**
+
+## Pas encore en place
 - **Le contraste de 10 nœuds de l'accueil reste INCONNU.** Ce n'est pas un
   défaut trouvé, ni un contrôle oublié : axe refuse de trancher, et refuser est
   son comportement correct. `a11y/axe` borne cette indécision par une règle et
@@ -847,5 +974,13 @@ l'emplacement de l'échec, qui est ce qu'on regarde en premier.
   vérificateur maison — rejeté plus haut, point 2 —, soit un changement de
   design qui rende le fond réductible à une couleur sous ces textes. **À
   arbitrer, et à ne pas relire comme « conforme ».**
-- **Le niveau informatif de l'action composite.** Voir « En CI » : il existe
-  mais bloque quand même. Son correctif est décrit là-bas et non appliqué.
+- **La jonction d'identite entre FlakySense et ReleaseGuard.** Mesuree cassee
+  le 12.10 sur du JUnit Playwright — voir le piege dedie. La chaine est branchee
+  et utile sans elle, mais l'**excuse** d'un echec connu comme instable ne se
+  declenche pas. La reparation est en amont (une option de dialecte JUnit dans
+  ReleaseGuard), pas ici. **A arbitrer par Jeremy.**
+- **Pas de couverture a donner a ReleaseGuard.** `--coverage` est optionnel
+  (mesure dans son `cli.py`) et son absence ne declenche pas G2 : le gate est
+  simplement « pas evalue » et les poids des signaux presents sont
+  renormalises. Ce site n'a pas de tests unitaires, donc pas de
+  `coverage.xml`. Ce n'est pas un oubli, c'est la nature du projet.

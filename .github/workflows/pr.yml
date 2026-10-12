@@ -32,4 +32,11 @@ jobs:
           quality-gate: "true"
           # `projects` is left at the action's default, which now includes
           # `a11y-axe`: one place to read the blocking list, not two.
+          #
+          # READ, never write. The PR report gets the trend of the `main`
+          # series, which is what makes it comparable, but a PR contributes
+          # nothing to it: its own test set may differ, and caches a PR creates
+          # are scoped to its merge ref and die with the PR anyway.
+          history: read
+          history-key: main-gate
           artifact-suffix: -pr-${{ github.event.pull_request.number }}

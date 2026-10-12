@@ -38,8 +38,27 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const RESULTS = './allure-results';
-const REPORT = 'allure-report/index.html';
+/**
+ * DEUX NIVEAUX, DEUX RAPPORTS. Le niveau informatif de
+ * `.github/actions/qa/action.yml` exige que le quality gate ne couvre JAMAIS
+ * que le run bloquant. Il faut donc pouvoir generer un second rapport depuis
+ * un autre dossier de resultats, vers un autre dossier de sortie, sans gate.
+ * D'ou ces deux arguments. Sans eux, les chemins etaient en dur et les deux
+ * niveaux partageaient tout.
+ *
+ * `--output` est passe au CLI plutot que pose en variable d'environnement :
+ * `allure generate` l'accepte (`-o`), et une option explicite se relit mieux
+ * qu'une variable posee trois fichiers plus loin.
+ */
+function arg(name, fallback) {
+  const i = process.argv.indexOf(`--${name}`);
+  if (i !== -1 && process.argv[i + 1]) return process.argv[i + 1];
+  return fallback;
+}
+
+const RESULTS = arg('results', './allure-results');
+const OUTPUT = arg('output', 'allure-report');
+const REPORT = `${OUTPUT}/index.html`;
 
 /** Retire le traceur. Renvoie un message, ou leve si rien n'a ete trouve. */
 function stripTracker() {
@@ -72,7 +91,7 @@ function stripTracker() {
   return `traceur Google Analytics retire (${before.length - after.length} octets) — rapport autonome, 0 requete externe.`;
 }
 
-const generate = spawnSync('npx', ['allure', 'generate', RESULTS], {
+const generate = spawnSync('npx', ['allure', 'generate', RESULTS, '--output', OUTPUT], {
   stdio: 'inherit',
   shell: true,
 });

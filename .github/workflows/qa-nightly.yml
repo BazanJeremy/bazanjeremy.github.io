@@ -170,6 +170,17 @@ jobs:
           retries: ${{ needs.resolve.outputs.retries }}
           # OFF: incompatible with retries, and nothing here should gate.
           quality-gate: "false"
+          # OFF: this is the instrument run. A type error can only be red here
+          # if `main` is already broken, which the deploy gate stops before the
+          # merge — so it would only add noise to a flakiness measurement.
+          typecheck: "false"
+          # WRITE ONLY ON `schedule`. A manual run picks its own `suite`, so
+          # its project set varies — and a history whose test set changes from
+          # one run to the next dilutes the very comparison it exists for. The
+          # scheduled run is the controlled series; a manual one still reads the
+          # trend, it just does not feed it.
+          history: ${{ github.event_name == 'schedule' && 'write' || 'read' }}
+          history-key: nightly-live
           browsers: chromium
           artifact-suffix: -nightly-${{ github.run_number }}-live
 
@@ -190,5 +201,123 @@ jobs:
           projects: ${{ needs.resolve.outputs.preview_projects }}
           retries: ${{ needs.resolve.outputs.retries }}
           quality-gate: "false"
+          # OFF for the same reason as the `live` job above.
+          typecheck: "false"
+          # Same rule as the `live` job: only the scheduled run feeds the series.
+          history: ${{ github.event_name == 'schedule' && 'write' || 'read' }}
+          history-key: nightly-preview
           browsers: ${{ needs.resolve.outputs.browsers }}
           artifact-suffix: -nightly-${{ github.run_number }}-preview
+
+  # ------------------------------------------------------------------ verdict
+  # Lit l'HISTORIQUE, pas le resultat de ce run : aucun `needs`, et il tourne
+  # aussi bien sur `schedule` que sur lancement manuel ("qu'est-ce qui est
+  # instable en ce moment ?").
+  #
+  # JAMAIS BLOQUANT, et par le critere ecrit de ce depot : l'ensemble bloquant
+  # est "ce qui est deterministe et ne depend que de ce depot". Ces deux outils
+  # vivent dans d'AUTRES depots et s'installent par le reseau, donc ils n'y ont
+  # pas leur place. Les codes de sortie sont lus et rendus, jamais propages.
+  verdict:
+    name: Flakiness + release verdict
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Lecture seule, et pas de `save` : ce job ne produit aucun JUnit, il
+      # consomme la serie de reference ecrite par le gate de `deploy.yml`.
+      # Un cache froid ne fait pas echouer le job : les deux scripts rendent un
+      # resume utile sans historique.
+      - name: Restore the main-gate JUnit history
+        id: history
+        uses: actions/cache/restore@v4
+        with:
+          path: .qa-history
+          key: qa-history-main-gate-${{ github.run_id }}
+          restore-keys: |
+            qa-history-main-gate-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # 3.14 parce que c'est la version sur laquelle la chaine a ete
+          # MESUREE le 12.10 (3.14.6). Les deux outils declarent >= 3.12 ;
+          # faire tourner la CI sur autre chose que la version mesuree
+          # rouvrirait une inconnue pour rien.
+          python-version: "3.14"
+
+      - name: Install the tools
+        shell: bash
+        run: |
+          # EPINGLES AU COMMIT, pas a une branche. Ce sont des instruments de
+          # mesure : le meme historique doit rendre le meme verdict demain.
+          # `pydantic` reste resolu par pip — dependance reseau assumee pour un
+          # instrument non bloquant.
+          python -m pip install --quiet             "flakysense @ git+https://github.com/BazanJeremy/flakysense@b7d732dd7eeb9362aaa37c7ecd5147ef0457660b"             "releaseguard @ git+https://github.com/BazanJeremy/ReleaseGuard@bbb5a76b867375e1a1d2eacba2373d6e9d854e1a"
+          python -m pip list | grep -iE 'flakysense|releaseguard|pydantic'
+
+      - name: Analyse the history
+        id: analyse
+        shell: bash
+        run: |
+          mkdir -p qa-verdict
+          ROOT=.qa-history/junit
+
+          if [ ! -d "$ROOT" ] || [ -z "$(ls -A "$ROOT" 2>/dev/null)" ]; then
+            echo "::notice title=No history yet::$ROOT is empty. The series fills up one run per merge to main; nothing to analyse yet."
+            echo "runs=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          RUNS=$(find "$ROOT" -mindepth 1 -maxdepth 1 -type d | wc -l)
+          echo "runs=$RUNS" >> "$GITHUB_OUTPUT"
+          echo "$RUNS run(s) in the history"
+
+          # Exit codes are a CONTRACT, not noise: flakysense uses the grep
+          # convention — 0 = ran, nothing flaky; 1 = flaky found; 2 = could not
+          # run. Only 2 is a problem.
+          set +e
+          flakysense "$ROOT" --json > qa-verdict/flakysense-report.json
+          FS=$?
+          set -e
+          if [ "$FS" -eq 2 ]; then
+            echo "::warning title=FlakySense could not run::See the log. The release verdict will be computed without a flakiness signal."
+            rm -f qa-verdict/flakysense-report.json
+          fi
+
+          # Le JUnit le plus recent de la serie. Les noms de dossier commencent
+          # par un horodatage UTC de longueur fixe, donc `sort` est bien un tri
+          # chronologique.
+          LATEST=$(find "$ROOT" -mindepth 2 -maxdepth 2 -name junit.xml | sort | tail -1)
+          echo "latest JUnit: $LATEST"
+
+          FLAG=""
+          [ -f qa-verdict/flakysense-report.json ] && FLAG="--flaky qa-verdict/flakysense-report.json"
+
+          # 0 GO, 1 CONDITIONAL GO, 2 NO GO, 3 error. Aucun ne fait echouer ce
+          # job : le verdict est rendu, il ne gate rien.
+          set +e
+          releaseguard --junit "$LATEST" $FLAG --json > qa-verdict/releaseguard.json
+          RG=$?
+          set -e
+          echo "releaseguard exit: $RG"
+          if [ "$RG" -eq 3 ]; then
+            echo "::warning title=ReleaseGuard errored::Exit 3 means it could not evaluate. See the log."
+            rm -f qa-verdict/releaseguard.json
+          fi
+
+      - name: Write the run summary
+        if: always()
+        shell: bash
+        run: |
+          node scripts/qa-verdict-summary.mjs             --flaky qa-verdict/flakysense-report.json             --verdict qa-verdict/releaseguard.json             --runs "${{ steps.analyse.outputs.runs || 0 }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the verdict reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-verdict-${{ github.run_number }}
+          path: qa-verdict
+          if-no-files-found: ignore
+          retention-days: 30
