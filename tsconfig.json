@@ -1,12 +1,15 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
+  "include": [
+    ".astro/types.d.ts",
+    "**/*"
+  ],
   "exclude": [
     "dist",
-    "test-results",
-    "playwright-report",
-    "allure-results",
-    "allure-report",
+    "test-results*",
+    "playwright-report*",
+    "allure-results*",
+    "allure-report*",
     ".qa-history"
   ]
 }

@@ -49,13 +49,46 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 5_000 },
 
+  // MESURE DU 12.10, et renommer le fichier JUnit ne suffisait PAS. Un run
+  // Playwright NETTOIE son `outputDir` au demarrage : le run informatif
+  // supprimait donc `test-results/junit.xml`, le JUnit du run bloquant, quel
+  // que soit le nom donne au sien. Isole en deux commandes — apres le run
+  // bloquant seul, `test-results/junit.xml` existe ; apres le run informatif
+  // avec un autre nom de fichier mais le meme dossier, il ne reste que
+  // `junit-check.xml`. C'est le DOSSIER qu'il faut separer.
+  outputDir: process.env.PW_OUTPUT_DIR || 'test-results',
+
+  // DEUX NIVEAUX, DEUX DOSSIERS DE RESULTATS. Le run bloquant et le run
+  // informatif de `.github/actions/qa` tournent avec LA MEME config, donc avec
+  // le meme tableau de reporters. Tant que les chemins etaient en dur, le
+  // second ecrasait le premier : meme `allure-results`, donc le quality gate
+  // (`maxFailures: 0`) voyait les echecs informatifs et faisait rougir le job
+  // qu'on croyait ne pas bloquer — mesure du 10.10. Et meme `junit.xml`, donc
+  // le run informatif ECRASAIT le JUnit du bloquant, celui que l'historique et
+  // ReleaseGuard consomment : couplage non documente jusqu'au 12.10.
+  //
+  // `||` et non `??`, pour la raison deja donnee plus haut : GitHub Actions
+  // pose une variable non renseignee a chaine vide.
   reporter: [
     [process.env.CI ? 'line' : 'list'],
     // Le nom `junit.xml` n'est pas cosmétique : les outils du dépôt qui
-    // consommeront ce fichier plus tard cherchent ce nom littéral.
-    ['junit', { outputFile: 'test-results/junit.xml', includeProjectInTestName: true }],
-    ['allure-playwright', { resultsDir: 'allure-results' }],
-    ['html', { open: 'never', outputFolder: 'playwright-report' }],
+    // consomment ce fichier cherchent ce nom littéral — `flakysense` le
+    // recherche recursivement sous ce nom exact.
+    [
+      'junit',
+      {
+        outputFile: process.env.PW_JUNIT_FILE || 'test-results/junit.xml',
+        includeProjectInTestName: true,
+      },
+    ],
+    ['allure-playwright', { resultsDir: process.env.ALLURE_RESULTS_DIR || 'allure-results' }],
+    [
+      'html',
+      {
+        open: 'never',
+        outputFolder: process.env.PW_HTML_REPORT_DIR || 'playwright-report',
+      },
+    ],
   ],
 
   use: {

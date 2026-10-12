@@ -35,7 +35,10 @@ const qualityGateEnabled = process.env.ALLURE_QUALITY_GATE === '1';
 export default defineConfig({
   name: 'bazanjeremy.github.io — suite QA',
   output: 'allure-report',
-  historyPath: '.qa-history/allure/history.jsonl',
+  // Pilote par l'environnement pour que le run INFORMATIF n'ecrive jamais dans
+  // la tendance du run BLOQUANT : deux niveaux, deux historiques. Le defaut
+  // reste celui du poste de travail.
+  historyPath: process.env.ALLURE_HISTORY_PATH || '.qa-history/allure/history.jsonl',
 
   ...(qualityGateEnabled
     ? {

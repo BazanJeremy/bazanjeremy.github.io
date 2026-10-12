@@ -31,19 +31,27 @@ inputs:
       Space-separated Playwright projects that run for information only. A
       failure is surfaced as a warning annotation and does not fail the job.
 
-      STILL EMPTY, and it cannot be used as written — MEASURED on 10.10, which
-      is why `a11y-axe` ended up in `projects` instead. Both runs write to the
-      SAME `allure-results`, the quality gate below carries `maxFailures: 0`,
-      and the report step is deliberately not `continue-on-error`. So an
-      informative failure fails the report step and therefore the job: the
-      warning annotation appears, and the job goes red anyway. Reproduced
-      locally — 150 blocking results green plus 2 informative failures gave
-      `maxFailures actual 2` and exit code 1.
+      IT REALLY DOES NOT BLOCK NOW, and the fix is worth reading before
+      touching it. As written until 12.10 the tier was a trap: both runs wrote
+      to the SAME `allure-results`, the quality gate carries `maxFailures: 0`,
+      and the report step is deliberately not `continue-on-error` — so an
+      informative failure failed the report step and therefore the job. The
+      warning annotation appeared, and the job went red anyway: the worst of
+      both worlds, since we believed nothing was blocking. MEASURED on 10.10
+      (150 blocking results green plus 2 informative failures gave
+      `maxFailures actual 2` and exit code 1), which is why `a11y-axe` ended up
+      in `projects` instead.
 
-      Making this tier real requires a results directory of its own (an env
-      var on the allure-playwright reporter) plus its own report artifact, so
-      that the quality gate only ever covers the blocking run. Not done, and
-      not needed while this input is empty.
+      The informative run now writes to `allure-results-check`, its own JUnit
+      file and its own history, and gets its own report with the quality gate
+      OFF. The gate therefore only ever covers the blocking run. The JUnit
+      separation is not cosmetic either: until 12.10 the informative run
+      OVERWROTE `test-results/junit.xml`, the very file the history and
+      ReleaseGuard consume.
+
+      Still empty by default — `a11y-axe` stays in `projects`, where a check
+      that fails the job carries the name of what it is. This tier is for
+      something genuinely advisory.
     required: false
     default: ""
   retries:
@@ -166,6 +174,21 @@ runs:
         PW_BASE_URL: ${{ inputs.base-url }}
         PW_NO_SERVER: ${{ inputs.target == 'production' && '1' || '' }}
         PROJECTS: ${{ inputs.check-projects }}
+        # THE WHOLE POINT. Separate results, separate output directory,
+        # separate JUnit, separate HTML report: nothing this run writes can
+        # reach the blocking run's quality gate or the JUnit the history
+        # consumes.
+        #
+        # `PW_OUTPUT_DIR` is the one that is easy to miss — MEASURED on 12.10,
+        # a Playwright run CLEARS its `outputDir`, so without it this run
+        # deleted the blocking run's `test-results/junit.xml` whatever we named
+        # its own file. The distinct FILENAME is kept on top of the distinct
+        # directory, so `flakysense`, which searches recursively for the
+        # literal name `junit.xml`, can never pick up an advisory run.
+        ALLURE_RESULTS_DIR: allure-results-check
+        PW_OUTPUT_DIR: test-results-check
+        PW_JUNIT_FILE: test-results-check/junit-check.xml
+        PW_HTML_REPORT_DIR: playwright-report-check
       run: |
         args=""
         for p in $PROJECTS; do args="$args --project=$p"; done
@@ -195,7 +218,33 @@ runs:
           echo "::warning title=No Allure report::allure-results/ is missing, so the suite never produced results. Look at the test step above, not here."
           exit 0
         fi
-        npm run test:report
+        npm run test:report -- --results ./allure-results --output allure-report
+
+    # Its own report, with the quality gate OFF. That is what makes the tier
+    # informative: nothing here can fail the job.
+    - name: Build the informative Allure report
+      if: always() && inputs.check-projects != ''
+      shell: bash
+      env:
+        # Never '1': a gate over advisory results is the defect this step fixes.
+        ALLURE_QUALITY_GATE: ""
+        # Its own trend, so advisory runs never land in the blocking history.
+        ALLURE_HISTORY_PATH: .qa-history/allure/history-check.jsonl
+      run: |
+        if [ ! -d allure-results-check ]; then
+          echo "::warning title=No informative report::allure-results-check/ is missing, so the informative run produced nothing."
+          exit 0
+        fi
+        npm run test:report -- --results ./allure-results-check --output allure-report-check
+
+    - name: Upload the informative Allure report
+      if: always() && inputs.check-projects != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report-check${{ inputs.artifact-suffix }}
+        path: allure-report-check/index.html
+        if-no-files-found: warn
+        retention-days: 30
 
     - name: Upload the Allure report
       if: always()
@@ -215,7 +264,10 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: test-results${{ inputs.artifact-suffix }}
-        # junit.xml plus the traces kept for failures.
-        path: test-results
+        # junit.xml plus the traces kept for failures. Both tiers, each in its
+        # own directory — see `PW_OUTPUT_DIR` above for why they cannot share.
+        path: |
+          test-results
+          test-results-check
         if-no-files-found: warn
         retention-days: 30
