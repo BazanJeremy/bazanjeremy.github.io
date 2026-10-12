@@ -151,8 +151,9 @@ ne nommait : le run informatif **écrasait** `test-results/junit.xml` (celui que
 ReleaseGuard consomment), et **renommer le fichier ne suffit pas** — un run Playwright
 **nettoie son `outputDir`**. C'est le dossier qu'il faut séparer. Les deux sont mesurés et
 documentés en pièges.
-**Pas encore en place après T39** : la jonction d'identité FlakySense ↔ ReleaseGuard (point
-ouvert ci-dessous) et le rapport Allure hébergé (évalué et écarté le 12.10).
+**Pas encore en place après T40** : le rapport Allure hébergé, et lui seul (évalué et écarté le
+12.10). La jonction d'identité FlakySense ↔ ReleaseGuard est **réparée en amont** par T40
+(`ReleaseGuard#7`, mergée le 12.10, check `tests` vert) — voir la section tranchée plus bas.
 
 **Point ouvert au 10.10 (source : ligne T32 du journal), décision de Jérémy** : le contraste de
 **10 nœuds des deux pages d'accueil est INCONNU**, et ne doit pas être relu comme conforme. Ce
@@ -251,26 +252,47 @@ qu'une session fraîche refera sinon à ses frais.
   peuvent produire le même octet, en exclure une ne prouve rien sur l'autre ; il faut les
   isoler une par une.
 
-**Point ouvert au 12.10 (source : ligne T39 du journal), décision de Jérémy** : la **jonction
-d'identité entre FlakySense et ReleaseGuard est cassée sur du JUnit Playwright**, et ce n'est
-pas une hypothèse — les deux outils ont été installés, épinglés au commit, et enchaînés sur un
-vrai JUnit de ce dépôt. `flakysense` dérive `invariants/zero-external.spec.ts::[invariants-gate]
-…` (attribut `file` s'il existe, sinon `classname`) ; ReleaseGuard reconstruit un identifiant de
-nœud **pytest** depuis le `classname` (son ADR-002) et sort
-`invariants/zero-external/spec/ts.py::[invariants-gate] …`. Le JUnit de Playwright n'a **aucun**
-attribut `file` (mesuré) et son `classname` est un chemin de fichier, que ReleaseGuard découpe
-sur les points. Mesuré : les **4** tests signalés instables par le premier ont été déclarés
-« 4 non-flaky failure(s) » par le second → G1 déclenché → **NO GO**.
-**Le mode de panne est du bon côté** : l'excuse d'un échec connu comme instable ne se déclenche
-jamais, donc ReleaseGuard est plus **strict** que conçu, jamais plus laxiste. Et le signal
-d'instabilité **fonctionne** (il ne compte que la longueur de la liste), donc le score et le
-partage GO / CONDITIONAL GO sont justes : 22/22 verts plus un historique à 4 instables donne
-**CONDITIONAL GO, score 0,70**, là où le code de sortie de Playwright dirait seulement « vert ».
-C'est l'apport réel du branchement, et il tient sans la jonction.
-**La réparation est en amont** : une option de dialecte JUnit dans ReleaseGuard. La contourner
-en réécrivant notre `classname` et en fabriquant un attribut `file` ferait s'accorder les deux
-outils **en mentant sur le chemin du fichier**. Non fait, signalé plutôt que corrigé en
-silence. **Arbitrage de Jérémy.**
+**Tranché en T40 (`ReleaseGuard#7`), mergé — ne pas reproposer** : la jonction d'identité
+FlakySense ↔ ReleaseGuard, **réparée en amont** comme T39 le préconisait, par une option de
+dialecte JUnit dans ReleaseGuard (son ADR-004, qui supersède ADR-002). `--junit-dialect
+pytest|path`, défaut `pytest`, donc aucun appel existant ne change ; `path` prend un `classname`
+déjà en forme de chemin **tel quel**. Rien n'est normalisé d'un dialecte à l'autre — réécrire
+nos séparateurs serait réécrire un côté d'une clé que ReleaseGuard ne produit pas.
+⚠️ **Et la mesure a corrigé l'énoncé avant de corriger le défaut, une fois de plus** : T39
+écrivait « les 4 tests signalés instables ont été déclarés 4 non-flaky failure(s) », ce qui
+laissait croire à un défaut portant sur 4 tests. Mesuré en T40 sur le même rapport :
+**0 identité sur 204 concorde**, et **0 testcase sur 204** porte un attribut `file`. La jonction
+n'était pas dégradée, elle était **morte pour tous les tests** — donc la règle inter-signaux,
+le seul comportement qu'aucun parseur seul ne peut produire, était absente de toute une famille
+d'artefacts. Le mode de panne restait du bon côté (plus strict, jamais plus laxiste), et c'est
+précisément pourquoi personne ne s'en plaignait : un défaut dont le symptôme est l'excès de
+prudence ne produit aucune réclamation.
+**Contrefactuel vérifié** : avec l'identité en chemin, le même rapport donne **CONDITIONAL GO,
+score 0,9837** au lieu de NO GO. Et sur la fixture du dépôt (`data/samples/dialect_playwright/`,
+dont les `classname`/`name` sont **copiés** des octets réels, seul le `<failure>` étant
+construit), la paire qui conclut est **NO GO / sortie 2** sans le dialecte contre
+**CONDITIONAL GO 0,72 / sortie 1** avec. Suite ReleaseGuard : **110 tests** (89 avant), dogfood
+**GO 1,00**, couverture 94 %, check `tests` vert en CI.
+⚠️ **Deux choses restent à faire là-bas, et elles sont pour Jérémy** : (1) `ADR-002` affiche
+encore `Accepted` alors qu'ADR-004 le supersède — le garde-fou de `docs/adr/` du dépôt refuse
+**toute** écriture sur un ADR existant, **y compris la ligne `Superseded by` qu'il demande
+lui-même** ; non contourné, et les tableaux d'ADR des deux READMEs portent l'information à sa
+place. (2) Le point ASCII ci-dessous.
+
+**Point ouvert au 12.10 (source : ligne T40 du journal), décision de Jérémy — REPORTÉE par lui
+le 12.10 (« à trancher plus tard »)** : dans **ReleaseGuard**, l'invariant « sortie ASCII
+uniquement » d'ADR-003 **ne tient pas sur des noms de tests non-ASCII venus du rapport**.
+Mesuré : un nom portant `›`, `é` ou `×` atteint le texte du verdict par `G1 detail` et par les
+conditions d'échec excusé, donc `isascii()` vaut **False** — et sur le rapport Playwright de ce
+dépôt-ci, **204 noms sur 204** sont non-ASCII. C'est la convention du bug #3 de ReleaseGuard qui
+tombe sur des **données d'entrée** et non sur ses propres chaînes, et c'est **indépendant** de
+T40 : réparer la jonction déplace seulement l'id de `G1` vers les conditions. Consigné là-bas en
+« signalé, non corrigé » (bug evidence #4) parce que **l'énoncé dépend de l'arbitrage** : si la
+règle ne vaut que pour les chaînes que le projet écrit, ce n'est pas un défaut mais une limite à
+documenter, et c'est la portée d'ADR-003 qu'il faut restreindre par un ADR. Si elle vaut pour
+toute la sortie, il faut choisir **comment** (échapper en `\uXXXX`, translittérer, ou ne plus
+afficher l'id entier — or l'id est ce qui rend le verdict actionnable). **Ne rien patcher sans
+lui** : ce dépôt est en « maintenance mode, smallest targeted fix only ».
 
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
 d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en mode LLM ; toute version
@@ -320,10 +342,13 @@ mais ici **aucune commande ne la vérifiait** : le `grep -c "🔄 PR ouverte"` n
 grep -c "^\*\*Point ouvert" CLAUDE.md
 ```
 
-Le résultat attendu est le nombre de points **réellement** ouverts — au 12.10, après T39 :
-**3**, les 10 nœuds de contraste inconnus, les prompts d'`anomaly-sentinel`, et la jonction
-d'identité FlakySense ↔ ReleaseGuard. S'il monte sans qu'un nouvel arbitrage ait été demandé,
-c'est qu'un point fermé a survécu.
+Le résultat attendu est le nombre de points **réellement** ouverts — au 12.10, après T40 :
+**3**, les 10 nœuds de contraste inconnus, les prompts d'`anomaly-sentinel`, et l'invariant
+ASCII de ReleaseGuard sur des noms de tests non-ASCII. ⚠️ **Le compte n'a pas bougé mais sa
+composition a changé** : T40 a fermé la jonction d'identité FlakySense ↔ ReleaseGuard et ouvert
+le point ASCII. Donc un compteur stable ne prouve rien — **lire les trois titres**, pas
+seulement le nombre. S'il monte sans qu'un nouvel arbitrage ait été demandé, c'est qu'un point
+fermé a survécu.
 
 ## Workflow Git (Jérémy merge lui-même)
 
