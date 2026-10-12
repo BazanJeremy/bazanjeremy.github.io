@@ -59,14 +59,18 @@ dans `src/i18n/fr.json`.
 Historique des tâches (T1–T31, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA au 12.10, sous Astro 7.3.8 et sharp 0.35.5** : **472 tests, 9 projets**
-Playwright. **Ensemble bloquant : 204 tests, 204 passés, sortie 0, 49,3 s** — c'est la mesure qui
-engage, parce que c'est celle que la CI applique. ⚠️ **La suite complète n'a PAS été verte aux
-deux derniers runs de T37**, et les deux échecs sont **hors de l'ensemble bloquant** : 1 échec
-`gate-firefox` non reproduit et de cause inconnue, puis 3 échecs `prod-http` par abandon client
-après un `200 OK` (détail et conduite à tenir juste en dessous). Le dernier run complet **vert**
-est celui de T36 : 469 passés, 3 sautés, sortie 0, 2,7 min. Ne pas écrire « suite verte » sans
-avoir relancé.
+**État de la suite QA au 12.10, sous Astro 7.3.8, sharp 0.35.5, Tailwind 4.3.3 et
+Playwright 1.64.0** : **472 tests, 9 projets**. **Ensemble bloquant : 204 tests, 204 passés,
+sortie 0, 43,8 s** — c'est la mesure qui engage, parce que c'est celle que la CI applique, et elle
+est verte sous les nouveaux moteurs, `a11y-axe` compris sur les 26 pages. ⚠️ **La suite complète
+n'a PAS été verte aux trois derniers runs (T37 et T38)**, et **tous** les échecs sont **hors de
+l'ensemble bloquant**, avec une cause identifiée qui n'est ni le site ni un navigateur :
+3 `prod-http` par abandon client après un `200 OK`, puis 4 `gate-firefox` par
+`NS_ERROR_CONNECTION_REFUSED` du serveur de prévisualisation local. **Les deux ont leur expérience
+d'isolation et leur conduite à tenir** — `prod-http` juste en dessous, `gate-firefox` dans le
+gotcha `astro preview`. Le dernier run complet **vert** est celui de T36 : 469 passés, 3 sautés,
+sortie 0, 2,7 min. **Ne pas écrire « suite verte » sans avoir relancé**, et ne pas lire ces rouges
+comme une régression du site : `dist/` a été vérifié identique octet pour octet à chaque étape.
 
 `a11y-axe` a aussi été pointé
 sur la **production** le 11.10 : 26 tests verts, sortie 0, 24,4 s — la conformité tient sur les
@@ -101,7 +105,11 @@ l'ai écrit, et c'était faux — le déploiement s'était terminé avant les de
 run 1 : un échec de `gate-firefox` › `blog-contract` (un seul h1 sur un article EN), non
 reproduit ensuite (25/25). La cause est restée inconnue parce que le réessai a **écrasé
 `test-results/`** avant que j'aie lu l'erreur. Lire `test-results/*/error-context.md` **d'abord**,
-relancer ensuite.
+relancer ensuite. **Appliqué en T38, ça a payé en une lecture** : les 4 rouges `gate-firefox` ont
+livré `NS_ERROR_CONNECTION_REFUSED` et la page « Unable to connect » de Firefox, donc la cause en
+une minute au lieu d'une hypothèse. Celle de T37 reste inconnue faute de trace, mais c'est le même
+projet et **vraisemblablement** la même cause — vraisemblablement, pas démontré. Détail et
+expérience d'isolation dans le gotcha `astro preview`.
 Trois workflows actifs —
 `pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
 échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
@@ -125,10 +133,16 @@ vérificateur de contraste maison — rejeté par `tests/README.md`, un second f
 contredire le premier —, soit un changement de design rendant le fond réductible à une couleur
 sous ces textes. **Arbitrage de Jérémy, rien à changer sans lui.**
 
-Le 3e test sauté est **mesuré, pas accidentel** : Firefox 155 (la build livrée avec Playwright
-1.63.0) répond `false` à `CSS.supports('animation-timeline', 'view()')`, donc l'assertion CSSOM de
-`gate/reveal-css` s'y abstient au lieu de conclure à un défaut. Chromium 153 **et WebKit 26.6**
-la supportent tous les deux et passent.
+Le 3e test sauté est **mesuré, pas accidentel** : Firefox répond `false` à
+`CSS.supports('animation-timeline', 'view()')`, donc l'assertion CSSOM de `gate/reveal-css` s'y
+abstient au lieu de conclure à un défaut. Chromium **et WebKit** la supportent tous les deux et
+passent. **Vérifié à chaque bump de Playwright, et ça tient** : c'était Firefox 155 / Chromium 153
+/ WebKit 26.6 avec Playwright 1.63.0 ; depuis T38 et Playwright 1.64.0, ce sont
+**Firefox 157 / Chromium 156.0.8078.4 / WebKit 27.2**, et la réponse est la même — `false` sur
+Firefox 157, `true` sur les deux autres. ⚠️ **C'est la mesure à refaire avant de lancer la suite
+après un bump de Playwright** : elle prédit le compte de sautés sans attendre les 2,5 min de la
+suite, et un passage de Firefox à `true` ferait disparaître le saut sans que rien du site ait
+bougé.
 
 **Les cinq écarts trouvés en construisant la suite sont tous tranchés** (source : lignes T23–T31
 du journal). Trois corrigés, deux fermés par décision. Détail juste en dessous — il reste écrit
@@ -326,11 +340,23 @@ Vaut aussi pour les commentaires de PR et les issues.
   déploiement dont on veut vérifier le rendu réel :
   `PW_NO_SERVER=1 PW_BASE_URL=https://bazanjeremy.github.io npx playwright test --project=motion`
 - **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
-  rester `_astro_content.D1b6u-4G.css`, 18 862 octets (il valait `DPDLS9i_` jusqu'à T27 — +81
+  rester `_astro_content.Cdcq06J1.css`, **18 949 octets** (il valait `DPDLS9i_` jusqu'à T27 — +81
   octets pour réparer la révélation au scroll —, `CerI2rm-` jusqu'à T29 — −27 octets, la règle
   `.contents`, documentation sortie du scan —, `DRDROTEC` jusqu'à T31 — +26 octets, une règle
-  devenue deux, le scrollport des tableaux passant du `<table>` à son conteneur —, puis
-  `CAfsBN8X` jusqu'à T36).
+  devenue deux, le scrollport des tableaux passant du `<table>` à son conteneur —, `CAfsBN8X`
+  jusqu'à T36, puis `D1b6u-4G` jusqu'à T38).
+  ⚠️ **T38 : +87 octets, et aucun n'atteint le rendu.** Au bump Tailwind 4.3.2 → 4.3.3,
+  `D1b6u-4G` → `Cdcq06J1`. Diff par règle : **263 règles avant comme après, 3 lignes diffèrent**.
+  (1) Le commentaire de version du preflight. (2) La pile de polices de **repli** du `html,:host`
+  s'allonge — c'est elle qui porte les +87 octets —, mais c'est le repli de
+  `var(--default-font-family, …)` et il n'est **jamais atteint** : le CSS produit définit
+  `--default-font-family: var(--font-sans)`, `--font-sans` reste
+  `"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`, et `body` repose
+  `font-family: var(--font-sans)` par-dessus. (3) `:-moz-focusring` devient
+  `:-moz-focusring:where(:not(iframe))`, et `dist/` ne contient **aucun** `<iframe>` (mesuré),
+  donc portée vide. **Mesuré dans un vrai moteur**, feuille externe chargée (38 règles) :
+  `html`, `body` et `h1` calculent tous `Inter, system-ui, …`, et Inter comme JetBrains Mono sont
+  chargées — donc le repli est inerte par la mesure, pas par un raisonnement sur la cascade.
   ⚠️ **T36 montre qu'un hash peut bouger à taille d'octets strictement identique** : au bump
   Astro 7.3.8, `CAfsBN8X` → `D1b6u-4G` **sans changer un octet de taille** (18 862 dans les deux
   cas), parce qu'une seule règle a changé de représentation et que les deux écritures font 10
@@ -458,6 +484,28 @@ Vaut aussi pour les commentaires de PR et les issues.
   désactiver la détection, plus `--ignore-lock` contre un verrou laissé par une session
   précédente. **En CI il n'y a pas d'agent, donc le défaut ne s'y voit pas** : sans ce
   correctif, la suite passerait en CI et échouerait en local.
+  ⚠️ **Et ce montage refuse des connexions par intermittence — isolé en T38, c'est LUI, pas le
+  navigateur.** Symptôme : `gate-firefox` sort des échecs `NS_ERROR_CONNECTION_REFUSED` sur
+  `localhost:4321`, et la capture de la page montre le « Unable to connect » de Firefox, **pas une
+  page du site**. Les tests touchés changent d'un run à l'autre, ce qui donne l'illusion d'un
+  défaut qui se déplace. **L'isolation est l'expérience à refaire, pas le diagnostic à recopier** :
+  le même projet, le même `dist/` et le même Firefox contre un serveur statique banal passent
+  **127/128 avec 1 sauté et sortie 0** —
+
+  ```bash
+  python -m http.server 4399 --directory dist
+  PW_NO_SERVER=1 PW_BASE_URL=http://127.0.0.1:4399 npx playwright test --project=gate-firefox
+  ```
+
+  Donc : **un rouge `gate-firefox` se vérifie contre un serveur statique avant d'accuser quoi que
+  ce soit d'autre.** Ce qui est isolé, c'est « le montage `astro preview` du `webServer` » — pas
+  nécessairement le serveur HTTP d'Astro lui-même, puisque l'expérience change aussi le port et
+  retire la gestion du `webServer` par Playwright ; **la cause fine reste inconnue**.
+  Chronologie mesurée : full suite verte en T36 (Playwright 1.63.0), **1** rouge `gate-firefox` en
+  T37 (même version), puis **4** en T38 (Playwright 1.64.0 / Firefox 157) et **2** en relançant le
+  projet seul. La fréquence a donc augmenté ; **la raison de cette augmentation est inconnue**, et
+  le bump n'est pas en cause puisque le défaut lui est antérieur. `gate-firefox` n'est pas dans
+  l'ensemble bloquant, donc rien de tout ça ne bloque une PR.
 - **GitHub Actions pose une entrée non renseignée à CHAÎNE VIDE, pas à `undefined`.** Un
   `process.env.X ?? défaut` ne retombe donc pas sur le défaut en CI — utiliser `||`. Vu sur
   `PW_BASE_URL`, qui serait devenu vide et aurait cassé toute navigation relative, en CI
@@ -613,6 +661,11 @@ Vaut aussi pour les commentaires de PR et les issues.
   **`first_patched_version` vaut `aucun`** — toute version publiée est vulnérable, donc aucun
   bump ne peut y changer quoi que ce soit, et la seule sortie serait qu'elle quitte l'arbre.
   **Ce n'est pas un oubli, ne pas la retrier à chaque session.**
+  ⚠️ **Et l'affichage de Dependabot retarde sur le dépôt** : mesuré le 12.10, l'alerte `sharp`
+  était encore listée `open` alors que `main` portait déjà **0.35.5** dans le lockfile (vérifié
+  par `git show main:package-lock.json`). Dependabot ferme à son propre rythme après un push sur
+  la branche par défaut. **La version du lockfile de `main` fait foi, pas le compteur d'alertes**
+  — sinon on refait un bump déjà fait.
   ⚠️ **T36 avait écrit ici que « le correctif passe par Astro 7.3.8 » : c'était faux pour la
   moitié**, le bump n'en fermant que deux sur quatre. Leçon, qui est la vraie valeur de ces deux
   tâches : **une alerte se ferme en comparant la version installée à la plage vulnérable**
