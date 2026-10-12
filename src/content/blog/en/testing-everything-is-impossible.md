@@ -132,8 +132,10 @@ calendar?
 
 ---
 
-Sources: testing principles (§1.3), test objectives (§1.1.1), risk register and
-traceability (§1.4.3 and §1.4.4), decision tables (§4.2.3),
+Sources: test objectives (§1.1.1), testing principles (§1.3), testware and the
+risk register (§1.4.3), traceability between the test basis and testware
+(§1.4.4), equivalence partitioning (§4.2.1), boundary value analysis (§4.2.2),
+decision table testing (§4.2.3), risk management (§5.2),
 [ISTQB Certified Tester Foundation Level syllabus v4.0.1](https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf);
 IEC 62304 safety classes and system testing in class A,
 [Johner Institute](https://blog.johner-institute.com/iec-62304-medical-software/safety-class-iec-62304/).

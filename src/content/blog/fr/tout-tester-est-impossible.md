@@ -79,7 +79,7 @@ plus son impact est lourd, plus il mérite d'être testé tôt et en profondeur.
 Ces deux dimensions ne relèvent pas des mêmes personnes. La probabilité se juge
 plutôt côté technique : un module complexe, modifié souvent, qui a déjà
 concentré des défauts. Le syllabus en fait d'ailleurs un autre de ses
-principes : les défauts se regroupent. L'impact se juge plutôt côté métier : ce
+principes : le regroupement des défauts. L'impact se juge plutôt côté métier : ce
 qu'une défaillance coûterait en argent, en réputation, en conformité.
 
 Le QA n'a donc pas à décider seul de ce qu'on ne teste pas. Le métier non plus,
@@ -138,8 +138,10 @@ calendrier ?
 
 ---
 
-Sources : principes du test (§1.3), objectifs du test (§1.1.1), référentiel des
-risques et traçabilité (§1.4.3 et §1.4.4), tables de décisions (§4.2.3),
+Sources : objectifs du test (§1.1.1), principes du test (§1.3), testware et
+référentiel des risques (§1.4.3), traçabilité entre base de test et testware
+(§1.4.4), partitions d'équivalence (§4.2.1), analyse des valeurs limites
+(§4.2.2), test par tables de décisions (§4.2.3), gestion des risques (§5.2),
 syllabus ISTQB de niveau Fondation v4.0, traduction française du CFTL ;
 [version anglaise v4.0.1, ISTQB](https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf) ;
 classes de sécurité IEC 62304 et tests système en classe A,
