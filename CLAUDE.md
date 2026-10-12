@@ -59,8 +59,9 @@ dans `src/i18n/fr.json`.
 Historique des tâches (T1–T31, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA, relancée en entier le 10.10** : **472 tests — 469 passés, 3 sautés**,
-**9 projets** Playwright, sortie Playwright 0 (mesurée), 2,0 min. `a11y-axe` a aussi été pointé
+**État de la suite QA, relancée en entier le 12.10 sous Astro 7.3.8** : **472 tests — 469
+passés, 3 sautés**, **9 projets** Playwright, sortie Playwright 0 (mesurée), 2,7 min — soit le
+même verdict qu'au 10.10 (2,0 min), le bump n'ayant déplacé aucun test. `a11y-axe` a aussi été pointé
 sur la **production** le 11.10 : 26 tests verts, sortie 0, 24,4 s — la conformité tient sur les
 octets servis, et les 10 nœuds indécis de l'accueil s'y comportent à l'identique. Le compte a bougé trois fois —
 446 → 443 en T30 (une assertion déplacée dans une boucle déjà paramétrée, donc moins de tests pour
@@ -197,27 +198,40 @@ comme contexte**, vérifié sur `main` et sur la PR #6. Copier `Quality gate` de
 `anomaly-sentinel` aurait rendu **toute PR immergeable**. Si ce job est renommé un jour, mettre à
 jour le contexte requis dans la même PR.
 
-**Point ouvert au 01.10 (source : ligne T21 du journal), décision de Jérémy** : l'article T21
-s'appuie sur « une analyse récente des sites des dix universités françaises », sans auteur. Cette
-analyse est l'œuvre d'**Accessiway**, un prestataire d'accessibilité (observé : l'article
-Handicap.fr du 03.09.2026 cité en source la lui attribue nommément). Les faits repris sont exacts
-— 2 universités sur 10 satisfaisaient l'ensemble des critères, contrastes insuffisants et
-navigation clavier déficiente. C'est un choix de rédaction, pas une erreur factuelle, donc **non
-réécrit** ; signalé parce que l'article reproche précisément à un indicateur de taire sa méthode.
-Ne rien changer sans son arbitrage.
+**Tranché en T35 (#75), déployé — ne pas reproposer** : l'attribution de l'étude des dix
+universités dans l'article T21. L'analyse est l'œuvre d'**Accessiway** (observé : l'article
+Handicap.fr du 03.09.2026 cité en source la lui attribue nommément, « entreprise spécialisée dans
+l'accessibilité numérique »). Aucun fait n'était faux — 2 universités sur 10 satisfaisaient
+l'ensemble des critères, contrastes insuffisants et navigation clavier déficiente —, donc ce
+n'était pas une erreur à corriger mais un **choix éditorial**. Décision de Jérémy : **nommer ET
+caractériser**, plus la phrase « L'analyse vient d'un acteur du secteur : à lire comme un signal,
+pas comme un audit indépendant », qui rend l'article cohérent avec sa propre thèse. ⚠️ Pas
+« prestataire » : le mot suggère une relation commerciale que la source ne dit pas. Vérifié le
+12.10 — `Accessiway` est présent dans les deux langues (`grep -rln` sur `src/`).
 
-**Point ouvert au 07.10 (source : ligne T22 du journal), décision de Jérémy** : deux écarts de
-**sourcement** relevés à la vérification de l'article T22, aucun n'étant une erreur factuelle,
-donc **non réécrits**. (1) Le principe 4 du syllabus s'appelle « **Regroupement des défauts** »
-dans la traduction CFTL (observé : CFTL v4.0 p. 20), là où l'article écrit « les défauts se
-regroupent » — retraduction du titre anglais « Defects cluster together », exacte et hors
-guillemets, mais l'article emploie partout ailleurs le vocabulaire officiel du CFTL. (2) La ligne
-de sources cite §1.1.1, §1.3, §1.4.3, §1.4.4 et §4.2.3 mais **pas §5.2**, alors que la mécanique
-centrale de l'article (probabilité × impact → tester plus tôt et plus en profondeur) en vient
-(observé : §5.2.1 « Plus le niveau de risque est élevé, plus son traitement est important » et
-§5.2.3 « influencer la rigueur et le périmètre des tests »), ni §4.2.1/§4.2.2 pour les partitions
-d'équivalence et les valeurs limites qu'il développe. Toutes les affirmations sont justes ; seul le
-renvoi manque. Ne rien changer sans son arbitrage.
+**Tranché en T34 (#74), déployé — ne pas reproposer** : les deux écarts de **sourcement** de
+l'article T22. (1) Le principe 4 du syllabus s'appelle « **Regroupement des défauts** » dans la
+traduction CFTL (observé : CFTL v4.0 p. 20) ; l'article emploie désormais « le regroupement des
+défauts ». (2) La ligne de sources ne renvoyait ni à §5.2, d'où vient sa mécanique centrale
+(probabilité × impact), ni à §4.2.1/§4.2.2 pour les partitions d'équivalence et les valeurs
+limites ; elle cite maintenant §1.1.1, §1.3, §1.4.3, §1.4.4, **§4.2.1**, **§4.2.2**, §4.2.3 et
+**§5.2** (vérifié le 12.10 sur le fichier FR). Aucune affirmation n'était fausse ; seuls les
+renvois manquaient.
+
+⚠️ **Ces deux paragraphes sont restés en « Point ouvert » après leur fermeture** (constaté le
+12.10 : T34 et T35 étaient mergées et déployées, et ce fichier disait encore « non réécrit » et
+« ne rien changer sans son arbitrage » — une session fraîche l'aurait lu comme l'état courant).
+C'est la même accumulation que la règle « compter les lignes ouvertes » décrit pour le journal,
+mais ici **aucune commande ne la vérifiait** : le `grep -c "🔄 PR ouverte"` ne regarde que
+`docs/JOURNAL.md`. À relancer avant tout `/clear`, en plus de celui du journal :
+
+```bash
+grep -c "^\*\*Point ouvert" CLAUDE.md
+```
+
+Le résultat attendu est le nombre de points **réellement** ouverts — au 12.10 : **2**, les 10
+nœuds de contraste inconnus et les prompts d'`anomaly-sentinel`. S'il monte sans qu'un nouvel
+arbitrage ait été demandé, c'est qu'un point fermé a survécu.
 
 ## Workflow Git (Jérémy merge lui-même)
 
@@ -279,7 +293,7 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
-- **`npm run test:e2e`** — 472 tests, ~2 min (2,0 mesuré le 10.10).
+- **`npm run test:e2e`** — 472 tests, ~2 min (2,0 mesuré le 10.10 ; 2,7 le 12.10).
   Il construit et sert `dist/` tout seul. Puis `npm run test:report` pour le rapport Allure
   (un fichier HTML autonome dans `allure-report/`). Pour un sous-ensemble :
   `npx playwright test --project=gate-desktop` (voir `tests/README.md` pour les 9 projets).
@@ -290,10 +304,25 @@ Vaut aussi pour les commentaires de PR et les issues.
   déploiement dont on veut vérifier le rendu réel :
   `PW_NO_SERVER=1 PW_BASE_URL=https://bazanjeremy.github.io npx playwright test --project=motion`
 - **Le hash du CSS après tout ajout de fichier** : `npm run build && ls dist/_astro/`. Le nom doit
-  rester `_astro_content.CAfsBN8X.css`, 18 862 octets (il valait `DPDLS9i_` jusqu'à T27 — +81
+  rester `_astro_content.D1b6u-4G.css`, 18 862 octets (il valait `DPDLS9i_` jusqu'à T27 — +81
   octets pour réparer la révélation au scroll —, `CerI2rm-` jusqu'à T29 — −27 octets, la règle
-  `.contents`, documentation sortie du scan —, puis `DRDROTEC` jusqu'à T31 : +26 octets, une règle
-  devenue deux, le scrollport des tableaux passant du `<table>` à son conteneur).
+  `.contents`, documentation sortie du scan —, `DRDROTEC` jusqu'à T31 — +26 octets, une règle
+  devenue deux, le scrollport des tableaux passant du `<table>` à son conteneur —, puis
+  `CAfsBN8X` jusqu'à T36).
+  ⚠️ **T36 montre qu'un hash peut bouger à taille d'octets strictement identique** : au bump
+  Astro 7.3.8, `CAfsBN8X` → `D1b6u-4G` **sans changer un octet de taille** (18 862 dans les deux
+  cas), parce qu'une seule règle a changé de représentation et que les deux écritures font 10
+  caractères — `.rounded-full{border-radius:3.40282e38px}` (FLT_MAX) devient
+  `…:2147483647px` (INT32_MAX). Mesuré : 263 règles avant comme après, et le `diff` par règle ne
+  sort que cette ligne. **Conséquence de rendu : nulle, et c'est mesuré, pas déduit** — sur la
+  pastille de `Journey.astro` (boîte de 10×10px, seul usage de `rounded-full`), le moteur calcule
+  `3.35544e+07px` pour **les deux** valeurs, donc elles sont indiscernables après calcul
+  (mesuré dans Chromium sur la production ; la réduction du rayon à la moitié de la boîte est en
+  outre imposée par la spec dans tout moteur — ça, c'est du raisonnement, pas une mesure).
+  Leçon : **comparer la taille ne suffit pas, il faut comparer le hash**, et quand il bouge,
+  diffracter par règle avant de conclure. La cause exacte de la réécriture est **inconnue** :
+  elle est corrélée au remplacement d'`esbuild` par `lightningcss` 1.33.0 dans la chaîne de vite
+  (mesuré dans le lockfile), mais ça n'a **pas** été isolé.
   **Depuis T29, une édition de `docs/`, `.github/` ou `CLAUDE.md` ne peut plus déplacer ce
   hash** — c'était tout l'objet du changement. Mais Tailwind scanne toujours plus large qu'on
   ne croit (voir les gotchas), et un mot de prose **d'article** peut injecter une règle.
@@ -375,10 +404,13 @@ Vaut aussi pour les commentaires de PR et les issues.
   passant `-1` depuis un plugin hast, et une assertion écrite sur la source du plugin ne mesure
   rien : asserter sur les octets servis, dont le seul levier de mutation est la **suppression** de
   la propriété.
-- **Le minifieur peut détruire une déclaration CSS correcte, et c'est `lightningcss`.** Les deux
-  minifieurs sont là (`esbuild` via Vite, `lightningcss` via la passe d'optimisation de
-  Tailwind 4) ; **mesuré le 08.10**, c'est `lightningcss` qui refusionne un raccourci `animation`
-  et un `animation-timeline` en `animation: linear both reveal-fade view()`. Ce raccourci
+- **Le minifieur peut détruire une déclaration CSS correcte, et c'est `lightningcss`.** Au
+  moment de la mesure du 08.10 les deux minifieurs étaient là (`esbuild` via Vite,
+  `lightningcss` via la passe d'optimisation de Tailwind 4) ; **depuis T36 il n'y a plus
+  que `lightningcss`**, en deux copies — 1.33.0 via vite 8.3.4, 1.32.0 via Tailwind —,
+  `esbuild` ayant quitté l'arbre. **Mesuré le 08.10**, c'est `lightningcss` qui refusionne un
+  raccourci `animation` et un `animation-timeline` en
+  `animation: linear both reveal-fade view()`. Ce raccourci
   n'accepte aucune valeur de timeline, donc le navigateur rejette la déclaration **en entier**
   (`cssText: ""`, d'où `animation-name: none`) : l'animation de `.reveal` n'a jamais tourné en
   production. La parade est d'écrire **tous les longhands** — mesuré, il ne reconstruit pas le
@@ -513,19 +545,43 @@ Vaut aussi pour les commentaires de PR et les issues.
   par Dependabot ne veut **pas** dire « tourne chez le visiteur » : c'est la distinction
   npm `dependencies` / `devDependencies`, héritée d'Astro. Sur ce site, la mesure qui
   tranche est que `dist/` ne contient aucun `.js` ni aucune balise `<script>`.
-- **Les 4 alertes Dependabot ouvertes au 12.10 sont triées — ne pas les relayer au score
-  CVSS.** `source-map-js` (DoS, haute), `http-cache-semantics` (divulgation de cache
+- **`npm update <paquet>` n'est PAS limité à ce paquet.** Mesuré en T36 : `npm update astro`
+  a re-résolu l'arbre entier — **57 versions changées, 16 paquets ajoutés, 31 retirés** —, dont
+  des minors de la chaîne de bundling (`vite` 8.1.4 → 8.3.4, `rolldown` 1.1.5 → 1.2.13) et la
+  **disparition d'`esbuild`** et de `js-yaml`. Même famille que le piège déjà noté sur
+  `npm audit fix`, qui « emporte des minors malgré son lockfile only » : le levier est le même,
+  npm re-résout tout ce que les plages autorisent. Deux conséquences pratiques :
+  **(1)** un bump « isolé » n'existe pas — toujours differ le lockfile **par version de paquet**
+  avant de conclure sur le périmètre (le script de T36 compare les deux `packages` et sort
+  changés / ajoutés / retirés) ; **(2)** une dépendance directe peut être emportée au passage.
+  En T36 `@astrojs/markdown-satteri` 0.4.0 → 0.4.3 est partie avec, et ce n'était pas gratuit :
+  les deux épinglent `@astrojs/internal-helpers` **exactement**, et Astro 7.3.8 exige `0.12.0`
+  là où satteri 0.4.0 exigeait `0.11.0`. ⚠️ Un bump du wrapper `@astrojs/markdown-satteri`
+  touche le pipeline Markdown, donc **le gotcha du cache de contenu s'applique** : sans
+  `rm -rf node_modules/.astro`, le HTML des 22 articles sort du cache et la comparaison ne
+  mesure rien. Mesuré après vidage en T36 : `satteri` lui-même (le moteur de rendu) **n'a pas
+  bougé**, 0.10.5 avant comme après, et le HTML des 26 pages est identique.
+- **Les alertes Dependabot sont triées — ne pas les relayer au score CVSS.** Les quatre ouvertes
+  au 12.10 : `source-map-js` (DoS, haute), `http-cache-semantics` (divulgation de cache
   inter-utilisateurs, haute), `sharp`/librsvg CVE-2026-96889 (haute), `smol-toml` (parse
   quadratique, moyenne). **Mesuré** : les quatre sont **transitives** (`isDirect: false`), toutes
-  tirées par `astro@7.3.1` et la chaîne de build, et **`dist/` contient 0 fichier `.js` et 0
+  tirées par `astro` et la chaîne de build, et **`dist/` contient 0 fichier `.js` et 0
   balise `<script>`** — donc aucune ne tourne chez le visiteur. Entrées hostiles : aucune non
   plus. `source-map-js` traite nos propres CSS au build ; `http-cache-semantics` suppose un cache
   HTTP partagé entre utilisateurs, que ce build n'a pas ; `sharp` n'est appelé **que** par
   `scripts/og-image.mjs`, lancé à la main sur notre propre SVG, jamais par le build ; et
-  `smol-toml` n'a rien à parser, **le dépôt ne contient aucun `.toml`** (vérifié). Le correctif
-  passe vraisemblablement par **Astro 7.3.1 → 7.3.8** (disponible, `npm outdated`), ce qui est un
-  bump à faire pour lui-même et à vérifier par la comparaison `dist/` contre la prod — pas une
-  urgence de sécurité sur ce site.
+  `smol-toml` n'a rien à parser, **le dépôt ne contient aucun `.toml`** (vérifié).
+  ⚠️ **T36 corrige l'énoncé qui était écrit ici** : « le correctif passe par Astro 7.3.8 » était
+  faux pour la moitié. Mesuré après le bump, en lisant les plages vulnérables de l'API Dependabot
+  plutôt que les numéros de version seuls — le bump ferme **2 alertes sur 4** :
+  `smol-toml` 1.8.0 → **1.9.1** (corrigé en 1.9.0) et `source-map-js` 1.2.1 → **1.2.2**
+  (corrigé en 1.2.2). Restent ouvertes, et **pas** par oubli : `sharp` reste en **0.35.4** là où
+  le correctif est 0.35.5, et `http-cache-semantics` est en 4.2.0 avec
+  **`first_patched_version: aucun`** — toute version est vulnérable, donc **aucun bump ne peut la
+  fermer**, et la seule sortie serait qu'elle quitte l'arbre. Un bump de `sharp` est un candidat
+  séparé ; ce n'est pas une urgence ici, le paquet n'étant appelé qu'à la main.
+  Leçon : **une alerte se ferme en comparant la version installée à la plage vulnérable**, pas en
+  supposant qu'un bump du parent emporte tout l'arbre.
 - **`allowScripts` dans `package.json`** : la machine de Jérémy est en **npm 11**, qui bloque
   les `postinstall` par défaut ; la CI est en **npm 10.9.8** (lu dans le log du workflow), qui
   ignore le champ. Le warning `allow-scripts` sur `esbuild` était donc local. Il est acté en
@@ -533,6 +589,15 @@ Vaut aussi pour les commentaires de PR et les issues.
   **no-op** (`maybeOptimizePackage()` s'exclut de `win32`, le binaire de plateforme résout déjà)
   — vérifié par `npm ci` complet puis `esbuild --version`. ⚠️ `npm install-scripts approve|deny`
   **écrit dans `package.json` malgré `--dry-run`** (npm 11.18.0) : ne pas s'y fier.
+  ⚠️ **Depuis T36, `esbuild` n'est plus dans l'arbre du tout** : Astro 7.3.8 exige
+  `vite ^8.3.1`, et vite 8.3.4 ne tire plus `esbuild` mais `lightningcss` 1.33.0 en imbriqué
+  (mesuré dans le lockfile ; `ls node_modules/esbuild` → absent). Le champ
+  `"esbuild": false` est donc devenu **inopérant** — gardé volontairement, pour qu'il reprenne
+  effet si `esbuild` revenait, et parce que le retirer ne gagne rien. Corollaire pour le gotcha
+  du minifieur plus haut : **la chaîne de minification CSS a changé**, et c'est ce qui rend le
+  contrôle du raccourci `animation` d'autant plus nécessaire. Vérifié en T36 : la règle
+  `.reveal` sort **identique octet pour octet**, et `grep -c 'animation:'` donne **0** sur le CSS
+  produit — le raccourci n'est pas reconstruit sous la nouvelle chaîne.
 - Repo : https://github.com/BazanJeremy/bazanjeremy.github.io · Live :
   https://bazanjeremy.github.io/
 
