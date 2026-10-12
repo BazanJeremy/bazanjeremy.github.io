@@ -513,6 +513,19 @@ Vaut aussi pour les commentaires de PR et les issues.
   par Dependabot ne veut **pas** dire « tourne chez le visiteur » : c'est la distinction
   npm `dependencies` / `devDependencies`, héritée d'Astro. Sur ce site, la mesure qui
   tranche est que `dist/` ne contient aucun `.js` ni aucune balise `<script>`.
+- **Les 4 alertes Dependabot ouvertes au 12.10 sont triées — ne pas les relayer au score
+  CVSS.** `source-map-js` (DoS, haute), `http-cache-semantics` (divulgation de cache
+  inter-utilisateurs, haute), `sharp`/librsvg CVE-2026-96889 (haute), `smol-toml` (parse
+  quadratique, moyenne). **Mesuré** : les quatre sont **transitives** (`isDirect: false`), toutes
+  tirées par `astro@7.3.1` et la chaîne de build, et **`dist/` contient 0 fichier `.js` et 0
+  balise `<script>`** — donc aucune ne tourne chez le visiteur. Entrées hostiles : aucune non
+  plus. `source-map-js` traite nos propres CSS au build ; `http-cache-semantics` suppose un cache
+  HTTP partagé entre utilisateurs, que ce build n'a pas ; `sharp` n'est appelé **que** par
+  `scripts/og-image.mjs`, lancé à la main sur notre propre SVG, jamais par le build ; et
+  `smol-toml` n'a rien à parser, **le dépôt ne contient aucun `.toml`** (vérifié). Le correctif
+  passe vraisemblablement par **Astro 7.3.1 → 7.3.8** (disponible, `npm outdated`), ce qui est un
+  bump à faire pour lui-même et à vérifier par la comparaison `dist/` contre la prod — pas une
+  urgence de sécurité sur ce site.
 - **`allowScripts` dans `package.json`** : la machine de Jérémy est en **npm 11**, qui bloque
   les `postinstall` par défaut ; la CI est en **npm 10.9.8** (lu dans le log du workflow), qui
   ignore le champ. Le warning `allow-scripts` sur `esbuild` était donc local. Il est acté en

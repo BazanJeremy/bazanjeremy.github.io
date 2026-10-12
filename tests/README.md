@@ -777,6 +777,53 @@ rapport, pour que le quality gate ne couvre jamais que le bloquant. **Non fait**
 où un contrôle qui fait échouer le job porte enfin le nom de ce qu'il est.
 Les liens externes et les autres moteurs restent dans le nocturne.
 
+## Le rapport dans l'UI de GitHub — évalué et écarté le 12.10
+
+Question posée à partir d'Azure DevOps, où une extension ajoute un **onglet
+« Allure Report »** dans la page du build, avec l'UI complète et la tendance.
+**Cela ne peut pas être reproduit sur GitHub, et ce n'est pas un défaut de
+configuration** : Azure DevOps a un modèle d'extensions qui autorise un tiers à
+ajouter un onglet aux résultats d'un build ; GitHub Actions n'a aucun point
+d'extension équivalent. Personne ne peut ajouter un onglet à la page d'un run.
+
+Ce que fait réellement l'action officielle `allure-framework/allure-action@v0`
+(lu sur `allurereport.org/docs/integrations-github-action/`, 12.10) : elle
+**n'héberge rien**. Elle poste un commentaire de PR avec un tableau de
+résultats, crée un **check pass/fail à partir du quality gate**, et ajoute un
+lien « View » si on lui passe `remote-href`, c'est-à-dire l'URL où l'on héberge
+soi-même le rapport. Elle lit `summary.json`, `test-results.json` et
+`quality-gate.json` — **les trois fichiers que ce dépôt produit déjà**, donc
+elle fonctionnerait sans rien changer à la génération.
+
+L'UI interactive demande donc un hébergement, et c'est là que l'invariant mord :
+il n'y a qu'un site Pages par dépôt, il est pris par la landing, et y déverser
+un rapport Allure ferait tomber « `dist/` ne contient aucun `.js` ». Les voies
+restantes sont un **dépôt séparé** avec ses propres Pages, ou le service hébergé
+d'Allure. **TRANCHÉ le 12.10 (décision de Jérémy) : rien pour l'instant.**
+Évalué et écarté, pas oublié.
+
+⚠️ Corollaire à ne pas perdre : le `singleFile: true` qui produit un fichier de
+20 Mo a été choisi **parce que** le rapport devait tenir dans un artefact. Le
+jour où il est hébergé, cette contrainte tombe et un rapport multi-fichiers
+normal est plus léger à charger.
+
+### Ce qui, en revanche, est natif et gratuit
+
+Deux choses donnent un KPI par run **sans hébergement ni dépendance**, et
+aucune n'est branchée aujourd'hui :
+
+- **`--reporter=github`**, livré avec Playwright. **Vérifié en le lançant le
+  12.10 sur ce dépôt** : il émet `::notice title=🎭 Playwright Run Summary::
+  22 passed (16.5s)`, et sur un échec un `::error` placé au bon fichier et à la
+  bonne ligne, donc annoté **dans le diff de la PR**. Rien à installer.
+- **`$GITHUB_STEP_SUMMARY`**, qui rend du Markdown directement dans la page du
+  run — le job `resolve` du nocturne s'en sert déjà pour son plan. De quoi
+  écrire un tableau de KPI (compteurs, durée, verdict du quality gate) visible
+  sans rien télécharger.
+
+Ni l'un ni l'autre ne rend l'UI Allure ; ensemble ils donnent le chiffre et
+l'emplacement de l'échec, qui est ce qu'on regarde en premier.
+
 ## Pas encore en place
 
 - **La persistance de l'historique Allure et du JUnit.** `historyPath` pointe
