@@ -72,9 +72,11 @@ découvrent qu'en test manuel, et elle recommande de combiner tests automatisés
 d'accessibilité sur 100 que calcule Lighthouse, c'est un taux de plus : utile
 pour suivre une tendance, muet sur un parcours.
 
-Une analyse récente des sites des dix universités françaises qui accueillent le
-plus d'étudiants relevait notamment des contrastes insuffisants et une navigation
-au clavier déficiente. Le premier défaut se détecte le plus souvent automatiquement. Le second
+Une analyse récente d'Accessiway, entreprise spécialisée dans l'accessibilité
+numérique, sur les sites des dix universités françaises qui accueillent le plus
+d'étudiants relevait notamment des contrastes insuffisants et une navigation
+au clavier déficiente. L'analyse vient d'un acteur du secteur : à lire comme un
+signal, pas comme un audit indépendant. Le premier défaut se détecte le plus souvent automatiquement. Le second
 demande presque toujours quelqu'un au clavier.
 
 Un outil automatique donne un plancher, pas un verdict.
@@ -141,7 +143,8 @@ d'acceptation, ou découverte à l'audit ?
 
 ---
 
-Sources : décret n° 2026-816 du 24 août 2026 et analyse des sites universitaires,
+Sources : décret n° 2026-816 du 24 août 2026 ; analyse des sites universitaires
+par Accessiway, relayée par
 [Handicap.fr, 3 septembre 2026](https://informations.handicap.fr/a-accessibilite-numerique-ce-qui-change-en-france-et-en-ue-39631.php) ;
 ordonnance du tribunal judiciaire de Caen du 4 juin 2026,
 [Handicap.fr](https://informations.handicap.fr/a-accessibilite-web-carrefour-condamne-par-la-justice-39309.php) ;
