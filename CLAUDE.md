@@ -59,9 +59,16 @@ dans `src/i18n/fr.json`.
 Historique des tâches (T1–T31, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA, relancée en entier le 12.10 sous Astro 7.3.8** : **472 tests — 469
-passés, 3 sautés**, **9 projets** Playwright, sortie Playwright 0 (mesurée), 2,7 min — soit le
-même verdict qu'au 10.10 (2,0 min), le bump n'ayant déplacé aucun test. `a11y-axe` a aussi été pointé
+**État de la suite QA au 12.10, sous Astro 7.3.8 et sharp 0.35.5** : **472 tests, 9 projets**
+Playwright. **Ensemble bloquant : 204 tests, 204 passés, sortie 0, 49,3 s** — c'est la mesure qui
+engage, parce que c'est celle que la CI applique. ⚠️ **La suite complète n'a PAS été verte aux
+deux derniers runs de T37**, et les deux échecs sont **hors de l'ensemble bloquant** : 1 échec
+`gate-firefox` non reproduit et de cause inconnue, puis 3 échecs `prod-http` par abandon client
+après un `200 OK` (détail et conduite à tenir juste en dessous). Le dernier run complet **vert**
+est celui de T36 : 469 passés, 3 sautés, sortie 0, 2,7 min. Ne pas écrire « suite verte » sans
+avoir relancé.
+
+`a11y-axe` a aussi été pointé
 sur la **production** le 11.10 : 26 tests verts, sortie 0, 24,4 s — la conformité tient sur les
 octets servis, et les 10 nœuds indécis de l'accueil s'y comportent à l'identique. Le compte a bougé trois fois —
 446 → 443 en T30 (une assertion déplacée dans une boucle déjà paramétrée, donc moins de tests pour
@@ -80,6 +87,21 @@ dit rien du site — et il ne bloque aucune PR, le défaut de `projects` dans
 l'ensemble bloquant, et `npm run test:gate` liste exactement les mêmes quatre projets
 (204 tests) : les deux étaient désalignés avant T32 — le script omettait `gate-mobile` —, donc
 si l'un change, changer l'autre dans la même PR.
+⚠️ **Et `prod-http` flanche de la même façon, mesuré en T37** : sur deux runs complets d'affilée,
+le second a sorti **3 échecs, tous dans `prod-http`, tous le même mécanisme** —
+`apiRequestContext.get: aborted` alors que le journal d'appel montre **`← 200 OK`** avec ses
+en-têtes, donc un **abandon côté client après réponse du serveur**, pas une erreur de la
+production. Lancé seul, `prod-http` passe **5/5 en 5,1 s**. L'hypothèse est la contention — 9
+projets qui martèlent le site live en parallèle —, elle n'est **pas prouvée**. Donc `prod-http`
+rouge en local après un `test:e2e` complet ne dit rien du site : **le relancer seul avant de
+conclure**, `PW_NO_SERVER=1 npx playwright test --project=prod-http`. ⚠️ Et ne pas imputer ce
+rouge à un déploiement en cours sans **vérifier l'horodatage du run de déploiement** : en T37 je
+l'ai écrit, et c'était faux — le déploiement s'était terminé avant les deux runs.
+⚠️ **Un échec non reproduit laisse la cause INCONNUE, et la trace se lit avant le réessai.** T37,
+run 1 : un échec de `gate-firefox` › `blog-contract` (un seul h1 sur un article EN), non
+reproduit ensuite (25/25). La cause est restée inconnue parce que le réessai a **écrasé
+`test-results/`** avant que j'aie lu l'erreur. Lire `test-results/*/error-context.md` **d'abord**,
+relancer ensuite.
 Trois workflows actifs —
 `pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
 échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
@@ -507,6 +529,14 @@ Vaut aussi pour les commentaires de PR et les issues.
   utilisables. Sortie attendue : 1200×630, sRGB, **sans canal alpha** (`.flatten()`), ~70 KB.
   La géométrie du texte est calibrée sur l'image de T6 ; le décor (halo, arcs) est une
   reconstruction, le script d'origine n'ayant jamais été versionné.
+  **Vérifié en T37, et c'est la bonne façon d'exercer un bump de `sharp`** : après
+  `sharp` 0.35.4 → 0.35.5 (donc librsvg 2.63.2), `node scripts/og-image.mjs` régénère les deux
+  cartes **identiques octet pour octet** — md5 inchangés, `cmp` silencieux, 1200×630, sRGB,
+  3 canaux, sans alpha, 67 et 69 KB. Le rendu ne dépend donc pas de la version de librsvg sur ce
+  SVG. ⚠️ C'est aussi le **seul** contrôle qui exerce vraiment `sharp` : le build ne l'appelle
+  jamais, donc un `dist/` identique ne dit **rien** sur lui, et une régression de `sharp` ne se
+  verrait qu'à la prochaine régénération. À refaire à chaque bump de `sharp`, en comparant les
+  octets et pas l'œil.
 - **Article qui cite une source externe (presse, rapport, fil X)** : aucun dépôt à
   interroger, mais la vérification reste due — recouper chaque fait sur plusieurs médias
   et remonter à la source primaire. Vu en T18 : la date et le verbatim ne sont pas
@@ -561,27 +591,36 @@ Vaut aussi pour les commentaires de PR et les issues.
   `rm -rf node_modules/.astro`, le HTML des 22 articles sort du cache et la comparaison ne
   mesure rien. Mesuré après vidage en T36 : `satteri` lui-même (le moteur de rendu) **n'a pas
   bougé**, 0.10.5 avant comme après, et le HTML des 26 pages est identique.
-- **Les alertes Dependabot sont triées — ne pas les relayer au score CVSS.** Les quatre ouvertes
+  ⚠️ **T37 nuance l'énoncé, et la nuance compte** : `npm update sharp` est resté **serré** — 27
+  versions changées, **0 ajoutée, 0 retirée**, uniquement `sharp` et ses binaires `@img/*`. La
+  règle n'est donc pas « `npm update` emporte toujours tout », ce qui mènerait à éviter la
+  commande, mais **le périmètre est imprévisible et se mesure** : il dépend de ce que les plages
+  du parent autorisent, pas du nom passé en argument. Le diff du lockfile par version de paquet
+  est la seule façon de le savoir, et il coûte une commande dans les deux cas.
+- **Les alertes Dependabot sont triées — ne pas les relayer au score CVSS.** Il y en avait quatre
   au 12.10 : `source-map-js` (DoS, haute), `http-cache-semantics` (divulgation de cache
   inter-utilisateurs, haute), `sharp`/librsvg CVE-2026-96889 (haute), `smol-toml` (parse
-  quadratique, moyenne). **Mesuré** : les quatre sont **transitives** (`isDirect: false`), toutes
+  quadratique, moyenne). **Mesuré** : les quatre étaient **transitives** (`isDirect: false`),
   tirées par `astro` et la chaîne de build, et **`dist/` contient 0 fichier `.js` et 0
-  balise `<script>`** — donc aucune ne tourne chez le visiteur. Entrées hostiles : aucune non
+  balise `<script>`** — donc aucune ne tournait chez le visiteur. Entrées hostiles : aucune non
   plus. `source-map-js` traite nos propres CSS au build ; `http-cache-semantics` suppose un cache
   HTTP partagé entre utilisateurs, que ce build n'a pas ; `sharp` n'est appelé **que** par
   `scripts/og-image.mjs`, lancé à la main sur notre propre SVG, jamais par le build ; et
   `smol-toml` n'a rien à parser, **le dépôt ne contient aucun `.toml`** (vérifié).
-  ⚠️ **T36 corrige l'énoncé qui était écrit ici** : « le correctif passe par Astro 7.3.8 » était
-  faux pour la moitié. Mesuré après le bump, en lisant les plages vulnérables de l'API Dependabot
-  plutôt que les numéros de version seuls — le bump ferme **2 alertes sur 4** :
-  `smol-toml` 1.8.0 → **1.9.1** (corrigé en 1.9.0) et `source-map-js` 1.2.1 → **1.2.2**
-  (corrigé en 1.2.2). Restent ouvertes, et **pas** par oubli : `sharp` reste en **0.35.4** là où
-  le correctif est 0.35.5, et `http-cache-semantics` est en 4.2.0 avec
-  **`first_patched_version: aucun`** — toute version est vulnérable, donc **aucun bump ne peut la
-  fermer**, et la seule sortie serait qu'elle quitte l'arbre. Un bump de `sharp` est un candidat
-  séparé ; ce n'est pas une urgence ici, le paquet n'étant appelé qu'à la main.
-  Leçon : **une alerte se ferme en comparant la version installée à la plage vulnérable**, pas en
-  supposant qu'un bump du parent emporte tout l'arbre.
+  **État après T36 et T37 : 4 alertes → 1.** `smol-toml` 1.8.0 → **1.9.1** et `source-map-js`
+  1.2.1 → **1.2.2** fermées par le bump Astro ; `sharp` 0.35.4 → **0.35.5** fermée par T37.
+  ⚠️ **Il reste `http-cache-semantics` 4.2.0, et elle ne se fermera pas** : son
+  **`first_patched_version` vaut `aucun`** — toute version publiée est vulnérable, donc aucun
+  bump ne peut y changer quoi que ce soit, et la seule sortie serait qu'elle quitte l'arbre.
+  **Ce n'est pas un oubli, ne pas la retrier à chaque session.**
+  ⚠️ **T36 avait écrit ici que « le correctif passe par Astro 7.3.8 » : c'était faux pour la
+  moitié**, le bump n'en fermant que deux sur quatre. Leçon, qui est la vraie valeur de ces deux
+  tâches : **une alerte se ferme en comparant la version installée à la plage vulnérable**
+  (`vulnerable_version_range` et `first_patched_version` dans l'API), jamais en supposant qu'un
+  bump du parent emporte l'arbre, ni en lisant le seul numéro de version. Et le correctif se
+  vérifie **au critère que l'avis donne lui-même** : celui de `sharp` disait « 0.35.5, which
+  provides librsvg 2.63.2 », donc la mesure qui conclut est
+  `require('sharp').versions.rsvg` → **2.63.2**, pas le numéro de `sharp`.
 - **`allowScripts` dans `package.json`** : la machine de Jérémy est en **npm 11**, qui bloque
   les `postinstall` par défaut ; la CI est en **npm 10.9.8** (lu dans le log du workflow), qui
   ignore le champ. Le warning `allow-scripts` sur `esbuild` était donc local. Il est acté en
