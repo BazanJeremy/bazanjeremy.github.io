@@ -66,9 +66,11 @@ assessments and inclusive user testing. As for the accessibility score out of
 100 that Lighthouse computes, it is one more rate: useful to track a trend,
 silent about a journey.
 
-A recent analysis of the websites of the ten French universities with the most
+A recent analysis by Accessiway, a company specialising in digital
+accessibility, of the websites of the ten French universities with the most
 students noted, among other issues, insufficient contrast and poor keyboard
-navigation. The first defect is usually detected automatically. The second almost always
+navigation. It comes from a company in the field: read it as a signal, not as an
+independent audit. The first defect is usually detected automatically. The second almost always
 needs someone at the keyboard.
 
 An automated tool gives you a floor, not a verdict.
@@ -135,8 +137,8 @@ discovered at audit time?
 
 ---
 
-Sources: decree no. 2026-816 of 24 August 2026 and the university websites
-analysis, [Handicap.fr, 3 September 2026](https://informations.handicap.fr/a-accessibilite-numerique-ce-qui-change-en-france-et-en-ue-39631.php) (in French);
+Sources: decree no. 2026-816 of 24 August 2026; the university websites
+analysis by Accessiway, reported by [Handicap.fr, 3 September 2026](https://informations.handicap.fr/a-accessibilite-numerique-ce-qui-change-en-france-et-en-ue-39631.php) (in French);
 order of the Caen court of 4 June 2026, [Handicap.fr](https://informations.handicap.fr/a-accessibilite-web-carrefour-condamne-par-la-justice-39309.php) (in French);
 banking-specific requirements,
 [Directive (EU) 2019/882, Annex I](https://eur-lex.europa.eu/eli/dir/2019/882/oj/eng);
