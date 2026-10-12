@@ -119,8 +119,21 @@ Trois workflows actifs —
 `qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI sur le run du merge
 de T32 : gate **99 s**, build 19 s, deploy 8 s, soit **~2 min 14** de bout en bout (c'était gate
 65 s / build 14 s / deploy 10 s, ~94 s avant axe, et 36 s avant toute suite) — les +34 s du gate
-sont le prix des 26 pages analysées par axe, payé une fois par PR et une fois par déploiement. **Les quatre points « pas encore en place » sont
-traités en T39** (PR ouverte) : persistance de l'historique Allure **et** du JUnit par le
+sont le prix des 26 pages analysées par axe, payé une fois par PR et une fois par déploiement.
+**Mesuré à nouveau sur le run du merge de T39** : gate **95 s**, build 25 s, deploy 16 s, soit
+**~2 min 16**. Donc la vérification de types et les quatre étapes de cache **n'ont rien coûté de
+mesurable** — le gate est même 4 s sous celui de T32, ce qui le situe dans le bruit d'un run à
+l'autre : **la cause de l'écart est inconnue, et il ne faut pas le lire comme un gain.** Le
+`astro check` lui-même a pris **5,4 s** en CI (11,7 s en local), 0 erreur / 12 indications.
+⚠️ **Et c'est le run qui a exercé les étapes `actions/cache`, impossibles à mesurer hors CI** :
+`Cache not found for input keys: qa-history-main-gate-…` au premier passage (cache froid attendu,
+le préfixe de `restore-keys` bien essayé), puis `Cache saved with key:
+qa-history-main-gate-38263619548`. Le script a écrit
+`.qa-history/junit/20261012T143334Z-main-gate-83/junit.xml`, « 1 run conservé ». Et le chemin
+**lecture seule** de `pr.yml` est vérifié par la mesure qui compte : **0** sauvegarde
+`qa-history` sur le run de la PR. La série `main-gate` contient donc 1 run, et se remplit d'un
+run par merge. **Les quatre points « pas encore en place » sont
+traités en T39** (#81, mergée et déployée) : persistance de l'historique Allure **et** du JUnit par le
 **cache d'Actions** (trois séries séparées par `history-key` ; `main-gate`, écrite par le gate
 de `deploy.yml`, est la série de référence, la seule à retries 0 sur un jeu de projets fixe),
 vérification de types bloquante (`npm run typecheck` → `astro check`, 0 erreur / 12 indications
