@@ -174,6 +174,13 @@ jobs:
           # if `main` is already broken, which the deploy gate stops before the
           # merge — so it would only add noise to a flakiness measurement.
           typecheck: "false"
+          # WRITE ONLY ON `schedule`. A manual run picks its own `suite`, so
+          # its project set varies — and a history whose test set changes from
+          # one run to the next dilutes the very comparison it exists for. The
+          # scheduled run is the controlled series; a manual one still reads the
+          # trend, it just does not feed it.
+          history: ${{ github.event_name == 'schedule' && 'write' || 'read' }}
+          history-key: nightly-live
           browsers: chromium
           artifact-suffix: -nightly-${{ github.run_number }}-live
 
@@ -196,5 +203,8 @@ jobs:
           quality-gate: "false"
           # OFF for the same reason as the `live` job above.
           typecheck: "false"
+          # Same rule as the `live` job: only the scheduled run feeds the series.
+          history: ${{ github.event_name == 'schedule' && 'write' || 'read' }}
+          history-key: nightly-preview
           browsers: ${{ needs.resolve.outputs.browsers }}
           artifact-suffix: -nightly-${{ github.run_number }}-preview

@@ -88,6 +88,41 @@ inputs:
     description: Appended to artifact names so concurrent callers do not collide.
     required: false
     default: ""
+  history:
+    description: >
+      Allure trend and JUnit history persistence. `off` keeps none, `read`
+      restores it so the report shows a trend, `write` restores it, appends
+      this run's JUnit and saves it back.
+
+      WHY THE ACTIONS CACHE AND NOT A STORAGE BRANCH. A branch would need
+      `contents: write` and a push from CI, on a repository whose `main` is
+      protected precisely to stop pushes. The cache needs no write permission
+      and puts nothing in the repository, so it is the smaller risk surface.
+
+      THE PRICE, AND IT IS REAL: a cache entry not accessed for 7 days is
+      removed, and the 10 GB repository ceiling evicts oldest-accessed first.
+      The history is therefore BEST EFFORT, not durable — it survives because
+      the nightly touches it every day. Turn the nightly off and the trend dies
+      a week later. Durability would mean the storage branch.
+
+      Series are kept apart by `history-key`: mixing a PR run, a main gate run
+      and a nightly instrument run into one trend would make the trend
+      meaningless. A PR run reads the main series and never writes: caches a PR
+      creates are scoped to its own merge ref anyway.
+    required: false
+    default: "off"
+  history-key:
+    description: >
+      Namespace of the history series, e.g. `main-gate` or `nightly-preview`.
+      Required as soon as `history` is not `off`.
+    required: false
+    default: ""
+  history-keep:
+    description: >
+      Number of JUnit runs kept. Matches `historyLimit` in `allurerc.mjs` on
+      purpose, so both halves of the history hold the same window.
+    required: false
+    default: "20"
   base-url:
     description: Overrides the target URL. Required when target is "production".
     required: false
@@ -109,6 +144,28 @@ runs:
       run: |
         npm ci
         echo "npm $(npm -v) / node $(node -v)"
+
+    # Fails loudly rather than silently writing a series named `qa-history--`,
+    # which would quietly merge every caller's history into one trend.
+    - name: Check the history inputs
+      if: inputs.history != 'off' && inputs.history-key == ''
+      shell: bash
+      run: |
+        echo "::error title=history-key missing::history is '${{ inputs.history }}' but history-key is empty. Name the series."
+        exit 1
+
+    # Before the suite and before the report: `allure generate` READS this file
+    # to build the trend, then appends to it.
+    - name: Restore the QA history
+      if: inputs.history != 'off'
+      uses: actions/cache/restore@v4
+      with:
+        path: .qa-history
+        # Cache entries are immutable, so the key rolls per run and the prefix
+        # in `restore-keys` is what finds the most recent one.
+        key: qa-history-${{ inputs.history-key }}-${{ github.run_id }}
+        restore-keys: |
+          qa-history-${{ inputs.history-key }}-
 
     # Before the build, deliberately: this is the cheapest check in the job,
     # and failing here skips the browser install entirely.
@@ -258,6 +315,25 @@ runs:
         # would bury the real cause under a second error.
         if-no-files-found: warn
         retention-days: 30
+
+    # `always()`: a red run belongs in the flakiness history more than a green
+    # one does. That is the whole signal.
+    - name: Accumulate this run's JUnit
+      if: always() && inputs.history == 'write'
+      shell: bash
+      env:
+        HISTORY_KEY: ${{ inputs.history-key }}
+        KEEP: ${{ inputs.history-keep }}
+        RUN_NUMBER: ${{ github.run_number }}
+      run: |
+        node scripts/qa-history.mjs           --junit test-results/junit.xml           --root .qa-history/junit           --run-id "$(date -u +%Y%m%dT%H%M%SZ)-${HISTORY_KEY}-${RUN_NUMBER}"           --keep "$KEEP"
+
+    - name: Save the QA history
+      if: always() && inputs.history == 'write'
+      uses: actions/cache/save@v4
+      with:
+        path: .qa-history
+        key: qa-history-${{ inputs.history-key }}-${{ github.run_id }}
 
     - name: Upload the raw results
       if: always()

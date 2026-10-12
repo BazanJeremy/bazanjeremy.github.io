@@ -48,6 +48,14 @@ jobs:
           retries: "0"
           quality-gate: "true"
           # `projects` left at the action's default, `a11y-axe` included.
+          #
+          # THE REFERENCE SERIES. One run per merge, retries at 0, a fixed set
+          # of four projects: the cleanest flakiness signal this repository
+          # produces, and the one `flakysense` reads in the nightly. A
+          # single-attempt measurement repeated on a stable test set is exactly
+          # what comparing a test to itself across runs requires.
+          history: write
+          history-key: main-gate
           artifact-suffix: -main-${{ github.run_number }}
 
   build:

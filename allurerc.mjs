@@ -40,6 +40,17 @@ export default defineConfig({
   // reste celui du poste de travail.
   historyPath: process.env.ALLURE_HISTORY_PATH || '.qa-history/allure/history.jsonl',
 
+  // PLAFOND NATIF, et c'est l'option d'Allure, pas une troncature maison.
+  // `historyLimit` est cable jusqu'a `AllureLocalHistory` (lu dans
+  // `@allurereport/core/dist/report.js` : `limit: historyLimit`), qui reecrit
+  // le fichier en ne gardant que les N dernieres entrees.
+  //
+  // Il est necessaire parce que la croissance est NON BORNEE par defaut :
+  // mesure du 12.10 sur l'historique local, 25 runs pesaient 6,7 Mo, soit
+  // ~270 Ko par run et jusqu'a 530 Ko pour un run rouge. L'historique voyage
+  // desormais par le cache d'Actions, plafonne a 10 Go par depot.
+  historyLimit: 20,
+
   ...(qualityGateEnabled
     ? {
         qualityGate: {
