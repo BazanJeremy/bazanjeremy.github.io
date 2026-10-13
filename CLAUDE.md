@@ -116,7 +116,19 @@ expérience d'isolation dans le gotcha `astro preview`.
 Trois workflows actifs —
 `pr.yml` (gate sur chaque PR), le job `gate` en amont de `build` dans `deploy.yml` (si le gate
 échoue, aucun artefact Pages n'est produit, donc `deploy` ne peut pas s'exécuter), et
-`qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré). Mesuré en CI sur le run du merge
+`qa-nightly.yml` (cron 04:17 UTC + lancement manuel paramétré).
+⚠️ **Le nocturne ne part PAS à l'heure déclarée, mesuré le 13.10 à 04:26 UTC** : le cron dit
+`17 4 * * *` et le commentaire du fichier justifie ce choix par « off the hour, where hosted
+runners are less contended », mais les trois derniers runs `schedule` sont tombés à **10:36,
+10:48 et 11:57 UTC** (10, 11 et 12.10). Décalage de **6 à 7,5 h, cause INCONNUE** — l'hypothèse
+écrite dans le workflow n'est donc pas confirmée par les faits, et GitHub ne garantit pas
+l'heure d'un cron. Conséquence pratique : **ne pas conclure à une panne du nocturne parce qu'il
+manque à 05:00 UTC**, et ne pas attendre son résultat avant la mi-journée.
+⚠️ **Et le job `verdict` n'a encore JAMAIS tourné** (mesuré le 13.10) : T39 l'a introduit en
+étant mergée le 12.10 vers 14:30 UTC, or le dernier nocturne est du 12.10 à 11:57 UTC, donc
+antérieur. Le premier run qui l'exercera est celui du 13.10. Tout ce qui est écrit sur son
+comportement vient donc d'essais **locaux**, pas d'un run en CI.
+Mesuré en CI sur le run du merge
 de T32 : gate **99 s**, build 19 s, deploy 8 s, soit **~2 min 14** de bout en bout (c'était gate
 65 s / build 14 s / deploy 10 s, ~94 s avant axe, et 36 s avant toute suite) — les +34 s du gate
 sont le prix des 26 pages analysées par axe, payé une fois par PR et une fois par déploiement.
@@ -151,9 +163,21 @@ ne nommait : le run informatif **écrasait** `test-results/junit.xml` (celui que
 ReleaseGuard consomment), et **renommer le fichier ne suffit pas** — un run Playwright
 **nettoie son `outputDir`**. C'est le dossier qu'il faut séparer. Les deux sont mesurés et
 documentés en pièges.
-**Pas encore en place après T40** : le rapport Allure hébergé, et lui seul (évalué et écarté le
-12.10). La jonction d'identité FlakySense ↔ ReleaseGuard est **réparée en amont** par T40
-(`ReleaseGuard#7`, mergée le 12.10, check `tests` vert) — voir la section tranchée plus bas.
+**Pas encore en place après T40** : le rapport Allure hébergé (évalué et écarté le 12.10), et
+**le branchement du nocturne sur la réparation de T40** — c'est la tâche suivante, et elle est
+plus subtile qu'un bump.
+⚠️ **T40 a réparé l'outil, pas ce dépôt-ci. Mesuré le 13.10** : `qa-nightly.yml` épingle
+ReleaseGuard à **`bbb5a76`**, un commit où **ADR-004 n'existe pas** (vérifié par
+`git cat-file -e bbb5a76:docs/adr/ADR-004-…`), et sa ligne 301 appelle
+`releaseguard --junit "$LATEST" $FLAG --json` **sans `--junit-dialect`** (0 occurrence dans le
+fichier). Donc la jonction est toujours morte dans le nocturne, et le verdict qu'il rendra
+aujourd'hui portera encore des « non-flaky failure(s) » qui sont en réalité connues comme
+instables. **Le piège est qu'il faut DEUX changements** : bumper l'épinglage à `2a6a97d` **et**
+ajouter `--junit-dialect path`. Bumper seul ne change **rien**, le dialecte par défaut restant
+`pytest` — c'est délibéré dans ADR-004 (aucun appel existant ne change), donc ce n'est pas un
+oubli de l'outil mais une déclaration que l'appelant doit faire.
+La jonction elle-même est **réparée en amont** par T40 (`ReleaseGuard#7`, mergée le 12.10,
+check `tests` vert) — voir la section tranchée plus bas, qui ne vaut que pour l'outil.
 
 **Point ouvert au 10.10 (source : ligne T32 du journal), décision de Jérémy** : le contraste de
 **10 nœuds des deux pages d'accueil est INCONNU**, et ne doit pas être relu comme conforme. Ce
@@ -252,8 +276,11 @@ qu'une session fraîche refera sinon à ses frais.
   peuvent produire le même octet, en exclure une ne prouve rien sur l'autre ; il faut les
   isoler une par une.
 
-**Tranché en T40 (`ReleaseGuard#7`), mergé — ne pas reproposer** : la jonction d'identité
-FlakySense ↔ ReleaseGuard, **réparée en amont** comme T39 le préconisait, par une option de
+**Tranché en T40 (`ReleaseGuard#7`), mergé — ne pas reproposer LA RÉPARATION, qui est faite dans
+l'outil. ⚠️ Mais elle n'est PAS branchée ici** (le nocturne épingle un commit d'avant T40 et
+n'envoie pas le flag — mesuré le 13.10, détail dans « Pas encore en place » plus haut) : la
+conception est tranchée, le branchement reste à faire. Donc la jonction d'identité
+FlakySense ↔ ReleaseGuard est **réparée en amont** comme T39 le préconisait, par une option de
 dialecte JUnit dans ReleaseGuard (son ADR-004, qui supersède ADR-002). `--junit-dialect
 pytest|path`, défaut `pytest`, donc aucun appel existant ne change ; `path` prend un `classname`
 déjà en forme de chemin **tel quel**. Rien n'est normalisé d'un dialecte à l'autre — réécrire
