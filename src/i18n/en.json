@@ -37,8 +37,8 @@
         "text": "Risk-assessed from the framing stage, every sprint, with a review agent — before the first line of code."
       },
       {
-        "value": "7 open-source tools",
-        "text": "Six test frameworks — around 848 cumulative tests — plus one plugin for coding agents. Runs locally, with a systematic deterministic fallback, and no external API key required."
+        "value": "8 open-source tools",
+        "text": "Seven test frameworks — over 1,100 cumulative tests — plus one plugin for coding agents. Runs locally, with a systematic deterministic fallback, and no external API key required."
       },
       {
         "value": "8 AI agents",
@@ -92,6 +92,11 @@
             "name": "ReleaseGuard",
             "description": "Explainable release gate. Merges tests, coverage and flakiness into a reasoned GO / CONDITIONAL GO / NO GO verdict.",
             "url": "https://github.com/BazanJeremy/ReleaseGuard"
+          },
+          {
+            "name": "loadlens",
+            "description": "Reasoned performance verdict from JMeter and LoadRunner results. PASS / WARN / FAIL backed by statistics, not by a single threshold.",
+            "url": "https://github.com/BazanJeremy/loadlens"
           }
         ]
       },
