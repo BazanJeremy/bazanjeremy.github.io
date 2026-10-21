@@ -93,11 +93,11 @@ test.describe('Destinations externes', () => {
     expect(dead, dead.length ? `Destinations mortes :\n  ${dead.join('\n  ')}` : '').toEqual([]);
   });
 
-  test('les 7 dépôts de la cartographie existent toujours', async ({ request }) => {
+  test('les dépôts de la cartographie existent toujours', async ({ request }) => {
     // Assertion séparée parce que ce sont EUX la vitrine : un dépôt renommé ou
     // repassé en privé est le cas le plus probable, et le plus coûteux.
     const expected = repos('fr');
-    expect(expected.length, 'la cartographie ne liste plus de dépôt').toBe(7);
+    expect(expected.length, 'la cartographie ne liste plus de dépôt').toBe(8);
 
     const missing: string[] = [];
     for (const r of expected) {

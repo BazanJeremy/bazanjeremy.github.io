@@ -72,7 +72,7 @@ export function sectionIds(lang: Locale): string[] {
   return [d.hero.id, d.proofs.id, d.portfolio.id, d.blog.id, d.stack.id, d.journey.id, d.contact.id];
 }
 
-/** Les 7 dépôts de la cartographie, pour la locale donnée. */
+/** Les dépôts de la cartographie, pour la locale donnée. */
 export function repos(lang: Locale): Repo[] {
   return dict[lang].portfolio.blocks.flatMap((b) => [...b.repos]);
 }

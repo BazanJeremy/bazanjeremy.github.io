@@ -37,8 +37,8 @@
         "text": "Évaluées sur leurs risques dès le cadrage, à chaque sprint, avec un agent de relecture — avant la première ligne de code."
       },
       {
-        "value": "7 outils open source",
-        "text": "Six frameworks de test — environ 848 tests cumulés — et un plugin pour agents de code. Exécution locale, fallback déterministe systématique, aucune clé API externe requise."
+        "value": "8 outils open source",
+        "text": "Sept frameworks de test — plus de 1 100 tests cumulés — et un plugin pour agents de code. Exécution locale, fallback déterministe systématique, aucune clé API externe requise."
       },
       {
         "value": "8 agents IA",
@@ -92,6 +92,11 @@
             "name": "ReleaseGuard",
             "description": "Verrou de release explicable. Fusionne tests, couverture et flakiness en un verdict GO / CONDITIONAL GO / NO GO argumenté.",
             "url": "https://github.com/BazanJeremy/ReleaseGuard"
+          },
+          {
+            "name": "loadlens",
+            "description": "Verdict de performance argumenté à partir de résultats JMeter et LoadRunner. PASS / WARN / FAIL fondé sur la statistique, pas sur un seuil isolé.",
+            "url": "https://github.com/BazanJeremy/loadlens"
           }
         ]
       },

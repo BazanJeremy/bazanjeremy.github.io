@@ -130,7 +130,7 @@ jour sans aucun défaut.
 | Spec / projet | Risque | Ce qu'elle verrouille |
 |---|---|---|
 | `nightly/prod-http` | impact faible-moyen | **Production uniquement.** Chaque page et chaque URL du sitemap en 200 ; un lien non canonique redirige en **une seule** étape vers exactement sa canonique ; un chemin inconnu répond 404 ; la feuille de style référencée est bien servie. Avec un garde-fou qui échoue si aucune redirection n'est observée — sinon la spec passerait sans rien vérifier de propre à la production. |
-| `nightly/external-links` | P basse-moy × I moyen | Les 7 dépôts de la cartographie, LinkedIn, GitHub et le champ `linkedin:` des articles. Un statut qu'on ne peut pas interpréter est compté « inconnu », pas « vérifié ». |
+| `nightly/external-links` | P basse-moy × I moyen | Les dépôts de la cartographie, LinkedIn, GitHub et le champ `linkedin:` des articles. Un statut qu'on ne peut pas interpréter est compté « inconnu », pas « vérifié ». |
 | `nightly/reduced-motion` | P basse × I moyen | La seule spec autorisée à s'intéresser au mouvement : sous `reduce` rien n'est animé et tout est visible ; sous `no-preference` l'animation s'applique ; **aucun contenu ne RESTE masqué** (chaque `.reveal` amené dans la vue atteint l'opacité 1) ; et à l'impression rien n'est animé ni masqué. Le mode de panne grave de ce motif est du contenu qui reste invisible, pas du contenu invisible à un instant donné. |
 | `gate-firefox` / `gate-webkit` | assurance de régression | Rejeu du gate sur les deux autres moteurs. Justifié, pas réflexe : le site a 0 JS et une seule feuille de style, et la seule fonctionnalité sensible au moteur est derrière un `@supports`. |
 
