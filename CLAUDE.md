@@ -802,20 +802,37 @@ Vaut aussi pour les commentaires de PR et les issues.
   `undici` **8.12.3**, `fast-uri` **3.1.9**, `follow-redirects` **1.16.2**. Dependabot fermera à
   son propre rythme après le merge : c'est la version du lockfile de `main` qui fait foi, pas le
   compteur.
-  ⚠️ **Et `npm audit` voit deux avis que Dependabot ne liste PAS DU TOUT.** Mesuré le 05.11 sur
-  **tous** les états de l'API : 11 ouvertes (`undici`, `fast-uri`, `follow-redirects`),
-  13 fermées, et **aucune sur `minimatch` ni `glob`**. Or `npm audit` rapporte `minimatch` « DoS
-  via globparts amplification » (installé **10.2.6**, plage `>= 7.0.0 < 11.0.1`) et `glob`
-  « AbortSignal cancellation bypass » (plage `>= 9.0.0 <= 14.0.1`). Ses « 6 moderate » sont **ces
-  deux avis propagés le long d'une seule chaîne** — `minimatch` ← `glob` ← `@allurereport/*` ←
-  **`allure`**, qui est en `devDependencies` —, **pas six défauts distincts**.
+  ⚠️ **Et `npm audit` a vu deux avis une heure AVANT que Dependabot en crée la moindre alerte.**
+  Mesuré le 05.11 vers 07:00 sur **tous** les états de l'API : 11 ouvertes (`undici`,
+  `fast-uri`, `follow-redirects`), 13 fermées, et **aucune sur `minimatch` ni `glob`** — alors
+  que `npm audit` rapportait déjà `minimatch` « DoS via globparts amplification » (installé
+  **10.2.6**, plage `>= 7.0.0 < 11.0.1`, corrigé en **11.0.1**) et `glob` « AbortSignal
+  cancellation bypass » (installé **13.0.6**, plage `>= 9.0.0 <= 14.0.1`, corrigé en **14.0.2**).
+  Ses « 6 moderate » sont **ces deux avis propagés le long d'une seule chaîne** — `minimatch` ←
+  `glob` ← `@allurereport/*` ← **`allure`**, qui est en `devDependencies` —, **pas six défauts
+  distincts**.
+  ⚠️ **Dependabot a rattrapé au merge, et les horodatages le prouvent** : #92 est mergée à
+  **07:59:20Z**, l'alerte `glob` est créée à **07:59:27Z** et **auto-rejetée dans la même
+  seconde**, l'alerte `minimatch` à **07:59:28Z** et **restée ouverte**. Ce n'était donc pas une
+  alerte manquée à la lecture : Dependabot ne les avait pas, et son scan de la branche par défaut
+  les a fait naître. **Pourquoi `glob` est auto-rejetée et pas `minimatch`, alors que les deux
+  portent `scope=development` : INCONNU.** **État mesuré le 05.11 après le merge : 23 fermées,
+  1 auto-rejetée (`glob`), 1 OUVERTE (`minimatch`, moyenne)** — et celle-là est ouverte **par
+  décision, pas par oubli**.
+  ⚠️ **Mais c'est une décision sur un ÉTAT, pas une interdiction de mesurer.** Le correctif
+  11.0.1 est hors d'atteinte **parce que** `glob` exige `minimatch ^10.2.2` : si `glob` monte un
+  jour en 14.x, `minimatch` 11.x devient atteignable et **la décision doit être réexaminée**.
+  C'est exactement l'inverse du piège de `http-cache-semantics` corrigé en T45, où un fait daté
+  avait été converti en « ne pas la retrier à chaque session » et avait survécu six semaines à sa
+  propre péremption. **La condition de réexamen est écrite ; la consigne de ne pas regarder, non.**
   ⚠️ **Et ils ne sont PAS corrigeables par un bump sûr** : `glob` exige `minimatch ^10.2.2`, qui
   ne peut pas atteindre 11.x, et le seul `fixAvailable` de npm est **`allure@0.0.0` en changement
   majeur** — c'est-à-dire la disparition du CLI Allure 3, une suppression et non un correctif.
   **Triage** : `allure` n'est appelé que par `npm run test:report` et l'étape de rapport, sur
   **nos propres** résultats de test et **nos propres** motifs de glob, donc aucune entrée
   hostile ; et `dist/` reste à 0 fichier `.js` et 0 balise `<script>`. **TRANCHÉ le 05.11
-  (décision de Jérémy, sur ce triage) : on les laisse en place — ne pas reproposer.** Et surtout,
+  (décision de Jérémy, sur ce triage) : on les laisse en place — ne pas reproposer tant que le
+  correctif reste hors d'atteinte.** Et surtout,
   ne JAMAIS lancer `npm audit fix --force` ici : son seul correctif est la suppression du CLI.
   **Leçon de méthode : le compteur Dependabot n'est pas l'image complète** — lancer `npm audit`
   aussi, les deux sources ne voient pas les mêmes avis.
