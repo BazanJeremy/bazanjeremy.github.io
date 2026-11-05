@@ -111,7 +111,8 @@ dev ou le test ?
 Sources : critères d'acceptation (§4.5.2), partitions d'équivalence (§4.2.1),
 analyse des valeurs limites, versions à deux et trois valeurs (§4.2.2),
 traçabilité entre la base de test et le testware (§1.4.4), syllabus ISTQB de
-niveau Fondation, [version anglaise v4.0.1, ISTQB](https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf)
+niveau Fondation v4.0, traduction française du CFTL ;
+[version anglaise v4.0.1, ISTQB](https://www.istqb.org/wp-content/uploads/2024/11/ISTQB_CTFL_Syllabus_v4.0.1.pdf)
 (numérotation de cette version) ;
 [livre blanc sur l'analyse des valeurs limites, ISTQB](https://istqb.org/wp-content/uploads/2025/10/Boundary-Value-Analysis-white-paper.pdf)
 (en anglais).
