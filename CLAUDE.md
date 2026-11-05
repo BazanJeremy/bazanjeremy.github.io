@@ -62,14 +62,22 @@ dans `src/i18n/fr.json`.
 Historique des tâches (T1–T31, correctifs, maintenance) : `docs/JOURNAL.md`. Ne pas le lire en
 entier ; le consulter par ligne ciblée quand une décision passée doit être vérifiée.
 
-**État de la suite QA au 12.10, sous Astro 7.3.8, sharp 0.35.5, Tailwind 4.3.3 et
-Playwright 1.64.0** : **472 tests, 9 projets**. **Ensemble bloquant : 204 tests, 204 passés,
-sortie 0, 43,8 s** — c'est la mesure qui engage, parce que c'est celle que la CI applique, et elle
-est verte sous les nouveaux moteurs, `a11y-axe` compris sur les 26 pages. ⚠️ **La suite complète
-n'a PAS été verte aux trois derniers runs (T37 et T38)**, et **tous** les échecs sont **hors de
-l'ensemble bloquant**, avec une cause identifiée qui n'est ni le site ni un navigateur :
-3 `prod-http` par abandon client après un `200 OK`, puis 4 `gate-firefox` par
-`NS_ERROR_CONNECTION_REFUSED` du serveur de prévisualisation local. **Les deux ont leur expérience
+**État de la suite QA au 05.11 (T45), sous Astro 7.3.8, sharp 0.35.5, Tailwind 4.3.3 et
+Playwright 1.64.0** : **528 tests, 9 projets**. **Ensemble bloquant : 228 tests, 228 passés,
+sortie 0, 1,2 min** — c'est la mesure qui engage, parce que c'est celle que la CI applique, et
+elle est verte, `a11y-axe` compris sur les **30 pages**. ⚠️ **Les chiffres précédents
+(472 tests, 204 bloquants, 26 pages) étaient restés sur l'état du 12.10 pendant DEUX paires
+d'articles** — T41 puis T43 —, et le compte a bougé parce que **le site a grandi, pas la
+suite** : les quatre projets bloquants sont paramétrés sur les articles, d'où 204 → 228, dont
++4 pages pour `a11y-axe`. ⚠️ **La suite complète
+n'a PAS été verte aux quatre derniers runs (T37, T38 et T45)**, et **tous** les échecs sont
+**hors de l'ensemble bloquant**, avec une cause identifiée qui n'est ni le site ni un
+navigateur : 3 `prod-http` par abandon client après un `200 OK`, puis 4 `gate-firefox`, puis
+**7 `gate-firefox` au 05.11** (528 tests, 518 passés, 7 échoués, 3 sautés, sortie 1, 4,3 min),
+tous par `NS_ERROR_CONNECTION_REFUSED` du serveur de prévisualisation local — les 7 traces du
+05.11 portent **14 occurrences** de cette erreur et **7 captures de la page « Unable to
+connect » de Firefox**, donc la cause a été lue dans la trace avant tout réessai, comme la
+règle l'exige. **Les deux ont leur expérience
 d'isolation et leur conduite à tenir** — `prod-http` juste en dessous, `gate-firefox` dans le
 gotcha `astro preview`. Le dernier run complet **vert** est celui de T36 : 469 passés, 3 sautés,
 sortie 0, 2,7 min. **Ne pas écrire « suite verte » sans avoir relancé**, et ne pas lire ces rouges
@@ -92,7 +100,7 @@ dit rien du site — et il ne bloque aucune PR, le défaut de `projects` dans
 `.github/actions/qa/action.yml` étant depuis T32
 `invariants-gate gate-desktop gate-mobile a11y-axe`. Ce défaut **est** la définition de
 l'ensemble bloquant, et `npm run test:gate` liste exactement les mêmes quatre projets
-(204 tests) : les deux étaient désalignés avant T32 — le script omettait `gate-mobile` —, donc
+(228 tests au 05.11) : les deux étaient désalignés avant T32 — le script omettait `gate-mobile` —, donc
 si l'un change, changer l'autre dans la même PR.
 ⚠️ **Et `prod-http` flanche de la même façon, mesuré en T37** : sur deux runs complets d'affilée,
 le second a sorti **3 échecs, tous dans `prod-http`, tous le même mécanisme** —
@@ -437,7 +445,7 @@ Vaut aussi pour les commentaires de PR et les issues.
 ## Vérification (obligatoire avant de livrer une PR)
 
 - `npm run build` (doit passer).
-- **`npm run test:e2e`** — 472 tests, ~2 min (2,0 mesuré le 10.10 ; 2,7 le 12.10).
+- **`npm run test:e2e`** — 528 tests, ~4,3 min (mesuré le 05.11 ; 2,0 le 10.10 ; 2,7 le 12.10).
   Il construit et sert `dist/` tout seul. Puis `npm run test:report` pour le rapport Allure
   (un fichier HTML autonome dans `allure-report/`). Pour un sous-ensemble :
   `npx playwright test --project=gate-desktop` (voir `tests/README.md` pour les 9 projets).
@@ -487,7 +495,7 @@ Vaut aussi pour les commentaires de PR et les issues.
   mesure de T16 — un test qui ne vérifie que le débordement passerait pour la même mauvaise
   raison), vocabulaire banni sur trois surfaces, ancres mortes, chaînage `translationSlug`,
   métadonnées par locale, contrat des articles, invariants 0-JS et 0 requête externe, et
-  depuis T32 les **règles WCAG 2.0/2.1 A et AA d'axe sur les 26 pages**, contrastes compris.
+  depuis T32 les **règles WCAG 2.0/2.1 A et AA d'axe sur les 30 pages**, contrastes compris.
   **Pas encore couvert** : le rendu visuel — pour ça, la comparaison `dist/` contre la prod
   ci-dessous reste la méthode. Et **10 nœuds de contraste des deux accueils restent inconnus**,
   axe refusant de les trancher : voir le point ouvert plus haut. ⚠️ Ne pas conclure d'un axe vert
@@ -597,8 +605,19 @@ Vaut aussi pour les commentaires de PR et les issues.
   `localhost:4321`, et la capture de la page montre le « Unable to connect » de Firefox, **pas une
   page du site**. Les tests touchés changent d'un run à l'autre, ce qui donne l'illusion d'un
   défaut qui se déplace. **L'isolation est l'expérience à refaire, pas le diagnostic à recopier** :
-  le même projet, le même `dist/` et le même Firefox contre un serveur statique banal passent
-  **127/128 avec 1 sauté et sortie 0** —
+  le même projet, le même `dist/` et le même Firefox contre un serveur statique banal passaient
+  **127/128 avec 1 sauté et sortie 0** en T38. ⚠️ **Refaite le 05.11 (T45), l'expérience n'est
+  plus propre : 142 passés, 1 échoué, 1 sauté, sortie 1.** Elle isole toujours ce qu'elle doit
+  isoler — **0 `NS_ERROR_CONNECTION_REFUSED`** contre le serveur statique, là où le run complet
+  en portait 14 —, mais elle ne revient plus à sortie 0 : **ce n'est donc plus « sortie 0 » qui
+  discrimine, c'est l'absence de `NS_ERROR_CONNECTION_REFUSED`.** Le rouge résiduel est un
+  **autre** test et un **autre** mécanisme (`i18n-toggle` sur
+  `/blog/de-zero-regle-a-la-regle-de-trop/` : le clic sur le toggle n'a pas navigué, l'URL n'a
+  pas changé), **non reproduit en 5 répétitions — 20/20, sortie 0** —, et le site est mesuré
+  **correct sur les octets servis** : les trois `hreflang` sont complets et réciproques, le
+  `href` du toggle vaut exactement `/en/blog/from-no-rule-to-one-rule-too-many/`, le retour
+  pointe la page FR, le chaînage `translationSlug` est réciproque et les deux cibles existent
+  dans `dist/`. **Cause INCONNUE**, donc, et surtout pas un défaut du site —
 
   ```bash
   python -m http.server 4399 --directory dist
@@ -765,10 +784,21 @@ Vaut aussi pour les commentaires de PR et les issues.
   `smol-toml` n'a rien à parser, **le dépôt ne contient aucun `.toml`** (vérifié).
   **État après T36 et T37 : 4 alertes → 1.** `smol-toml` 1.8.0 → **1.9.1** et `source-map-js`
   1.2.1 → **1.2.2** fermées par le bump Astro ; `sharp` 0.35.4 → **0.35.5** fermée par T37.
-  ⚠️ **Il reste `http-cache-semantics` 4.2.0, et elle ne se fermera pas** : son
-  **`first_patched_version` vaut `aucun`** — toute version publiée est vulnérable, donc aucun
-  bump ne peut y changer quoi que ce soit, et la seule sortie serait qu'elle quitte l'arbre.
-  **Ce n'est pas un oubli, ne pas la retrier à chaque session.**
+  ⚠️ **Ce fichier disait ensuite que `http-cache-semantics` « ne se fermera pas » et qu'il ne
+  fallait « pas la retrier à chaque session » — les deux sont périmés, et c'est la CONSIGNE qui
+  était le vrai défaut.** Le fait était juste au 12.10 : `first_patched_version` valait bien
+  `aucun`. Mais la consigne interdisait de constater qu'il avait cessé de l'être — un correctif
+  a été publié depuis, **#88 (23.10) l'a pris (4.2.0 → 4.3.0, lockfile seul) et l'alerte est
+  close**, mesuré le 05.11. **Leçon : un fait daté ne se convertit pas en consigne permanente** ;
+  c'est `first_patched_version` qu'on relit, pas une phrase écrite trois semaines plus tôt.
+  **État au 05.11, mesuré : 11 alertes ouvertes, 3 paquets, toutes transitives** (aucun des
+  trois n'est dans `dependencies` ni `devDependencies` de `package.json`), et **`dist/` reste à
+  0 fichier `.js` et 0 balise `<script>`** — donc aucune ne tourne chez le visiteur. ⚠️ **Mais
+  les trois ont un correctif publié**, contrairement aux précédentes : `undici` **8.10.2**
+  contre `>= 8.0.0, < 8.12.2` → **8.12.2** (6 alertes, dont 3 hautes) ; `fast-uri` **3.1.8**
+  contre `>= 3.0.0, < 3.1.9` → **3.1.9** (4 alertes) ; `follow-redirects` **1.16.1** contre
+  `>= 1.16.0, <= 1.16.1` → **1.16.2** (1 haute). **Délibérément non bumpées en T45** : un bump
+  se livre une étape à la fois avec sa mesure, et ce n'était pas l'objet de la tâche.
   ⚠️ **Et l'affichage de Dependabot retarde sur le dépôt** : mesuré le 12.10, l'alerte `sharp`
   était encore listée `open` alors que `main` portait déjà **0.35.5** dans le lockfile (vérifié
   par `git show main:package-lock.json`). Dependabot ferme à son propre rythme après un push sur
