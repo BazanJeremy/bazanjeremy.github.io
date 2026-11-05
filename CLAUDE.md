@@ -797,8 +797,27 @@ Vaut aussi pour les commentaires de PR et les issues.
   les trois ont un correctif publié**, contrairement aux précédentes : `undici` **8.10.2**
   contre `>= 8.0.0, < 8.12.2` → **8.12.2** (6 alertes, dont 3 hautes) ; `fast-uri` **3.1.8**
   contre `>= 3.0.0, < 3.1.9` → **3.1.9** (4 alertes) ; `follow-redirects` **1.16.1** contre
-  `>= 1.16.0, <= 1.16.1` → **1.16.2** (1 haute). **Délibérément non bumpées en T45** : un bump
-  se livre une étape à la fois avec sa mesure, et ce n'était pas l'objet de la tâche.
+  `>= 1.16.0, <= 1.16.1` → **1.16.2** (1 haute). **Les trois sont bumpées en T46**, un commit
+  par paquet, et les trois versions installées sont **hors de leur plage vulnérable** — mesuré :
+  `undici` **8.12.3**, `fast-uri` **3.1.9**, `follow-redirects` **1.16.2**. Dependabot fermera à
+  son propre rythme après le merge : c'est la version du lockfile de `main` qui fait foi, pas le
+  compteur.
+  ⚠️ **Et `npm audit` voit deux avis que Dependabot ne liste PAS DU TOUT.** Mesuré le 05.11 sur
+  **tous** les états de l'API : 11 ouvertes (`undici`, `fast-uri`, `follow-redirects`),
+  13 fermées, et **aucune sur `minimatch` ni `glob`**. Or `npm audit` rapporte `minimatch` « DoS
+  via globparts amplification » (installé **10.2.6**, plage `>= 7.0.0 < 11.0.1`) et `glob`
+  « AbortSignal cancellation bypass » (plage `>= 9.0.0 <= 14.0.1`). Ses « 6 moderate » sont **ces
+  deux avis propagés le long d'une seule chaîne** — `minimatch` ← `glob` ← `@allurereport/*` ←
+  **`allure`**, qui est en `devDependencies` —, **pas six défauts distincts**.
+  ⚠️ **Et ils ne sont PAS corrigeables par un bump sûr** : `glob` exige `minimatch ^10.2.2`, qui
+  ne peut pas atteindre 11.x, et le seul `fixAvailable` de npm est **`allure@0.0.0` en changement
+  majeur** — c'est-à-dire la disparition du CLI Allure 3, une suppression et non un correctif.
+  **Triage** : `allure` n'est appelé que par `npm run test:report` et l'étape de rapport, sur
+  **nos propres** résultats de test et **nos propres** motifs de glob, donc aucune entrée
+  hostile ; et `dist/` reste à 0 fichier `.js` et 0 balise `<script>`. **Conclusion : laissées en
+  place, et surtout ne JAMAIS lancer `npm audit fix --force` ici.** **Leçon de méthode : le
+  compteur Dependabot n'est pas l'image complète** — lancer `npm audit` aussi, les deux sources
+  ne voient pas les mêmes avis.
   ⚠️ **Et l'affichage de Dependabot retarde sur le dépôt** : mesuré le 12.10, l'alerte `sharp`
   était encore listée `open` alors que `main` portait déjà **0.35.5** dans le lockfile (vérifié
   par `git show main:package-lock.json`). Dependabot ferme à son propre rythme après un push sur
