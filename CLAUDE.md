@@ -814,10 +814,11 @@ Vaut aussi pour les commentaires de PR et les issues.
   majeur** — c'est-à-dire la disparition du CLI Allure 3, une suppression et non un correctif.
   **Triage** : `allure` n'est appelé que par `npm run test:report` et l'étape de rapport, sur
   **nos propres** résultats de test et **nos propres** motifs de glob, donc aucune entrée
-  hostile ; et `dist/` reste à 0 fichier `.js` et 0 balise `<script>`. **Conclusion : laissées en
-  place, et surtout ne JAMAIS lancer `npm audit fix --force` ici.** **Leçon de méthode : le
-  compteur Dependabot n'est pas l'image complète** — lancer `npm audit` aussi, les deux sources
-  ne voient pas les mêmes avis.
+  hostile ; et `dist/` reste à 0 fichier `.js` et 0 balise `<script>`. **TRANCHÉ le 05.11
+  (décision de Jérémy, sur ce triage) : on les laisse en place — ne pas reproposer.** Et surtout,
+  ne JAMAIS lancer `npm audit fix --force` ici : son seul correctif est la suppression du CLI.
+  **Leçon de méthode : le compteur Dependabot n'est pas l'image complète** — lancer `npm audit`
+  aussi, les deux sources ne voient pas les mêmes avis.
   ⚠️ **Et l'affichage de Dependabot retarde sur le dépôt** : mesuré le 12.10, l'alerte `sharp`
   était encore listée `open` alors que `main` portait déjà **0.35.5** dans le lockfile (vérifié
   par `git show main:package-lock.json`). Dependabot ferme à son propre rythme après un push sur
