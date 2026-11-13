@@ -111,7 +111,7 @@ The decision stays human. What changes is that it is written down: rereadable,
 transferable, contestable, and the same whether or not the person who "knows" is
 there.
 
-The code is public: [github.com/BazanJeremy/ReleaseGuard](https://github.com/BazanJeremy/ReleaseGuard), 89 tests.
+The code is public: [github.com/BazanJeremy/ReleaseGuard](https://github.com/BazanJeremy/ReleaseGuard).
 
 In your team, does the release decision rest on a written rule, or on someone who
 knows?
