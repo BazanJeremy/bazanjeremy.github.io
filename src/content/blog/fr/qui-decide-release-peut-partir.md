@@ -112,7 +112,7 @@ La décision reste humaine. Ce qui change, c'est qu'elle est écrite : relisible
 transmissible, contestable, et identique que la personne qui « sait » soit là ou
 non.
 
-Le code est public : [github.com/BazanJeremy/ReleaseGuard](https://github.com/BazanJeremy/ReleaseGuard), 89 tests.
+Le code est public : [github.com/BazanJeremy/ReleaseGuard](https://github.com/BazanJeremy/ReleaseGuard).
 
 Dans votre équipe, la décision de sortie s'appuie-t-elle sur une règle écrite, ou
 sur quelqu'un qui sait ?
