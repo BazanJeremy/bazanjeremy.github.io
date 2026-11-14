@@ -57,7 +57,7 @@ This is the part I had not planned for when I started.
 
 **Three.** A purely cosmetic defect classified as class B under IEC 62304. A display problem promoted to the rank of patient risk. Regular expression tightened.
 
-None of the three was found by rereading the code. All three were found by the tool's own test suite, which counts 144 tests today.
+None of the three was found by rereading the code. All three were found by the tool's own test suite.
 
 The third is the one that bothered me most, and not for the reason you would expect. An underrated severity eventually corrects itself: someone complains, the ticket climbs. A regulatory tag assigned in error does not correct itself, because it **reassures**. Nobody is going to reopen a classification that looks serious.
 

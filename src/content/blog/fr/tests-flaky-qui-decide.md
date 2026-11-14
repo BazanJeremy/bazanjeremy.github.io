@@ -62,7 +62,7 @@ Les deux premiers sont entièrement déterministes. Ce sont eux qui décident.
 
 Le LLM n'intervient qu'aux deux derniers, et à deux conditions cumulatives : que le score atteigne 0.5, et qu'une clé API soit configurée. Son travail se limite alors à rédiger — expliquer en langage naturel un verdict déjà rendu, et formuler une action corrective lisible.
 
-Chaque étage embarque son repli déterministe. Les 60 tests de la suite et la chaîne d'intégration tournent avec zéro clé API, et la sortie garde exactement la même forme. L'absence de LLM dégrade la lisibilité du rapport, jamais sa structure ni son verdict.
+Chaque étage embarque son repli déterministe. La suite de tests et la chaîne d'intégration tournent avec zéro clé API, et la sortie garde exactement la même forme. L'absence de LLM dégrade la lisibilité du rapport, jamais sa structure ni son verdict.
 
 Ce point n'est pas une précaution de confort. Un outil de qualité dont la suite de tests dépend d'un service externe n'est pas un outil de qualité — c'est une dépendance de plus dans une chaîne qu'on cherchait justement à fiabiliser.
 
@@ -84,11 +84,11 @@ Le raisonnement : en dessous de 0.5, le motif est trop faible pour justifier le 
 
 La valeur reste calibrée sur des jeux de données synthétiques — l'ADR l'écrit noir sur blanc, et prévoit de la revoir le jour où de vrais historiques CI remplaceront les fixtures. La ligne de commande expose bien un `--escalation-threshold` pour qui veut explorer, mais le défaut ne se règle pas au fil des pipelines : il ne bouge que par un ADR qui remplace le précédent. Un seuil qu'on ajuste projet par projet finit toujours par être ajusté par l'équipe la plus pressée, un vendredi. La stabilité du contrat de décision fait partie du contrat.
 
-### « 60 tests, pour un outil qui juge des tests ? »
+### « Une soixantaine de tests, pour un outil qui juge des tests ? »
 
 Volontaire. La suite couvre les modèles Pydantic, chaque heuristique de scoring, le repli déterministe de chaque étage, et le contrat de la ligne de commande de bout en bout.
 
-Ajouter des tests redondants dilue le signal. Je préfère 60 tests dont je peux nommer la raison d'être à 300 dont la moitié vérifie que Python compile. C'est d'ailleurs le même raisonnement que celui qui a produit l'outil : un chiffre n'a de valeur que si l'on sait ce qu'il mesure.
+Ajouter des tests redondants dilue le signal. Je préfère une soixantaine de tests dont je peux nommer la raison d'être à 300 dont la moitié vérifie que Python compile. C'est d'ailleurs le même raisonnement que celui qui a produit l'outil : un chiffre n'a de valeur que si l'on sait ce qu'il mesure.
 
 ## Ce que j'en retire
 
