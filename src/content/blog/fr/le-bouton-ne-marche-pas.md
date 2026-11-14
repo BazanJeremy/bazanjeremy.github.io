@@ -57,7 +57,7 @@ C'est la partie que je n'avais pas prévue en commençant.
 
 **Trois.** Un défaut purement cosmétique classé en classe B au sens de l'IEC 62304. Un problème d'affichage promu au rang de risque patient. Expression régulière resserrée.
 
-Aucun des trois n'a été trouvé en relisant le code. Les trois ont été trouvés par la suite de tests de l'outil, qui en compte 144 aujourd'hui.
+Aucun des trois n'a été trouvé en relisant le code. Les trois ont été trouvés par la suite de tests de l'outil.
 
 Le troisième est celui qui m'a le plus gêné, et pas pour la raison qu'on croit. Une sévérité sous-évaluée finit par se rattraper : quelqu'un râle, le ticket remonte. Un tag réglementaire posé à tort ne se rattrape pas, parce qu'il **rassure**. Personne ne va rouvrir une classification qui a l'air sérieuse.
 

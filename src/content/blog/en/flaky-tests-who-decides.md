@@ -62,7 +62,7 @@ The first two are entirely deterministic. They are the ones that decide.
 
 The LLM only steps in at the last two, and under two cumulative conditions: the score must reach 0.5, and an API key must be configured. Its job is then limited to writing — explaining in natural language a verdict already handed down, and phrasing a readable corrective action.
 
-Every stage ships its own deterministic fallback. The suite's 60 tests and the CI pipeline run with zero API key, and the output keeps exactly the same shape. The absence of an LLM degrades the readability of the report, never its structure nor its verdict.
+Every stage ships its own deterministic fallback. The test suite and the CI pipeline run with zero API key, and the output keeps exactly the same shape. The absence of an LLM degrades the readability of the report, never its structure nor its verdict.
 
 This is not a comfort precaution. A quality tool whose test suite depends on an external service is not a quality tool — it is one more dependency in a chain we were precisely trying to make reliable.
 
@@ -84,11 +84,11 @@ The reasoning: below 0.5, the pattern is too weak to justify the cost of an LLM 
 
 The value is still calibrated against synthetic datasets — the ADR says so in writing, and plans to revisit it the day real CI histories replace the fixtures. The command line does expose an `--escalation-threshold` for whoever wants to explore, but the default is not tuned pipeline by pipeline: it only moves through an ADR that supersedes the previous one. A threshold adjusted project by project always ends up adjusted by the team in the biggest hurry, on a Friday. The stability of the decision contract is part of the contract.
 
-### "60 tests, for a tool that judges tests?"
+### "Some sixty tests, for a tool that judges tests?"
 
 Deliberate. The suite covers the Pydantic models, every scoring heuristic, the deterministic fallback of each stage, and the command-line contract end to end.
 
-Adding redundant tests dilutes the signal. I prefer 60 tests whose reason to exist I can name to 300 where half of them check that Python compiles. It is, incidentally, the same reasoning that produced the tool: a number is only worth something if you know what it measures.
+Adding redundant tests dilutes the signal. I prefer some sixty tests whose reason to exist I can name to 300 where half of them check that Python compiles. It is, incidentally, the same reasoning that produced the tool: a number is only worth something if you know what it measures.
 
 ## What I take from it
 
