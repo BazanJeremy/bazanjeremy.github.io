@@ -51,7 +51,7 @@ appareil) du contexte transmis.
 
 ## Des règles comme spécification exécutable
 
-Sans clé API, la suite complète — 182 tests — tourne en mode déterministe. Le LLM
+Sans clé API, la suite complète tourne en mode déterministe. Le LLM
 y est remplacé par des règles qui décrivent le comportement attendu : pas un
 bouchon, une spécification exécutable. Avec une clé, c'est le LLM qui est soumis
 exactement aux mêmes tests. S'il s'écarte de la spécification, un test échoue et
