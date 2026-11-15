@@ -331,7 +331,7 @@ lui** : ce dépôt est en « maintenance mode, smallest targeted fix only ».
 
 **Point ouvert au 22.09 (source : ligne T19 du journal), décision de Jérémy** : aligner les prompts
 d'`anomaly-sentinel` (`fintech_v1.2`, `medtech_v1.1`) attend un premier run en mode LLM ; toute version
-ajoutée au test paramétré change le nombre de tests (182, publié dans l'article T19).
+ajoutée au test paramétré change le nombre de tests (184 au 15.11 ; il n'est plus publié dans l'article T19, retiré en T50).
 
 **T20 — `main` de `ReleaseGuard` est protégée depuis le 09.10** (décision de Jérémy), ce qui
 ferme le point ouvert du 29.09 : l'article T20 et le README écrivaient que l'outil « est le verrou
@@ -678,7 +678,8 @@ Vaut aussi pour les commentaires de PR et les issues.
   fausse **une fois rejouée**. Quand un article dit qu'un test attrape un défaut, remettre le
   défaut dans un clone et lancer la suite : c'est le seul moyen de savoir quel test échoue.
   Et relire les métriques : un taux de faux positifs n'est pas une part d'alertes fausses.
-  Un chiffre du dépôt cité dans un article (T19 : « 182 tests ») lie le dépôt à l'article :
+  Un chiffre du dépôt cité dans un article (T19 : « 182 tests », retiré en T50 une fois le
+  dépôt passé à 184) lie le dépôt à l'article :
   ajouter un test à l'outil rend l'article faux. Vérifier le nombre collecté avant et après
   tout changement dans le dépôt cité.
   Reformuler et le signaler à Jérémy, ne jamais publier l'écart en silence. Distinguer

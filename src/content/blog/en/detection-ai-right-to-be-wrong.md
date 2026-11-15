@@ -48,7 +48,7 @@ strip direct identifiers (patient, account, device) from the context sent to it.
 
 ## Rules as an executable specification
 
-Without an API key, the full suite — 182 tests — runs in deterministic mode. The
+Without an API key, the full suite runs in deterministic mode. The
 LLM is replaced there by rules that describe the expected behaviour: not a stub,
 an executable specification. With a key, it is the LLM that is put through
 exactly the same tests. If it strays from the specification, a test fails and
