@@ -171,21 +171,22 @@ ne nommait : le run informatif **écrasait** `test-results/junit.xml` (celui que
 ReleaseGuard consomment), et **renommer le fichier ne suffit pas** — un run Playwright
 **nettoie son `outputDir`**. C'est le dossier qu'il faut séparer. Les deux sont mesurés et
 documentés en pièges.
-**Pas encore en place après T40** : le rapport Allure hébergé (évalué et écarté le 12.10), et
-**le branchement du nocturne sur la réparation de T40** — c'est la tâche suivante, et elle est
-plus subtile qu'un bump.
-⚠️ **T40 a réparé l'outil, pas ce dépôt-ci. Mesuré le 13.10** : `qa-nightly.yml` épingle
-ReleaseGuard à **`bbb5a76`**, un commit où **ADR-004 n'existe pas** (vérifié par
-`git cat-file -e bbb5a76:docs/adr/ADR-004-…`), et sa ligne 301 appelle
-`releaseguard --junit "$LATEST" $FLAG --json` **sans `--junit-dialect`** (0 occurrence dans le
-fichier). Donc la jonction est toujours morte dans le nocturne, et le verdict qu'il rendra
-aujourd'hui portera encore des « non-flaky failure(s) » qui sont en réalité connues comme
-instables. **Le piège est qu'il faut DEUX changements** : bumper l'épinglage à `2a6a97d` **et**
-ajouter `--junit-dialect path`. Bumper seul ne change **rien**, le dialecte par défaut restant
-`pytest` — c'est délibéré dans ADR-004 (aucun appel existant ne change), donc ce n'est pas un
-oubli de l'outil mais une déclaration que l'appelant doit faire.
+**Pas encore en place après T40** : le rapport Allure hébergé (évalué et écarté le 12.10).
+**Le branchement du nocturne sur la réparation de T40 est fait en T51** (16.11) : épingles
+relevées à flakysense `e7ee36a` et ReleaseGuard `1d6c6de`, et l'appel déclare
+`--junit-dialect path`.
+⚠️ **L'énoncé du 13.10 était devenu faux avant d'être appliqué.** Il disait « il faut DEUX
+changements, bumper seul ne change rien, le dialecte par défaut restant `pytest` ». Depuis,
+**ReleaseGuard ADR-005 (14.11) a fait de `path` le défaut** : au commit `1d6c6de`, **bumper seul
+suffit**. Mesuré le 16.11 sur un historique où un test échoue un run sur deux, dont le dernier :
+anciennes épingles → **NO GO, sortie 2** (le test instable compté comme échec réel, identité
+reconstruite en `invariants/assets/spec/ts.py::…`) ; nouvelles épingles, sans flag ou avec
+`--junit-dialect path` → **CONDITIONAL GO, sortie 1**, sorties identiques au champ `created_at`
+près. Le flag est déclaré quand même : un instrument ne dépend pas d'un défaut qui a déjà changé
+une fois. Sur l'historique réel du 16.11 (13 runs, aucun échec), les deux paires rendent **GO**
+— le changement ne se voit qu'au premier test instable qui échoue.
 La jonction elle-même est **réparée en amont** par T40 (`ReleaseGuard#7`, mergée le 12.10,
-check `tests` vert) — voir la section tranchée plus bas, qui ne vaut que pour l'outil.
+check `tests` vert) — voir la section tranchée plus bas.
 
 **Point ouvert au 10.10 (source : ligne T32 du journal), décision de Jérémy** : le contraste de
 **10 nœuds des deux pages d'accueil est INCONNU**, et ne doit pas être relu comme conforme. Ce
@@ -285,12 +286,11 @@ qu'une session fraîche refera sinon à ses frais.
   isoler une par une.
 
 **Tranché en T40 (`ReleaseGuard#7`), mergé — ne pas reproposer LA RÉPARATION, qui est faite dans
-l'outil. ⚠️ Mais elle n'est PAS branchée ici** (le nocturne épingle un commit d'avant T40 et
-n'envoie pas le flag — mesuré le 13.10, détail dans « Pas encore en place » plus haut) : la
-conception est tranchée, le branchement reste à faire. Donc la jonction d'identité
+l'outil.** Elle est branchée ici depuis T51 (16.11, détail dans « Pas encore en place » plus
+haut). Donc la jonction d'identité
 FlakySense ↔ ReleaseGuard est **réparée en amont** comme T39 le préconisait, par une option de
 dialecte JUnit dans ReleaseGuard (son ADR-004, qui supersède ADR-002). `--junit-dialect
-pytest|path`, défaut `pytest`, donc aucun appel existant ne change ; `path` prend un `classname`
+pytest|path` — défaut `pytest` en T40, **`path` depuis ReleaseGuard ADR-005 (14.11)** ; `path` prend un `classname`
 déjà en forme de chemin **tel quel**. Rien n'est normalisé d'un dialecte à l'autre — réécrire
 nos séparateurs serait réécrire un côté d'une clé que ReleaseGuard ne produit pas.
 ⚠️ **Et la mesure a corrigé l'énoncé avant de corriger le défaut, une fois de plus** : T39
