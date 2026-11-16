@@ -177,7 +177,10 @@ documentés en pièges.
 **Pas encore en place après T40** : le rapport Allure hébergé (évalué et écarté le 12.10).
 **Le branchement du nocturne sur la réparation de T40 est fait en T51** (16.11) : épingles
 relevées à flakysense `e7ee36a` et ReleaseGuard `1d6c6de`, et l'appel déclare
-`--junit-dialect path`.
+`--junit-dialect path`. **ReleaseGuard relevé à `e09836d` en T53** (16.11) : `ReleaseGuard#17`
+corrige la justification d'un CONDITIONAL GO dû à un échec instable excusé (« score 0.97 below
+GO threshold 0.80 » devient « … meets GO threshold 0.80, capped by 1 excused flaky failure(s) ») ;
+mesuré par `git diff 1d6c6de e09836d -- src/`, seul ce texte change, pas le verdict ni le score.
 ⚠️ **L'énoncé du 13.10 était devenu faux avant d'être appliqué.** Il disait « il faut DEUX
 changements, bumper seul ne change rien, le dialecte par défaut restant `pytest` ». Depuis,
 **ReleaseGuard ADR-005 (14.11) a fait de `path` le défaut** : au commit `1d6c6de`, **bumper seul

@@ -254,7 +254,7 @@ jobs:
           # mesure : le meme historique doit rendre le meme verdict demain.
           # `pydantic` reste resolu par pip — dependance reseau assumee pour un
           # instrument non bloquant.
-          python -m pip install --quiet             "flakysense @ git+https://github.com/BazanJeremy/flakysense@e7ee36a71fe88419b7db27cc57170025c1c24de9"             "releaseguard @ git+https://github.com/BazanJeremy/ReleaseGuard@1d6c6de60653f7287e859f689651b674a5d96c5f"
+          python -m pip install --quiet             "flakysense @ git+https://github.com/BazanJeremy/flakysense@e7ee36a71fe88419b7db27cc57170025c1c24de9"             "releaseguard @ git+https://github.com/BazanJeremy/ReleaseGuard@e09836dd2418d3aabeb037a0b6a4392d51900fed"
           python -m pip list | grep -iE 'flakysense|releaseguard|pydantic'
 
       - name: Analyse the history
