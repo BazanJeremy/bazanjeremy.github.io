@@ -132,10 +132,13 @@ runners are less contended », mais les trois derniers runs `schedule` sont tomb
 écrite dans le workflow n'est donc pas confirmée par les faits, et GitHub ne garantit pas
 l'heure d'un cron. Conséquence pratique : **ne pas conclure à une panne du nocturne parce qu'il
 manque à 05:00 UTC**, et ne pas attendre son résultat avant la mi-journée.
-⚠️ **Et le job `verdict` n'a encore JAMAIS tourné** (mesuré le 13.10) : T39 l'a introduit en
-étant mergée le 12.10 vers 14:30 UTC, or le dernier nocturne est du 12.10 à 11:57 UTC, donc
-antérieur. Le premier run qui l'exercera est celui du 13.10. Tout ce qui est écrit sur son
-comportement vient donc d'essais **locaux**, pas d'un run en CI.
+**Le job `verdict` tourne en CI depuis le 13.10** (mesuré le 16.11 par `gh run view`) : T39 l'a
+introduit le 12.10, et son premier passage est le nocturne n° 5 (run `38392562377`, 13.10 à
+11:46Z, `success`), et il figure dans les 35 nocturnes sur 35 du 13.10 au 16.11, tous en
+`success`. Ce fichier a dit jusqu'au 16.11 qu'il n'avait « encore JAMAIS tourné » —
+vrai le 13.10 au matin, faux le jour même. Dernière mesure : le nocturne n° 39 (run
+`43821172079`, 16.11, lancé à la main), premier aux épingles de T51, rend **GO, score 1.00,
+sortie 0** sur 19 runs de la série `main-gate`.
 Mesuré en CI sur le run du merge
 de T32 : gate **99 s**, build 19 s, deploy 8 s, soit **~2 min 14** de bout en bout (c'était gate
 65 s / build 14 s / deploy 10 s, ~94 s avant axe, et 36 s avant toute suite) — les +34 s du gate
